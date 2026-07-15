@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+Client/node_modules/
+Server/node_modules/
+
+# Local Environment files (Sensitive)
+**/.env
+**/.env.*
+!**/.env.example
+
+# AWS Key files (Sensitive)
+*.pem
+
+# Expo
+Client/.expo/
+Client/dist/
+Client/web-build/
+Client/expo-env.d.ts
+
+# Generated native folders (if you build native builds locally)
+Client/ios/
+Client/android/
+
+# OS specific files
+.DS_Store
+Thumbs.db

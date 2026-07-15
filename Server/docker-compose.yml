@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  # API Gateway
+  gateway:
+    build: .
+    container_name: fashion_gateway
+    command: node gateway/server.js
+    ports:
+      - "5000:5000"
+    env_file:
+      - gateway/.env
+    environment:
+      - PORT=5000
+      - AUTH_SERVICE_URL=http://auth-service:5001
+      - CATALOG_SERVICE_URL=http://catalog-service:5002
+      - CART_SERVICE_URL=http://cart-service:5003
+      - ORDER_SERVICE_URL=http://order-service:5004
+    depends_on:
+      - auth-service
+      - catalog-service
+      - cart-service
+      - order-service
+    networks:
+      - fashion_network
+    restart: always
+
+  # Auth & Profile Service
+  auth-service:
+    build: .
+    container_name: fashion_auth_service
+    command: node auth-service/server.js
+    ports:
+      - "5001:5001"
+    env_file:
+      - auth-service/.env
+    environment:
+      - PORT=5001
+    networks:
+      - fashion_network
+    restart: always
+
+  # Catalog & Products Service
+  catalog-service:
+    build: .
+    container_name: fashion_catalog_service
+    command: node catalog-service/server.js
+    ports:
+      - "5002:5002"
+    env_file:
+      - catalog-service/.env
+    environment:
+      - PORT=5002
+    networks:
+      - fashion_network
+    restart: always
+
+  # Cart Service
+  cart-service:
+    build: .
+    container_name: fashion_cart_service
+    command: node cart-service/server.js
+    ports:
+      - "5003:5003"
+    env_file:
+      - cart-service/.env
+    environment:
+      - PORT=5003
+    networks:
+      - fashion_network
+    restart: always
+
+  # Order & Payment Service
+  order-service:
+    build: .
+    container_name: fashion_order_service
+    command: node order-service/server.js
+    ports:
+      - "5004:5004"
+    env_file:
+      - order-service/.env
+    environment:
+      - PORT=5004
+      - AUTH_SERVICE_URL=http://auth-service:5001
+    networks:
+      - fashion_network
+    restart: always
+
+networks:
+  fashion_network:
+    driver: bridge
