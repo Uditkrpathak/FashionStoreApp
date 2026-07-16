@@ -11,6 +11,10 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://13.239.11.70:5000/api/v1",
+        "EXPO_PUBLIC_RAZORPAY_KEY_ID": "rzp_test_TDcSlPdmpjHqXj"
       }
     },
     "production": {}
