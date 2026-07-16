@@ -13,6 +13,7 @@ import {
   updateAccessToken,
   clearTokens,
 } from '../utils/storage';
+import { logout } from '../../features/auth/store/authSlice';
 
 // Singleton Axios instance shared across all RTK Query calls
 export const axiosInstance = axios.create({
@@ -97,7 +98,7 @@ axiosInstance.interceptors.response.use(
  */
 const axiosBaseQuery =
   ({ baseUrl } = { baseUrl: '' }) =>
-  async ({ url, method = 'GET', data, params, headers }) => {
+  async ({ url, method = 'GET', data, params, headers }, api) => {
     try {
       axiosInstance.defaults.baseURL = baseUrl;
       const result = await axiosInstance({
@@ -109,9 +110,17 @@ const axiosBaseQuery =
       });
       return { data: result.data };
     } catch (axiosError) {
+      const status = axiosError.response?.status;
+      const message = axiosError.response?.data?.message;
+
+      // Handle unauthorized or stale session (e.g. user deleted/database reset)
+      if (status === 401 || (status === 404 && message === 'User not found')) {
+        api.dispatch(logout());
+      }
+
       return {
         error: {
-          status: axiosError.response?.status,
+          status,
           data:   axiosError.response?.data ?? axiosError.message,
         },
       };

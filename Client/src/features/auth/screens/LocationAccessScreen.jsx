@@ -1,24 +1,115 @@
 // src/features/auth/screens/LocationAccessScreen.jsx
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { MapPin } from 'lucide-react-native';
+import * as Location from 'expo-location';
+import axios from 'axios';
 import { useAppDispatch } from '../../../shared/hooks/useAppDispatch';
 import { loginSuccess }   from '../store/authSlice';
 import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
 
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:5000/api/v1';
+
 const LocationAccessScreen = () => {
   const navigation = useNavigation();
+  const route      = useRoute();
   const dispatch   = useAppDispatch();
+  const [loading, setLoading] = useState(false);
+
+  const { user, token } = route.params ?? {};
 
   const handleAllow = async () => {
-    // TODO: Request location permission via expo-location
+    try {
+      setLoading(true);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Denied',
+          'Location permission is required to fetch your position. Please select a location manually.',
+          [{ text: 'OK', onPress: () => handleSkip() }]
+        );
+        return;
+      }
+
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const { latitude, longitude } = loc.coords;
+      const geo = await Location.reverseGeocodeAsync({ latitude, longitude });
+      
+      let addressString = 'New York, USA';
+      if (geo && geo.length > 0) {
+        const place = geo[0];
+        const city = place.city || place.subregion || place.district;
+        const country = place.country || place.isoCountryCode;
+        addressString = city && country ? `${city}, ${country}` : city || country || 'New York, USA';
+      }
+
+      // Save user location to backend database
+      if (token && user) {
+        try {
+          await axios.patch(
+            `${BASE_URL}/auth/profile`,
+            { location: addressString },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        } catch (err) {
+          console.log('Failed to save location to backend:', err.message);
+        }
+      }
+
+      // Complete authentication
+      const updatedUser = user ? { ...user, location: addressString } : null;
+      dispatch(loginSuccess({ user: updatedUser, accessToken: token, refreshToken: token }));
+
+    } catch (error) {
+      console.log('Location retrieval error:', error);
+      Alert.alert('Error', 'Failed to retrieve location. Please choose a city manually.', [
+        { text: 'OK', onPress: () => handleSkip() }
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSkip = () => {
-    // Navigate past or handle appropriately
+    Alert.alert(
+      'Enter Location Manually',
+      'Select a default city to continue:',
+      [
+        { text: 'New York, USA', onPress: () => saveManualLocation('New York, USA') },
+        { text: 'Paris, France', onPress: () => saveManualLocation('Paris, France') },
+        { text: 'Tokyo, Japan', onPress: () => saveManualLocation('Tokyo, Japan') },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const saveManualLocation = async (manualLoc) => {
+    try {
+      setLoading(true);
+      if (token && user) {
+        try {
+          await axios.patch(
+            `${BASE_URL}/auth/profile`,
+            { location: manualLoc },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        } catch (err) {
+          console.log('Failed to save manual location to backend:', err.message);
+        }
+      }
+
+      const updatedUser = user ? { ...user, location: manualLoc } : null;
+      dispatch(loginSuccess({ user: updatedUser, accessToken: token, refreshToken: token }));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -31,14 +122,20 @@ const LocationAccessScreen = () => {
       <Text style={styles.sub}>
         We need to know your location in order to suggest nearby services.
       </Text>
-      
-      <TouchableOpacity style={styles.btnPrimary} onPress={handleAllow}>
-        <Text style={styles.btnPrimaryText}>Allow Location Access</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity style={styles.btnSecondary} onPress={handleSkip}>
-        <Text style={styles.btnSecondaryText}>Enter Location Manually</Text>
-      </TouchableOpacity>
+
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: spacing[4] }} />
+      ) : (
+        <>
+          <TouchableOpacity style={styles.btnPrimary} onPress={handleAllow}>
+            <Text style={styles.btnPrimaryText}>Allow Location Access</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.btnSecondary} onPress={handleSkip}>
+            <Text style={styles.btnSecondaryText}>Enter Location Manually</Text>
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
 };
@@ -51,7 +148,7 @@ const styles = StyleSheet.create({
   },
   iconCircle: {
     width: 140, height: 140, borderRadius: 70, 
-    backgroundColor: colors.surfaceAlt, // '#EDEDED'
+    backgroundColor: colors.surfaceAlt,
     alignItems: 'center', justifyContent: 'center',
     marginBottom: spacing[10]
   },

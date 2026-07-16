@@ -45,11 +45,7 @@ const VerifyOTPScreen = () => {
       if (flow === 'forgot') {
         navigation.navigate('NewPassword', { email });
       } else {
-        // Log them in immediately after successful verification
-        if (res.token && res.user) {
-          dispatch(loginSuccess({ user: res.user, accessToken: res.token, refreshToken: res.token }));
-        }
-        navigation.navigate('ContinueProfile');
+        navigation.navigate('ContinueProfile', { user: res.user, token: res.token });
       }
     } catch (err) {
       showToast(err?.data?.message ?? 'Invalid OTP. Try again.', 'error');

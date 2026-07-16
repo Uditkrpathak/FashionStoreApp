@@ -2,19 +2,49 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, RefreshControl, Image, Platform
+  TouchableOpacity, RefreshControl, Image, Platform, Dimensions
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MapPin, ChevronDown, Bell, Search, SlidersHorizontal, Shirt, Sparkles, Box, Scissors } from 'lucide-react-native';
 import { useGetProductsQuery, useGetCategoriesQuery } from '../../products/api/productApi';
 import ProductCard from '../../../shared/components/ProductCard';
-import { useAppDispatch }  from '../../../shared/hooks/useAppDispatch';
-import { useAppSelector }  from '../../../shared/hooks/useAppSelector';
+import { useAppDispatch } from '../../../shared/hooks/useAppDispatch';
+import { useAppSelector } from '../../../shared/hooks/useAppSelector';
 import { toggleWishlist, selectIsWishlisted } from '../../wishlist/store/wishlistSlice';
 import { setSelectedProduct } from '../../products/store/productSlice';
-import { colors }    from '../../../theme/colors';
+import { selectUser } from '../../auth/store/authSlice';
+import { colors } from '../../../theme/colors';
 import { spacing, layout } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
+
+const { width } = Dimensions.get('window');
+
+const BANNERS = [
+  {
+    id: '1',
+    title: 'New Collection',
+    subtitle: 'Discount 50% for\nthe first transaction',
+    buttonText: 'Shop Now',
+    image: require('../../../../assets/images/banner_collection.png'),
+    backgroundColor: '#F1E9DE', // Earthy beige color
+  },
+  {
+    id: '2',
+    title: 'Summer Sale',
+    subtitle: 'Up to 60% off on\nall summer apparel',
+    buttonText: 'Explore',
+    image: require('../../../../assets/images/banner_summer.png'),
+    backgroundColor: '#EAE1DF',
+  },
+  {
+    id: '3',
+    title: 'Trending Outfits',
+    subtitle: 'Unleash your style\nwith our latest picks',
+    buttonText: 'View Details',
+    image: require('../../../../assets/images/banner_trending.png'),
+    backgroundColor: '#E2E6E3',
+  }
+];
 
 const getCategoryIcon = (name) => {
   const lower = name.toLowerCase();
@@ -26,14 +56,16 @@ const getCategoryIcon = (name) => {
 
 const HomeScreen = () => {
   const navigation = useNavigation();
-  const dispatch   = useAppDispatch();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectUser);
   const { data: productsData, isLoading: prodLoading, refetch } = useGetProductsQuery({ limit: 20 });
   const { data: categoriesData } = useGetCategoriesQuery();
   const [activeFilter, setActiveFilter] = useState('All');
-  
+  const [activeBannerIndex, setActiveBannerIndex] = useState(0);
+
   const wishlistItems = useAppSelector(state => state.wishlist.items);
 
-  const products   = productsData?.products   ?? [];
+  const products = productsData?.products ?? [];
   const categories = categoriesData?.categories ?? [];
 
   const handleProductPress = (item) => {
@@ -56,7 +88,7 @@ const HomeScreen = () => {
             <Text style={styles.greeting}>Location</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <MapPin size={16} color={colors.primary} fill={colors.primary} style={{ marginRight: 4 }} />
-              <Text style={styles.tagline}>New York, USA</Text>
+              <Text style={styles.tagline}>{user?.location ?? 'New York, USA'}</Text>
               <ChevronDown size={16} color={colors.text} style={{ marginLeft: 4 }} />
             </View>
           </View>
@@ -68,7 +100,7 @@ const HomeScreen = () => {
 
         {/* Search Bar */}
         <View style={styles.searchRow}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.searchBar}
             activeOpacity={0.9}
             onPress={() => navigation.navigate('SearchTab')}
@@ -76,25 +108,65 @@ const HomeScreen = () => {
             <Search size={20} color={colors.textMuted} style={{ marginRight: spacing[3] }} />
             <Text style={styles.searchPlaceholder}>Search</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.filterBtn}>
+          <TouchableOpacity
+            style={styles.filterBtn}
+            onPress={() => navigation.navigate('SearchTab', { screen: 'Filter' })}
+          >
             <SlidersHorizontal size={20} color={colors.white} />
           </TouchableOpacity>
         </View>
 
-        {/* Banner */}
-        <View style={styles.banner}>
-          <View style={styles.bannerTextContainer}>
-            <Text style={styles.bannerTitle}>New Collection</Text>
-            <Text style={styles.bannerSub}>Discount 50% for{'\n'}the first transaction</Text>
-            <TouchableOpacity style={styles.bannerBtn}>
-              <Text style={styles.bannerBtnText}>Shop Now</Text>
-            </TouchableOpacity>
+        {/* Banner Carousel */}
+        <View style={styles.carouselContainer}>
+          <ScrollView
+            horizontal
+            pagingEnabled={false}
+            showsHorizontalScrollIndicator={false}
+            onScroll={(e) => {
+              const offset = e.nativeEvent.contentOffset.x;
+              const index = Math.round(offset / (width - 36)); // width - 48 (width of card) + 12 (marginRight) = width - 36
+              if (index !== activeBannerIndex && index >= 0 && index < BANNERS.length) {
+                setActiveBannerIndex(index);
+              }
+            }}
+            scrollEventThrottle={16}
+            snapToInterval={width - 36}
+            decelerationRate="fast"
+            contentContainerStyle={styles.bannerScrollContent}
+          >
+            {BANNERS.map((banner) => (
+              <View key={banner.id} style={[styles.banner, { backgroundColor: banner.backgroundColor }]}>
+                <View style={styles.bannerTextContainer}>
+                  <Text style={styles.bannerTitle}>{banner.title}</Text>
+                  <Text style={styles.bannerSub}>{banner.subtitle}</Text>
+                  <TouchableOpacity
+                    style={styles.bannerBtn}
+                    onPress={() => navigation.navigate('SearchTab', { screen: 'Search' })}
+                  >
+                    <Text style={styles.bannerBtnText}>{banner.buttonText}</Text>
+                  </TouchableOpacity>
+                </View>
+                <Image
+                  source={banner.image}
+                  style={styles.bannerImage}
+                  resizeMode="cover"
+                />
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* Dots Indicator */}
+          <View style={styles.dotsContainer}>
+            {BANNERS.map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.dot,
+                  i === activeBannerIndex && styles.dotActive
+                ]}
+              />
+            ))}
           </View>
-          <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1515347619362-67343e808207' }} 
-            style={styles.bannerImage}
-            resizeMode="cover"
-          />
         </View>
 
         {/* Categories */}
@@ -136,11 +208,11 @@ const HomeScreen = () => {
               <View style={styles.timerBox}><Text style={styles.timerNum}>56</Text></View>
             </View>
           </View>
-          
+
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
             {['All', 'Newest', 'Popular', 'Man', 'Women'].map((filter) => (
-              <TouchableOpacity 
-                key={filter} 
+              <TouchableOpacity
+                key={filter}
                 style={[styles.filterPill, activeFilter === filter && styles.filterPillActive]}
                 onPress={() => setActiveFilter(filter)}
               >
@@ -168,13 +240,13 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container:     { flex: 1, backgroundColor: colors.background }, // White background
+  container: { flex: 1, backgroundColor: colors.background }, // White background
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     padding: spacing[6], paddingTop: Platform.OS === 'ios' ? 60 : spacing[10],
   },
-  greeting:   { ...textStyles.body2, color: colors.textMuted },
-  tagline:    { ...textStyles.body1, color: colors.text, fontWeight: '700', marginTop: 2 },
+  greeting: { ...textStyles.body2, color: colors.textMuted },
+  tagline: { ...textStyles.body1, color: colors.text, fontWeight: '700', marginTop: 2 },
   bellBtn: {
     width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surfaceAlt,
     alignItems: 'center', justifyContent: 'center'
@@ -202,18 +274,44 @@ const styles = StyleSheet.create({
     width: 50, height: 50, borderRadius: 25, backgroundColor: colors.primary, // Brown
     alignItems: 'center', justifyContent: 'center',
   },
+  carouselContainer: {
+    marginBottom: spacing[6],
+  },
+  bannerScrollContent: {
+    paddingLeft: spacing[6],
+    paddingRight: spacing[6] - 12,
+  },
   banner: {
-    marginHorizontal: spacing[6],
-    marginBottom: spacing[8],
+    width: width - 48,
+    marginRight: 12,
     padding: spacing[5],
-    backgroundColor: '#F1E9DE', // Earthy beige color
     borderRadius: layout.cardRadiusLg,
     flexDirection: 'row',
     overflow: 'hidden',
+    height: 160,
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: spacing[3],
+    gap: 6,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#E0E0E0',
+  },
+  dotActive: {
+    width: 16,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#624735',
   },
   bannerTextContainer: { flex: 1, paddingRight: spacing[2], justifyContent: 'center' },
   bannerTitle: { ...textStyles.h3, color: colors.text, marginBottom: spacing[1] },
-  bannerSub:   { ...textStyles.caption, color: colors.textMuted, marginBottom: spacing[4], lineHeight: 18 },
+  bannerSub: { ...textStyles.caption, color: colors.textMuted, marginBottom: spacing[4], lineHeight: 18 },
   bannerBtn: {
     backgroundColor: colors.primary, paddingHorizontal: spacing[4], paddingVertical: spacing[2],
     borderRadius: 20, alignSelf: 'flex-start'
@@ -227,10 +325,10 @@ const styles = StyleSheet.create({
     right: -10,
     bottom: -10,
   },
-  section:     { marginBottom: spacing[6] },
-  sectionHeaderRow:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[4], paddingHorizontal: spacing[6] },
-  sectionTitle:{ ...textStyles.h4, color: colors.text, fontWeight: '700' },
-  seeAll:      { ...textStyles.caption, color: colors.textMuted },
+  section: { marginBottom: spacing[6] },
+  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[4], paddingHorizontal: spacing[6] },
+  sectionTitle: { ...textStyles.h4, color: colors.text, fontWeight: '700' },
+  seeAll: { ...textStyles.caption, color: colors.textMuted },
   categoryScroll: { paddingHorizontal: spacing[6], gap: spacing[5] },
   categoryItem: { alignItems: 'center' },
   categoryIconCircle: {

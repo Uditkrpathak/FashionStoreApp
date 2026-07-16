@@ -1,65 +1,36 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useAppSelector } from '../../../shared/hooks/useAppSelector';
-import { selectIsAuthenticated } from '../store/authSlice';
 import { getOnboardingSeen } from '../../../shared/utils/storage';
-import { colors }   from '../../../theme/colors';
-import { spacing }  from '../../../theme/spacing';
-import { textStyles } from '../../../theme/typography';
-import Button from '../../../shared/components/Button';
+
+const { width } = Dimensions.get('window');
 
 const SplashScreen = () => {
-  const navigation      = useNavigation();
-  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const navigation = useNavigation();
 
   useEffect(() => {
-    if (isAuthenticated) return;
-  }, [isAuthenticated]);
-
-  const handleStart = () => {
-    navigation.replace('Onboarding');
-  };
-
-  const handleSignIn = () => {
-    navigation.replace('SignIn');
-  };
+    const timer = setTimeout(() => {
+      navigation.replace('Welcome');
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [navigation]);
 
   return (
     <View style={styles.container}>
-      <View style={styles.imageLayout}>
-        <Image 
-          source={{ uri: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=800' }} 
-          style={styles.leftPill} 
-        />
-        <View style={styles.rightCol}>
-          <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800' }} 
-            style={styles.rightTopPill} 
-          />
-          <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=800' }} 
-            style={styles.rightBottomCircle} 
-          />
-        </View>
-        <Text style={styles.asterisk}>*</Text>
-      </View>
+      {/* Background concentric circles */}
+      <View style={styles.topRightCircle1} />
+      <View style={styles.topRightCircle2} />
+      <View style={styles.bottomLeftCircle1} />
+      <View style={styles.bottomLeftCircle2} />
 
-      <View style={styles.textContainer}>
-        <Text style={styles.title}>The Fashion App That{'\n'}Makes You Look Your Best</Text>
-        <Text style={styles.subtitle}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+      {/* Logo container */}
+      <View style={styles.logoRow}>
+        <View style={styles.brownCircle}>
+          <Text style={styles.logoLetter}>f</Text>
+        </View>
+        <Text style={styles.logoText}>
+          fashion<Text style={styles.logoDot}>.</Text>
         </Text>
-      </View>
-
-      <View style={styles.footer}>
-        <Button title="Let's Get Started" onPress={handleStart} style={styles.btn} />
-        <View style={styles.loginRow}>
-          <Text style={styles.loginText}>Already have an account? </Text>
-          <TouchableOpacity onPress={handleSignIn}>
-            <Text style={styles.loginLink}>Sign In</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </View>
   );
@@ -68,89 +39,84 @@ const SplashScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
-    paddingTop: 80,
-  },
-  imageLayout: {
-    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 16,
-    height: 380,
-    marginBottom: spacing[8],
-    position: 'relative',
   },
-  leftPill: {
-    width: 140,
-    height: 340,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 70,
-  },
-  rightCol: {
-    gap: 16,
-  },
-  rightTopPill: {
-    width: 140,
-    height: 180,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 70,
-  },
-  rightBottomCircle: {
-    width: 140,
-    height: 140,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 70,
-  },
-  asterisk: {
+  // Background decorative circles
+  topRightCircle1: {
     position: 'absolute',
-    left: '12%',
-    bottom: 20,
-    fontSize: 50,
-    color: colors.text,
-    fontWeight: '300',
+    top: -80,
+    right: -80,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
   },
-  textContainer: {
-    paddingHorizontal: spacing[8],
-    alignItems: 'center',
+  topRightCircle2: {
+    position: 'absolute',
+    top: -120,
+    right: -120,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    borderWidth: 1,
+    borderColor: '#F3F3F3',
   },
-  title: {
-    ...textStyles.h2,
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: spacing[4],
-    fontWeight: '800',
-    lineHeight: 34,
+  bottomLeftCircle1: {
+    position: 'absolute',
+    bottom: -100,
+    left: -100,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
   },
-  subtitle: {
-    ...textStyles.body2,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: spacing[4],
+  bottomLeftCircle2: {
+    position: 'absolute',
+    bottom: -140,
+    left: -140,
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    borderWidth: 1,
+    borderColor: '#F3F3F3',
   },
-  footer: {
-    marginTop: 'auto',
-    paddingHorizontal: spacing[6],
-    paddingBottom: spacing[12],
-  },
-  btn: {
-    marginBottom: spacing[4],
-    backgroundColor: colors.primary,
-    borderRadius: 30,
-  },
-  loginRow: {
+  logoRow: {
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  brownCircle: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: '#624735', // Premium warm brown color
     justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#624735',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  loginText: {
-    ...textStyles.body2,
-    color: colors.textMuted,
+  logoLetter: {
+    color: '#FFFFFF',
+    fontSize: 34,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontWeight: 'bold',
+    marginTop: Platform.OS === 'ios' ? -4 : -6,
   },
-  loginLink: {
-    ...textStyles.body2,
-    color: colors.text,
-    fontWeight: '700',
-    textDecorationLine: 'underline',
+  logoText: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    color: '#1A1A1A',
+  },
+  logoDot: {
+    color: '#624735', // Match the brown theme dot
   },
 });
 

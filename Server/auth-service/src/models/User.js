@@ -14,6 +14,7 @@ const UserSchema = new mongoose.Schema({
   avatar: String,
   dob: Date,
   gender: { type: String, enum: ['male', 'female', 'other'] },
+  location: String,
   
   // Addresses
   addresses: [{

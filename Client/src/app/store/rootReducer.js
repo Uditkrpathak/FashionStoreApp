@@ -32,7 +32,7 @@ const appReducer = combineReducers({
 });
 
 const rootReducer = (state, action) => {
-  if (action.type === 'auth/logout/pending' || action.type === 'auth/logout/fulfilled') {
+  if (action.type === 'auth/logout/fulfilled') {
     // Clear all state on logout to prevent data leaks between users
     state = undefined;
   }

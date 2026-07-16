@@ -7,6 +7,10 @@ import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
 
+import { useAppDispatch } from '../../../shared/hooks/useAppDispatch';
+import { useAppSelector } from '../../../shared/hooks/useAppSelector';
+import { setFilters, setSortBy, selectActiveFilters, selectSortBy } from '../store/searchSlice';
+
 const BRANDS = ['All', 'Nike', 'Adidas', 'Puma', 'Reebok', 'Fila'];
 const GENDERS = ['All', 'Men', 'Women'];
 const SORT_OPTIONS = ['Most Recent', 'Popular', 'Price High', 'Price Low'];
@@ -23,15 +27,58 @@ const RATINGS = [
 
 const FilterScreen = () => {
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
 
-  // State matching screenshot selections
-  const [selectedBrand, setSelectedBrand] = useState('All');
-  const [selectedGender, setSelectedGender] = useState('All');
-  const [selectedSort, setSelectedSort] = useState('Popular');
-  const [selectedRating, setSelectedRating] = useState('4.5 and above');
+  const activeFilters = useAppSelector(selectActiveFilters);
+  const sortBy = useAppSelector(selectSortBy);
+
+  // Helper to map sort values
+  const getSortLabel = (val) => {
+    if (val === 'newest') return 'Most Recent';
+    if (val === 'price_desc') return 'Price High';
+    if (val === 'price_asc') return 'Price Low';
+    return 'Popular';
+  };
+
+  // State matching selections
+  const [selectedBrand, setSelectedBrand] = useState(activeFilters.brand || 'All');
+  const [selectedGender, setSelectedGender] = useState(activeFilters.gender || 'All');
+  const [selectedSort, setSelectedSort] = useState(getSortLabel(sortBy));
+  const [selectedRating, setSelectedRating] = useState(activeFilters.ratingText || 'All');
+
+  const [priceMinIdx, setPriceMinIdx] = useState(activeFilters.priceMinIdx ?? 1);
+  const [priceMaxIdx, setPriceMaxIdx] = useState(activeFilters.priceMaxIdx ?? 4);
 
   const apply = () => {
-    // Navigate back
+    // Map sort
+    let sortVal = 'popularity';
+    if (selectedSort === 'Most Recent') sortVal = 'newest';
+    if (selectedSort === 'Price High') sortVal = 'price_desc';
+    if (selectedSort === 'Price Low') sortVal = 'price_asc';
+
+    // Map rating
+    let ratingMin = null;
+    if (selectedRating === '4.5 and above') ratingMin = 4.5;
+    else if (selectedRating === '4.0 - 4.5') ratingMin = 4.0;
+    else if (selectedRating === '3.5 - 4.0') ratingMin = 3.5;
+    else if (selectedRating === '3.0 - 3.5') ratingMin = 3.0;
+    else if (selectedRating === '2.5 - 3.0') ratingMin = 2.5;
+
+    const minVal = parseInt(PRICE_POINTS[priceMinIdx]);
+    const maxVal = PRICE_POINTS[priceMaxIdx] === '150+' ? undefined : parseInt(PRICE_POINTS[priceMaxIdx]);
+
+    dispatch(setFilters({
+      brand: selectedBrand === 'All' ? undefined : selectedBrand,
+      gender: selectedGender === 'All' ? undefined : selectedGender,
+      rating: ratingMin || undefined,
+      ratingText: selectedRating,
+      priceMin: minVal,
+      priceMax: maxVal,
+      priceMinIdx: priceMinIdx,
+      priceMaxIdx: priceMaxIdx,
+    }));
+    dispatch(setSortBy(sortVal));
+
     navigation.goBack();
   };
 
@@ -39,7 +86,9 @@ const FilterScreen = () => {
     setSelectedBrand('All');
     setSelectedGender('All');
     setSelectedSort('Popular');
-    setSelectedRating('4.5 and above');
+    setSelectedRating('All');
+    setPriceMinIdx(0);
+    setPriceMaxIdx(5);
   };
 
   return (
@@ -116,21 +165,36 @@ const FilterScreen = () => {
         <Text style={styles.sectionTitle}>Pricing Range</Text>
         <View style={styles.sliderContainer}>
           <View style={styles.sliderTrack}>
-            {/* The active range highlight from 7 to 100 */}
-            <View style={styles.sliderFill} />
+            {/* The active range highlight */}
+            <View style={[styles.sliderFill, { left: `${(priceMinIdx / 5) * 100}%`, right: `${100 - (priceMaxIdx / 5) * 100}%` }]} />
           </View>
-          {/* Thumb 1 (at index 1: "7") */}
-          <View style={[styles.sliderThumb, { left: '16.66%' }]} />
-          {/* Thumb 2 (at index 4: "100") */}
-          <View style={[styles.sliderThumb, { left: '66.66%' }]} />
+          {/* Thumb 1 */}
+          <View style={[styles.sliderThumb, { left: `${(priceMinIdx / 5) * 100}%` }]} />
+          {/* Thumb 2 */}
+          <View style={[styles.sliderThumb, { left: `${(priceMaxIdx / 5) * 100}%` }]} />
           
           <View style={styles.pricePoints}>
             {PRICE_POINTS.map((pt, idx) => {
-              const isHighlight = pt === '7' || pt === '100';
+              const isHighlight = idx >= priceMinIdx && idx <= priceMaxIdx;
+              const handlePricePress = () => {
+                if (idx < priceMinIdx) {
+                  setPriceMinIdx(idx);
+                } else if (idx > priceMaxIdx) {
+                  setPriceMaxIdx(idx);
+                } else {
+                  if (idx - priceMinIdx < priceMaxIdx - idx) {
+                    setPriceMinIdx(idx);
+                  } else {
+                    setPriceMaxIdx(idx);
+                  }
+                }
+              };
               return (
-                <Text key={pt} style={[styles.pricePointText, isHighlight && styles.pricePointTextHighlight]}>
-                  {pt}
-                </Text>
+                <TouchableOpacity key={pt} onPress={handlePricePress}>
+                  <Text style={[styles.pricePointText, isHighlight && styles.pricePointTextHighlight]}>
+                    {pt}
+                  </Text>
+                </TouchableOpacity>
               );
             })}
           </View>
