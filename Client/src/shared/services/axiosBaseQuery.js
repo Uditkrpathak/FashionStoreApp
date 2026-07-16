@@ -18,7 +18,10 @@ import { logout } from '../../features/auth/store/authSlice';
 // Singleton Axios instance shared across all RTK Query calls
 export const axiosInstance = axios.create({
   timeout: 15000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: { 
+    'Content-Type': 'application/json',
+    'Bypass-Tunnel-Reminder': 'true'
+  },
 });
 
 // Prevent concurrent refresh calls
