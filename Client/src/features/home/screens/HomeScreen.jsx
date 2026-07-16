@@ -25,7 +25,7 @@ const BANNERS = [
     title: 'New Collection',
     subtitle: 'Discount 50% for\nthe first transaction',
     buttonText: 'Shop Now',
-    image: require('../../../../assets/images/banner_collection.png'),
+    image: require('../../../../assets/images/banner_collection.jpg'),
     backgroundColor: '#F1E9DE', // Earthy beige color
   },
   {
@@ -33,7 +33,7 @@ const BANNERS = [
     title: 'Summer Sale',
     subtitle: 'Up to 60% off on\nall summer apparel',
     buttonText: 'Explore',
-    image: require('../../../../assets/images/banner_summer.png'),
+    image: require('../../../../assets/images/banner_summer.jpg'),
     backgroundColor: '#EAE1DF',
   },
   {
@@ -41,7 +41,7 @@ const BANNERS = [
     title: 'Trending Outfits',
     subtitle: 'Unleash your style\nwith our latest picks',
     buttonText: 'View Details',
-    image: require('../../../../assets/images/banner_trending.png'),
+    image: require('../../../../assets/images/banner_trending.jpg'),
     backgroundColor: '#E2E6E3',
   }
 ];
