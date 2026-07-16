@@ -18,7 +18,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.uditkr.fashionstore"
+      "package": "com.uditkr.fashionstore",
+      "usesCleartextTraffic": true
     },
     "web": {
       "output": "single",
