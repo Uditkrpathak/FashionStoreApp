@@ -49,7 +49,6 @@ export const orderApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [{ type: 'Order', id }],
     }),
   }),
-  overrideExisting: false,
 });
 
 export const {

@@ -16,7 +16,6 @@ export const notificationApi = baseApi.injectEndpoints({
       invalidatesTags: ['Notification'],
     }),
   }),
-  overrideExisting: false,
 });
 
 export const { useGetNotificationsQuery, useMarkAsReadMutation } = notificationApi;

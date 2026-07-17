@@ -1,5 +1,5 @@
 // src/shared/components/SkeletonLoader.jsx
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 import { colors } from '../../theme/colors';
 
@@ -8,7 +8,7 @@ import { colors } from '../../theme/colors';
  * @param {{ width, height, borderRadius, style }} props
  */
 const SkeletonLoader = ({ width, height = 20, borderRadius = 8, style }) => {
-  const shimmer = useRef(new Animated.Value(0)).current;
+  const [shimmer] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     const anim = Animated.loop(

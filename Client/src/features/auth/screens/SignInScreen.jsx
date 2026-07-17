@@ -7,20 +7,20 @@ import {
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
-import { useLoginMutation }   from '../api/authApi';
-import { useAppDispatch }     from '../../../shared/hooks/useAppDispatch';
-import { loginSuccess }       from '../store/authSlice';
-import { useToast }           from '../../../context/ToastContext';
-import Input   from '../../../shared/components/Input';
-import Button  from '../../../shared/components/Button';
-import { colors }    from '../../../theme/colors';
-import { spacing }   from '../../../theme/spacing';
+import { useLoginMutation } from '../api/authApi';
+import { useAppDispatch } from '../../../shared/hooks/useAppDispatch';
+import { loginSuccess } from '../store/authSlice';
+import { useToast } from '../../../context/ToastContext';
+import Input from '../../../shared/components/Input';
+import Button from '../../../shared/components/Button';
+import { colors } from '../../../theme/colors';
+import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
 import { isEmail, isPhone, required } from '../../../shared/utils/validators';
 
 const SignInScreen = () => {
-  const navigation   = useNavigation();
-  const dispatch     = useAppDispatch();
+  const navigation = useNavigation();
+  const dispatch = useAppDispatch();
   const { showToast } = useToast();
   const [login, { isLoading }] = useLoginMutation();
 
@@ -32,8 +32,8 @@ const SignInScreen = () => {
     try {
       const res = await login({ email: data.identifier, password: data.password }).unwrap();
       await dispatch(loginSuccess({
-        user:         res.user,
-        accessToken:  res.token,
+        user: res.user,
+        accessToken: res.token,
         refreshToken: res.token,
       }));
     } catch (err) {
@@ -52,7 +52,7 @@ const SignInScreen = () => {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.heading}>Sign In</Text>
-        <Text style={styles.sub}>Hi! Welcome back, you've been missed</Text>
+        <Text style={styles.sub}>{"Hi! Welcome back, you've been missed"}</Text>
 
         <Controller
           control={control}
@@ -124,7 +124,7 @@ const SignInScreen = () => {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Don't have an account? </Text>
+          <Text style={styles.footerText}>{"Don't have an account? "}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
             <Text style={styles.link}>Sign Up</Text>
           </TouchableOpacity>
@@ -137,15 +137,15 @@ const SignInScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
   content: {
-    padding:    spacing[6],
+    padding: spacing[6],
     paddingTop: spacing[16],
-    flexGrow:   1,
+    flexGrow: 1,
   },
-  heading:     { ...textStyles.h2, color: colors.text, textAlign: 'center', marginBottom: spacing[2], fontWeight: '700' },
-  sub:         { ...textStyles.body2, color: colors.textMuted, textAlign: 'center', marginBottom: spacing[10] },
-  forgotBtn:   { alignSelf: 'flex-end', marginBottom: spacing[8] },
-  forgotText:  { ...textStyles.label, color: colors.text, textDecorationLine: 'underline', fontWeight: '600' },
-  btn:         { marginBottom: spacing[8], backgroundColor: colors.primary, borderRadius: 30 },
+  heading: { ...textStyles.h2, color: colors.text, textAlign: 'center', marginBottom: spacing[2], fontWeight: '700' },
+  sub: { ...textStyles.body2, color: colors.textMuted, textAlign: 'center', marginBottom: spacing[10] },
+  forgotBtn: { alignSelf: 'flex-end', marginBottom: spacing[8] },
+  forgotText: { ...textStyles.label, color: colors.text, textDecorationLine: 'underline', fontWeight: '600' },
+  btn: { marginBottom: spacing[8], backgroundColor: colors.primary, borderRadius: 30 },
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing[4],
   },
   footerText: { ...textStyles.body2, color: colors.textMuted },
-  link:       { ...textStyles.body2, color: colors.primary, fontWeight: '700', textDecorationLine: 'underline' },
+  link: { ...textStyles.body2, color: colors.primary, fontWeight: '700', textDecorationLine: 'underline' },
 });
 
 export default SignInScreen;

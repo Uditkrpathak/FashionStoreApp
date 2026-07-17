@@ -10,6 +10,7 @@ import { loginSuccess }   from '../store/authSlice';
 import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
+import MapSelectorModal from '../../../shared/components/MapSelectorModal';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:5000/api/v1';
 
@@ -18,6 +19,7 @@ const LocationAccessScreen = () => {
   const route      = useRoute();
   const dispatch   = useAppDispatch();
   const [loading, setLoading] = useState(false);
+  const [mapVisible, setMapVisible] = useState(false);
 
   const { user, token } = route.params ?? {};
 
@@ -78,16 +80,7 @@ const LocationAccessScreen = () => {
   };
 
   const handleSkip = () => {
-    Alert.alert(
-      'Enter Location Manually',
-      'Select a default city to continue:',
-      [
-        { text: 'New York, USA', onPress: () => saveManualLocation('New York, USA') },
-        { text: 'Paris, France', onPress: () => saveManualLocation('Paris, France') },
-        { text: 'Tokyo, Japan', onPress: () => saveManualLocation('Tokyo, Japan') },
-      ],
-      { cancelable: true }
-    );
+    setMapVisible(true);
   };
 
   const saveManualLocation = async (manualLoc) => {
@@ -136,6 +129,14 @@ const LocationAccessScreen = () => {
           </TouchableOpacity>
         </>
       )}
+
+      <MapSelectorModal
+        visible={mapVisible}
+        onClose={() => setMapVisible(false)}
+        onConfirm={(data) => {
+          saveManualLocation(data.shortAddress || data.address);
+        }}
+      />
     </View>
   );
 };

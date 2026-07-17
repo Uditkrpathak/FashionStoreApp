@@ -5,10 +5,9 @@ import RazorpayCheckout from 'react-native-razorpay';
 import { useNavigation } from '@react-navigation/native';
 import { useAppDispatch } from '../../../shared/hooks/useAppDispatch';
 import { useAppSelector } from '../../../shared/hooks/useAppSelector';
-import { selectCheckout } from '../store/checkoutSlice';
+import { selectCheckout, resetCheckout } from '../store/checkoutSlice';
 import { selectCartItems, selectDiscountedTotal, clearCart } from '../../cart/store/cartSlice';
 import { setActiveOrder } from '../../orders/store/orderSlice';
-import { resetCheckout } from '../store/checkoutSlice';
 import { usePlaceOrderMutation, useVerifyPaymentMutation } from '../../orders/api/orderApi';
 import { useToast } from '../../../context/ToastContext';
 import Button from '../../../shared/components/Button';
@@ -37,7 +36,11 @@ const OrderReviewScreen = () => {
           productId: i.productId,
           variantSku: i.variantSku,
           qty: i.quantity ?? 1,
-          priceAtAdd: i.price ?? 0
+          priceAtAdd: i.price ?? 0,
+          title: i.title,
+          image: i.image,
+          color: i.color,
+          size: i.size
         }));
 
       const res = await placeOrder({
@@ -50,7 +53,7 @@ const OrderReviewScreen = () => {
       const { order, razorpayOrderId } = res;
 
       if (razorpayOrderId) {
-        var options = {
+        const options = {
           description: 'Fashion Store Purchase',
           image: 'https://i.imgur.com/3g7nmJC.png',
           currency: 'INR',

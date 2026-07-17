@@ -1,12 +1,13 @@
-// src/features/profile/screens/AddEditAddressScreen.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
+import { MapPin } from 'lucide-react-native';
 import { useAddAddressMutation, useUpdateAddressMutation } from '../../cart/api/cartApi';
 import { useToast } from '../../../context/ToastContext';
 import Input  from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
+import MapSelectorModal from '../../../shared/components/MapSelectorModal';
 import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
@@ -20,8 +21,9 @@ const AddEditAddressScreen = () => {
   const { showToast } = useToast();
   const [addAddress,    { isLoading: adding }]   = useAddAddressMutation();
   const [updateAddress, { isLoading: updating }] = useUpdateAddressMutation();
+  const [mapVisible, setMapVisible] = useState(false);
 
-  const { control, handleSubmit, formState: { errors } } = useForm({
+  const { control, handleSubmit, setValue, formState: { errors } } = useForm({
     defaultValues: {
       label:  existing?.label  ?? 'Home',
       line1:  existing?.line1  ?? '',
@@ -41,6 +43,37 @@ const AddEditAddressScreen = () => {
     } catch { showToast('Failed to save address', 'error'); }
   };
 
+  const handleMapConfirm = (data) => {
+    const details = data.addressDetails || {};
+    
+    // Construct line1 from available street details
+    const road = details.road || '';
+    const neighbourhood = details.neighbourhood || details.suburb || '';
+    const village = details.village || details.town || '';
+    const street = [road, neighbourhood, village].filter(Boolean).join(', ');
+    
+    const city = details.city || details.town || details.village || details.county || '';
+    const state = details.state || '';
+    const pincode = details.postcode || '';
+
+    if (street) {
+      setValue('line1', street);
+    } else if (data.address) {
+      // Fallback to parsed address up to first comma
+      const parts = data.address.split(',');
+      setValue('line1', parts[0] + (parts[1] ? ', ' + parts[1] : ''));
+    }
+
+    if (city) setValue('city', city);
+    if (state) setValue('state', state);
+    if (pincode) {
+      const cleanPincode = pincode.replace(/\s+/g, '').substring(0, 6);
+      setValue('pincode', cleanPincode);
+    }
+    
+    showToast('Address filled from map', 'success');
+  };
+
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.container}>
@@ -50,6 +83,16 @@ const AddEditAddressScreen = () => {
           <View style={{ width: 32 }} />
         </View>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          
+          <TouchableOpacity 
+            style={styles.mapPickBtn} 
+            onPress={() => setMapVisible(true)}
+            activeOpacity={0.8}
+          >
+            <MapPin size={16} color={colors.primary} style={{ marginRight: spacing[2] }} />
+            <Text style={styles.mapPickBtnText}>Pick Location from Map</Text>
+          </TouchableOpacity>
+
           <Controller control={control} name="label"
             render={({ field: { onChange, onBlur, value } }) => (
               <Input label="Label (Home / Work)" value={value} onChangeText={onChange} onBlur={onBlur} />
@@ -79,6 +122,12 @@ const AddEditAddressScreen = () => {
           <Button title={isEdit ? 'Update Address' : 'Save Address'} onPress={handleSubmit(onSubmit)} loading={adding || updating} style={styles.btn} />
         </ScrollView>
       </View>
+
+      <MapSelectorModal
+        visible={mapVisible}
+        onClose={() => setMapVisible(false)}
+        onConfirm={handleMapConfirm}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -91,6 +140,22 @@ const styles = StyleSheet.create({
   content:{ padding: spacing[4] },
   row:    { flexDirection: 'row' },
   btn:    { marginTop: spacing[2] },
+  mapPickBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing[3],
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    borderRadius: 8,
+    marginBottom: spacing[4],
+    backgroundColor: '#FAF7F5',
+  },
+  mapPickBtnText: {
+    ...textStyles.body2,
+    fontWeight: '700',
+    color: colors.primary,
+  },
 });
 
 export default AddEditAddressScreen;

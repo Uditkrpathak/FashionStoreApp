@@ -6,7 +6,11 @@ const OrderSchema = new mongoose.Schema({
     productId: String,
     variantSku: String,
     qty: Number,
-    priceAtAdd: Number
+    priceAtAdd: Number,
+    title: String,
+    image: String,
+    color: String,
+    size: String
   }],
   shippingAddress: Object,
   deliveryOption: Object,

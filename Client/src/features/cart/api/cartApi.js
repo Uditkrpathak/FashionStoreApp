@@ -1,5 +1,7 @@
 // src/features/cart/api/cartApi.js
 import { baseApi } from '../../../shared/services/baseApi';
+import { syncCart } from '../store/cartSlice';
+import { setSelectedAddress } from '../../checkout/store/checkoutSlice';
 
 export const cartApi = baseApi.injectEndpoints({
   overrideExisting: true,
@@ -8,6 +10,16 @@ export const cartApi = baseApi.injectEndpoints({
     getCart: builder.query({
       query: () => ({ url: '/cart' }),
       providesTags: ['Cart'],
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.cart) {
+            dispatch(syncCart(data.cart));
+          }
+        } catch (err) {
+          console.error('getCart sync error', err);
+        }
+      },
     }),
 
     addToCartRemote: builder.mutation({
@@ -50,6 +62,19 @@ export const cartApi = baseApi.injectEndpoints({
     getAddresses: builder.query({
       query: () => ({ url: '/cart/addresses' }),
       providesTags: ['Address'],
+      async onQueryStarted(arg, { dispatch, queryFulfilled, getState }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.addresses && data.addresses.length > 0) {
+            const state = getState();
+            if (!state.checkout?.selectedAddress) {
+              dispatch(setSelectedAddress(data.addresses[0]));
+            }
+          }
+        } catch (err) {
+          console.error('getAddresses sync error', err);
+        }
+      },
     }),
 
     addAddress: builder.mutation({
@@ -67,7 +92,6 @@ export const cartApi = baseApi.injectEndpoints({
       invalidatesTags: ['Address'],
     }),
   }),
-  overrideExisting: false,
 });
 
 export const {

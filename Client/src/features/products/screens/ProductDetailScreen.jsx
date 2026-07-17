@@ -19,6 +19,24 @@ import { textStyles } from '../../../theme/typography';
 
 const { width, height } = Dimensions.get('window');
 
+const COLOR_MAP = {
+  Brown: '#704F38',
+  Black: '#000000',
+  Yellow: '#F3C63F',
+  White: '#FFFFFF',
+  Blue: '#2A55E5',
+  Red: '#E53E3E',
+  Gray: '#8E8E93',
+  Grey: '#8E8E93',
+  Beige: '#F5F2EF',
+  Pink: '#FF8DA1',
+  Olive: '#556B2F',
+  Navy: '#000080',
+  Purple: '#800080',
+  Rust: '#B7410E',
+  Khaki: '#C3B091',
+};
+
 const ProductDetailScreen = () => {
   const navigation      = useNavigation();
   const route           = useRoute();
@@ -30,7 +48,8 @@ const ProductDetailScreen = () => {
   const isWishlisted = wishlistItems.some(i => i._id === productId);
 
   const [imageIndex, setImageIndex] = useState(0);
-  const [selectedSize, setSelectedSize] = useState('M'); // Default for mockup
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
 
   const { data, isLoading } = useGetProductByIdQuery(productId, { skip: !productId });
   const product = data?.product;
@@ -44,6 +63,11 @@ const ProductDetailScreen = () => {
   }
 
   const sizes = product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+  const colorsList = product.colors && product.colors.length > 0 ? product.colors : ['Brown'];
+
+  // Derived state: fallback to product's first size and color if not explicitly selected yet
+  const activeSize  = selectedSize || sizes[0];
+  const activeColor = selectedColor || colorsList[0];
 
   const handleAddToCart = () => {
     dispatch(addToCart({
@@ -52,9 +76,9 @@ const ProductDetailScreen = () => {
       brand:      product.brand,
       image:      product.images?.[0] || product.image,
       price:      product.price,
-      size:       selectedSize,
-      color:      'Brown',
-      variantSku: `${product._id}-${selectedSize}-Brown`,
+      size:       activeSize,
+      color:      activeColor,
+      variantSku: `${product._id}-${activeSize}-${activeColor}`,
     }));
     showToast('Added to cart', 'success');
   };
@@ -124,15 +148,39 @@ const ProductDetailScreen = () => {
             {sizes.map((size) => (
               <TouchableOpacity
                 key={size}
-                style={[styles.sizeBox, selectedSize === size && styles.sizeBoxActive]}
+                style={[styles.sizeBox, activeSize === size && styles.sizeBoxActive]}
                 onPress={() => setSelectedSize(size)}
               >
-                <Text style={[styles.sizeText, selectedSize === size && styles.sizeTextActive]}>{size}</Text>
+                <Text style={[styles.sizeText, activeSize === size && styles.sizeTextActive]}>{size}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={styles.sectionTitle}>Select Color : <Text style={styles.colorValue}>Brown</Text></Text>
+          <Text style={styles.sectionTitle}>Select Color : <Text style={styles.colorValue}>{activeColor}</Text></Text>
+          <View style={styles.colorsRow}>
+            {colorsList.map((color) => {
+              const hex = COLOR_MAP[color] || color.toLowerCase();
+              const isSelected = activeColor === color;
+              const isWhite = color.toLowerCase() === 'white';
+              return (
+                <TouchableOpacity
+                  key={color}
+                  style={[
+                    styles.colorCircle,
+                    { backgroundColor: hex },
+                    isSelected && styles.colorCircleActive,
+                    isWhite && styles.colorCircleWhiteBorder,
+                  ]}
+                  onPress={() => setSelectedColor(color)}
+                  activeOpacity={0.8}
+                >
+                  {isSelected && (
+                    <View style={[styles.colorDot, { backgroundColor: isWhite ? '#000' : '#FFF' }]} />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
       </ScrollView>
 
@@ -257,6 +305,37 @@ const styles = StyleSheet.create({
   },
   colorValue: {
     color: colors.textMuted, fontWeight: 'normal',
+  },
+  colorsRow: {
+    flexDirection: 'row',
+    gap: spacing[3],
+    marginTop: spacing[1],
+  },
+  colorCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  colorCircleActive: {
+    borderColor: colors.primary,
+  },
+  colorCircleWhiteBorder: {
+    borderWidth: 1.5,
+    borderColor: '#E5E5E5',
+  },
+  colorDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   bottomBarWrapper: {
     position: 'absolute',

@@ -13,6 +13,8 @@ import { useAppSelector } from '../../../shared/hooks/useAppSelector';
 import { toggleWishlist, selectIsWishlisted } from '../../wishlist/store/wishlistSlice';
 import { setSelectedProduct } from '../../products/store/productSlice';
 import { selectUser } from '../../auth/store/authSlice';
+import { useUpdateProfileMutation } from '../../auth/api/authApi';
+import MapSelectorModal from '../../../shared/components/MapSelectorModal';
 import { colors } from '../../../theme/colors';
 import { spacing, layout } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
@@ -62,11 +64,33 @@ const HomeScreen = () => {
   const { data: categoriesData } = useGetCategoriesQuery();
   const [activeFilter, setActiveFilter] = useState('All');
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
+  const [mapVisible, setMapVisible] = useState(false);
+  const [updateProfile] = useUpdateProfileMutation();
 
   const wishlistItems = useAppSelector(state => state.wishlist.items);
 
   const products = productsData?.products ?? [];
   const categories = categoriesData?.categories ?? [];
+
+  // Filter and sort products based on selected pill
+  const getFilteredProducts = () => {
+    let list = [...products];
+    if (activeFilter === 'Man') {
+      return list.filter(p => p.gender === 'Men');
+    }
+    if (activeFilter === 'Women') {
+      return list.filter(p => p.gender === 'Women');
+    }
+    if (activeFilter === 'Newest') {
+      return list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+    if (activeFilter === 'Popular') {
+      return list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    }
+    return list;
+  };
+
+  const filteredProducts = getFilteredProducts();
 
   const handleProductPress = (item) => {
     dispatch(setSelectedProduct(item));
@@ -74,6 +98,14 @@ const HomeScreen = () => {
   };
 
   const isProductWishlisted = (id) => wishlistItems.some(i => i._id === id);
+
+  const handleLocationConfirm = async (data) => {
+    try {
+      await updateProfile({ location: data.shortAddress || data.address }).unwrap();
+    } catch (err) {
+      console.log('Failed to update home location:', err);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -84,14 +116,14 @@ const HomeScreen = () => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          <TouchableOpacity onPress={() => setMapVisible(true)} activeOpacity={0.8}>
             <Text style={styles.greeting}>Location</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <MapPin size={16} color={colors.primary} fill={colors.primary} style={{ marginRight: 4 }} />
               <Text style={styles.tagline}>{user?.location ?? 'New York, USA'}</Text>
               <ChevronDown size={16} color={colors.text} style={{ marginLeft: 4 }} />
             </View>
-          </View>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('ProfileTab')}>
             <Bell size={20} color={colors.text} fill={colors.text} />
             <View style={styles.bellDot} />
@@ -222,7 +254,7 @@ const HomeScreen = () => {
           </ScrollView>
 
           <View style={styles.grid}>
-            {products.map((item) => (
+            {filteredProducts.map((item) => (
               <View key={item._id} style={styles.gridItem}>
                 <ProductCard
                   item={item}
@@ -235,6 +267,12 @@ const HomeScreen = () => {
           </View>
         </View>
       </ScrollView>
+
+      <MapSelectorModal
+        visible={mapVisible}
+        onClose={() => setMapVisible(false)}
+        onConfirm={handleLocationConfirm}
+      />
     </View>
   );
 };

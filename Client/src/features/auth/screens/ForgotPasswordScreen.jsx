@@ -35,7 +35,7 @@ const ForgotPasswordScreen = () => {
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.heading}>Forgot Password? 🔑</Text>
-        <Text style={styles.sub}>Enter your email and we'll send you an OTP to reset your password.</Text>
+        <Text style={styles.sub}>{"Enter your email and we'll send you an OTP to reset your password."}</Text>
         <Controller control={control} name="email" rules={{ validate: isEmail }}
           render={({ field: { onChange, onBlur, value } }) => (
             <Input label="Email Address" placeholder="you@email.com" value={value} onChangeText={onChange} onBlur={onBlur} keyboardType="email-address" autoCapitalize="none" error={errors.email?.message} />

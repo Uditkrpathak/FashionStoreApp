@@ -53,15 +53,14 @@ const MyOrdersScreen = () => {
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => {
             const firstItem = item.items?.[0] || {};
-            const product = firstItem.product || {};
-            const imageUri = product.images?.[0] || 'https://via.placeholder.com/100';
+            const imageUri = firstItem.image || 'https://via.placeholder.com/100';
             
             return (
               <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('OrderDetail', { orderId: item._id })}>
                 <View style={styles.cardContent}>
                   <Image source={{ uri: imageUri }} style={styles.image} />
                   <View style={styles.details}>
-                    <Text style={styles.productName} numberOfLines={1}>{product.title || 'Product Name'}</Text>
+                    <Text style={styles.productName} numberOfLines={1}>{firstItem.title || 'Product Name'}</Text>
                     <Text style={styles.metaText}>Color: {firstItem.color || 'N/A'}  |  Size: {firstItem.size || 'N/A'}</Text>
                     
                     <View style={styles.statusRow}>
@@ -79,7 +78,7 @@ const MyOrdersScreen = () => {
                       <Text style={styles.actionBtnText}>Track Order</Text>
                     </TouchableOpacity>
                   ) : tab === 'Completed' ? (
-                    <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('WriteReview', { productId: product._id })}>
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('WriteReview', { productId: firstItem.productId })}>
                       <Text style={styles.actionBtnText}>Leave Review</Text>
                     </TouchableOpacity>
                   ) : null}

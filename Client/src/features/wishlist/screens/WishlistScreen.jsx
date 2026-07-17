@@ -21,6 +21,32 @@ const WishlistScreen = () => {
 
   const filterOptions = ['All', 'Jacket', 'Shirt', 'Pant', 'T-Shirt'];
 
+  const getFilteredItems = () => {
+    if (activeFilter === 'All') return items;
+    
+    return items.filter(item => {
+      const catName = (item.category?.name || '').toLowerCase();
+      const title = (item.title || '').toLowerCase();
+      
+      if (activeFilter === 'Jacket') {
+        return catName === 'jacket' || title.includes('jacket') || title.includes('hoodie') || title.includes('cardigan') || title.includes('suit') || title.includes('blazer');
+      }
+      if (activeFilter === 'Shirt') {
+        return catName === 'shirt' || (title.includes('shirt') && !title.includes('t-shirt'));
+      }
+      if (activeFilter === 'T-Shirt') {
+        return catName === 't-shirt' || title.includes('tee') || title.includes('t-shirt');
+      }
+      if (activeFilter === 'Pant') {
+        return catName === 'pant' || catName === 'jeans' || catName === 'trousers' || 
+               title.includes('pant') || title.includes('jeans') || title.includes('joggers') || title.includes('chinos') || title.includes('tights') || title.includes('shorts');
+      }
+      return false;
+    });
+  };
+
+  const filteredItems = getFilteredItems();
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -53,7 +79,7 @@ const WishlistScreen = () => {
         />
       ) : (
         <FlatList
-          data={items}
+          data={filteredItems}
           numColumns={2}
           keyExtractor={(i) => i.productId}
           renderItem={({ item }) => (

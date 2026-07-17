@@ -11,7 +11,7 @@ const DURATION = 2800;
 
 export const ToastProvider = ({ children }) => {
   const [toast, setToast]   = useState(null);
-  const opacity             = useRef(new Animated.Value(0)).current;
+  const [opacity]           = useState(() => new Animated.Value(0));
   const timerRef            = useRef(null);
 
   const showToast = useCallback((message, type = 'info') => {

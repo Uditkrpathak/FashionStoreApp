@@ -134,7 +134,7 @@ const EReceiptScreen = () => {
           <View style={styles.barcodeContainer}>
             <View style={styles.barcodeMock}>
               {[...Array(30)].map((_, i) => (
-                <View key={i} style={[styles.bar, { width: Math.max(1, Math.random() * 4) }]} />
+                <View key={i} style={[styles.bar, { width: (i % 4) + 1 }]} />
               ))}
             </View>
           </View>

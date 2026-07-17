@@ -1,8 +1,8 @@
 // src/features/profile/screens/HelpCenterScreen.jsx
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Search, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { Search, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react-native';
 import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
@@ -67,8 +67,34 @@ const HelpCenterScreen = () => {
         )}
         {tab === 'Contact Us' && (
           <View style={styles.contactContainer}>
-            <Text style={styles.contactText}>For further assistance, please reach out to us at:</Text>
-            <Text style={styles.contactEmail}>support@fashionapp.com</Text>
+            <View style={styles.supportCard}>
+              <View style={styles.supportHeader}>
+                <View style={styles.avatarWrapper}>
+                  <Image
+                    source={{ uri: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=150&auto=format&fit=crop' }}
+                    style={styles.supportAvatar}
+                  />
+                  <View style={styles.onlineBadge} />
+                </View>
+                <View style={styles.supportInfo}>
+                  <Text style={styles.supportTitle}>Live Chat Support</Text>
+                  <Text style={styles.supportAgentName}>Angie Brekke (Online)</Text>
+                  <Text style={styles.supportSub}>Ready to assist you with order, delivery, or product queries</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.chatBtn}
+                onPress={() => navigation.navigate('ChatSupport')}
+              >
+                <MessageSquare size={18} color={colors.white} style={{ marginRight: 8 }} />
+                <Text style={styles.chatBtnText}>Start Conversation</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.emailContainer}>
+              <Text style={styles.contactText}>For less urgent inquiries, email us at:</Text>
+              <Text style={styles.contactEmail}>support@fashionapp.com</Text>
+            </View>
           </View>
         )}
       </ScrollView>
@@ -129,9 +155,86 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: '#F0F0F0', marginBottom: spacing[3] },
   faqAnswer: { ...textStyles.body2, color: colors.textMuted, lineHeight: 22 },
   
-  contactContainer: { alignItems: 'center', marginTop: spacing[10] },
-  contactText: { ...textStyles.body1, color: colors.textMuted, textAlign: 'center', marginBottom: spacing[2] },
-  contactEmail: { ...textStyles.h5, color: colors.primary, fontWeight: '700' },
+  contactContainer: { paddingVertical: spacing[4] },
+  supportCard: {
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    padding: spacing[5],
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 3,
+    marginBottom: spacing[6],
+  },
+  supportHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[4],
+    marginBottom: spacing[5],
+  },
+  avatarWrapper: {
+    position: 'relative',
+  },
+  supportAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F8F8F8',
+  },
+  onlineBadge: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#4CAF50',
+    borderWidth: 2,
+    borderColor: colors.white,
+  },
+  supportInfo: {
+    flex: 1,
+  },
+  supportTitle: {
+    ...textStyles.body1,
+    fontWeight: '800',
+    color: colors.text,
+    marginBottom: 2,
+  },
+  supportAgentName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
+    marginBottom: 4,
+  },
+  supportSub: {
+    fontSize: 12,
+    color: colors.textMuted,
+    lineHeight: 16,
+  },
+  chatBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#704F38', // primary brown
+    borderRadius: 20,
+    paddingVertical: spacing[3.5],
+  },
+  chatBtnText: {
+    ...textStyles.body2,
+    color: colors.white,
+    fontWeight: '700',
+  },
+  emailContainer: {
+    alignItems: 'center',
+    marginTop: spacing[4],
+    gap: 4,
+  },
+  contactText: { ...textStyles.body2, color: colors.textMuted, textAlign: 'center' },
+  contactEmail: { ...textStyles.body1, color: colors.primary, fontWeight: '700' },
 });
 
 export default HelpCenterScreen;

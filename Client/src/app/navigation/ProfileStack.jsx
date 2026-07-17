@@ -12,6 +12,7 @@ import NotificationsScreen  from '../../features/notifications/screens/Notificat
 import NotifSettingsScreen  from '../../features/notifications/screens/NotifSettingsScreen';
 import PrivacyPolicyScreen  from '../../features/profile/screens/PrivacyPolicyScreen';
 import HelpCenterScreen     from '../../features/profile/screens/HelpCenterScreen';
+import ChatSupportScreen     from '../../features/profile/screens/ChatSupportScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,6 +28,7 @@ const ProfileStack = () => (
     <Stack.Screen name="Settings"       component={SettingsScreen} />
     <Stack.Screen name="PrivacyPolicy"  component={PrivacyPolicyScreen} />
     <Stack.Screen name="HelpCenter"     component={HelpCenterScreen} />
+    <Stack.Screen name="ChatSupport"    component={ChatSupportScreen} />
   </Stack.Navigator>
 );
 

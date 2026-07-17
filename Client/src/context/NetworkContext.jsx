@@ -10,7 +10,7 @@ const NetworkContext = createContext({ isOnline: true });
 
 export const NetworkProvider = ({ children }) => {
   const [isOnline, setIsOnline] = useState(true);
-  const slideAnim = React.useRef(new Animated.Value(-50)).current;
+  const [slideAnim] = useState(() => new Animated.Value(-50));
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {

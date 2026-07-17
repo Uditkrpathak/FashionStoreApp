@@ -1,5 +1,5 @@
 // src/features/checkout/screens/OrderSuccessScreen.jsx
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { useAppSelector } from '../../../shared/hooks/useAppSelector';
@@ -12,8 +12,8 @@ import { textStyles } from '../../../theme/typography';
 const OrderSuccessScreen = () => {
   const navigation = useNavigation();
   const activeOrder = useAppSelector(selectActiveOrder);
-  const scale = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const [scale] = useState(() => new Animated.Value(0));
+  const [opacity] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     Animated.sequence([

@@ -22,6 +22,10 @@ import Badge from '../../shared/components/Badge';
 import { colors } from '../../theme/colors';
 import { spacing, layout, shadows } from '../../theme/spacing';
 import { useAppSelector } from '../../shared/hooks/useAppSelector';
+import { useGetMeQuery } from '../../features/auth/api/authApi';
+import { useGetCartQuery, useGetAddressesQuery } from '../../features/cart/api/cartApi';
+import FilterScreen from '../../features/search/screens/FilterScreen';
+import SortScreen from '../../features/search/screens/SortScreen';
 
 const Tab = createTabNav();
 const Stack = createNativeStackNavigator();
@@ -96,7 +100,8 @@ const BottomTabs = () => {
         name="CartTab"
         component={CartStack}
         options={{
-          tabBarIcon: (props) => <TabIcon IconComponent={ShoppingBag} count={cartTotalQty} {...props} />
+          tabBarIcon: (props) => <TabIcon IconComponent={ShoppingBag} count={cartTotalQty} {...props} />,
+          tabBarStyle: { display: 'none' }
         }}
       />
       <Tab.Screen
@@ -108,17 +113,22 @@ const BottomTabs = () => {
   );
 };
 
-import { useGetMeQuery } from '../../features/auth/api/authApi';
+
 
 // ── App root: Tabs + Modal stack ──────────────────────────────────────────────
 const AppNavigator = () => {
   // Hydrate user profile from the server on app mount
   useGetMeQuery();
+  // Hydrate cart and addresses from the server on app mount
+  useGetCartQuery();
+  useGetAddressesQuery();
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Tabs" component={BottomTabs} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <Stack.Screen name="Filter" component={FilterScreen} options={{ presentation: 'modal' }} />
+      <Stack.Screen name="Sort" component={SortScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="Modals" component={ModalStack}
         options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
     </Stack.Navigator>

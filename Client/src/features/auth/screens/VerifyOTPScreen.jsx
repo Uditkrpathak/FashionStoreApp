@@ -82,7 +82,7 @@ const VerifyOTPScreen = () => {
       <Button title="Verify" onPress={onSubmit} loading={isLoading} style={styles.btn} />
 
       <TouchableOpacity style={styles.resend}>
-        <Text style={styles.resendText}>Didn't receive? <Text style={{ color: colors.primary }}>Resend</Text></Text>
+        <Text style={styles.resendText}>{"Didn't receive? "}<Text style={{ color: colors.primary }}>Resend</Text></Text>
       </TouchableOpacity>
     </View>
   );

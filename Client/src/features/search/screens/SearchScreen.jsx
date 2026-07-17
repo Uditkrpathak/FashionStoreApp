@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput } from 'r
 import { useNavigation } from '@react-navigation/native';
 import { useAppDispatch, } from '../../../shared/hooks/useAppDispatch';
 import { useAppSelector }  from '../../../shared/hooks/useAppSelector';
-import { setQuery, addRecentSearch, clearRecentSearches, selectRecentSearches } from '../store/searchSlice';
+import { setQuery, addRecentSearch, clearRecentSearches, selectRecentSearches, resetFilters } from '../store/searchSlice';
 import { useDebounce }     from '../../../shared/hooks/useDebounce';
 import { colors }    from '../../../theme/colors';
 import { spacing }   from '../../../theme/spacing';
@@ -18,6 +18,7 @@ const SearchScreen = () => {
 
   const handleSearch = () => {
     if (!input.trim()) return;
+    dispatch(resetFilters()); // Reset filters on new search query
     dispatch(setQuery(input.trim()));
     dispatch(addRecentSearch(input.trim()));
     navigation.navigate('SearchResults');
@@ -58,6 +59,7 @@ const SearchScreen = () => {
             renderItem={({ item }) => (
               <TouchableOpacity style={styles.recentItem} onPress={() => {
                 setInput(item);
+                dispatch(resetFilters()); // Reset filters on recent search click
                 dispatch(setQuery(item));
                 navigation.navigate('SearchResults');
               }}>

@@ -12,6 +12,7 @@ const ProductSchema = new mongoose.Schema({
   rating: { type: Number, default: 4.5 },
   reviewsCount: { type: Number, default: 0 },
   brand: String,
+  gender: String,
   isFeatured: { type: Boolean, default: false }
 }, { timestamps: true });
 

@@ -65,7 +65,6 @@ export const productApi = baseApi.injectEndpoints({
       ],
     }),
   }),
-  overrideExisting: false,
 });
 
 export const {

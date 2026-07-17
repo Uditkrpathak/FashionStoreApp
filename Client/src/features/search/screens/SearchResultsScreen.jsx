@@ -12,6 +12,7 @@ import EmptyState  from '../../../shared/components/EmptyState';
 import { colors }    from '../../../theme/colors';
 import { spacing }   from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
+import { SlidersHorizontal } from 'lucide-react-native';
 
 const SearchResultsScreen = () => {
   const navigation    = useNavigation();
@@ -34,8 +35,8 @@ const SearchResultsScreen = () => {
           <Text style={styles.back}>←</Text>
         </TouchableOpacity>
         <Text style={styles.title}>{`"${query}"`}</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Filter')}>
-          <Text style={styles.filterIcon}>⚙️</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Filter')} style={styles.filterBtn}>
+          <SlidersHorizontal size={18} color={colors.white} />
         </TouchableOpacity>
       </View>
       <View style={styles.sortBar}>
@@ -72,7 +73,14 @@ const styles = StyleSheet.create({
   },
   back:       { fontSize: 22, color: colors.text },
   title:      { ...textStyles.body2, fontWeight: '600', color: colors.text, flex: 1, textAlign: 'center' },
-  filterIcon: { fontSize: 22 },
+  filterBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sortBar: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: spacing[4], paddingVertical: spacing[3],
