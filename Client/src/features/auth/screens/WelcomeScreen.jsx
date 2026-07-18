@@ -17,7 +17,7 @@ const WelcomeScreen = () => {
   }, [isAuthenticated]);
 
   const handleStart = () => {
-    navigation.replace('Onboarding');
+    navigation.replace('SignIn');
   };
 
   const handleSignIn = () => {

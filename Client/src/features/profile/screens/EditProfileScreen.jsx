@@ -35,7 +35,12 @@ const EditProfileScreen = () => {
   const [showImageModal, setShowImageModal] = useState(false);
 
   const { control, handleSubmit, formState: { errors } } = useForm({
-    defaultValues: { name: user?.name ?? '', email: user?.email ?? '', phone: user?.phone ?? '' },
+    defaultValues: { 
+      name: user?.name ?? '', 
+      email: user?.email ?? '', 
+      phone: user?.phone ?? '',
+      gender: user?.gender ?? ''
+    },
   });
 
   const handlePickImage = async () => {
@@ -139,6 +144,29 @@ const EditProfileScreen = () => {
             render={({ field: { onChange, onBlur, value } }) => (
               <Input label="Phone" value={value} onChangeText={onChange} onBlur={onBlur} keyboardType="phone-pad" />
             )} />
+
+          <Text style={styles.fieldLabel}>Gender</Text>
+          <Controller 
+            control={control} 
+            name="gender"
+            render={({ field: { onChange, value } }) => (
+              <View style={styles.genderRow}>
+                {['male', 'female', 'other'].map((g) => (
+                  <TouchableOpacity 
+                    key={g} 
+                    style={[styles.genderChip, value === g && styles.genderChipActive]}
+                    onPress={() => onChange(g)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.genderChipText, value === g && styles.genderChipTextActive]}>
+                      {g.charAt(0).toUpperCase() + g.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )} 
+          />
+
           <Button title="Save Changes" onPress={handleSubmit(onSubmit)} loading={isLoading} style={styles.btn} />
         </ScrollView>
 
@@ -228,6 +256,44 @@ const styles = StyleSheet.create({
   presetGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[3], justifyContent: 'space-between' },
   presetAvatarWrapper: { width: '30%', aspectRatio: 1, borderRadius: 12, overflow: 'hidden', backgroundColor: '#F0F0F0' },
   presetAvatar: { width: '100%', height: '100%' },
+
+  fieldLabel: {
+    ...textStyles.caption,
+    color: colors.text,
+    fontWeight: '700',
+    marginBottom: spacing[2],
+    marginTop: spacing[3],
+    paddingLeft: spacing[1],
+  },
+  genderRow: {
+    flexDirection: 'row',
+    gap: spacing[3],
+    marginBottom: spacing[4],
+    paddingHorizontal: spacing[1],
+  },
+  genderChip: {
+    flex: 1,
+    paddingVertical: spacing[3],
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#ECECEC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.white,
+  },
+  genderChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + '12',
+  },
+  genderChipText: {
+    ...textStyles.body2,
+    color: colors.textMuted,
+    fontWeight: '600',
+  },
+  genderChipTextActive: {
+    color: colors.primary,
+    fontWeight: '800',
+  },
 });
 
 export default EditProfileScreen;

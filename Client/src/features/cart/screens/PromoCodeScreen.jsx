@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Ticket, Percent } from 'lucide-react-native';
+import { Ticket, Percent, ArrowLeft } from 'lucide-react-native';
 import { useAppDispatch } from '../../../shared/hooks/useAppDispatch';
-import { applyCoupon, setCouponError } from '../store/cartSlice';
+import { useAppSelector } from '../../../shared/hooks/useAppSelector';
+import { applyCoupon, setCouponError, selectCartTotalPrice } from '../store/cartSlice';
 import { useApplyCouponRemoteMutation } from '../api/cartApi';
 import { useToast } from '../../../context/ToastContext';
 import { colors } from '../../../theme/colors';
@@ -12,9 +13,9 @@ import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
 
 const COUPONS = [
-  { code: 'SAVE10', title: 'Special 10% Off', desc: 'Special promo only valid today', icon: Percent },
-  { code: 'WELCOME20', title: 'Discount 20% Off', desc: 'Special promo only valid today', icon: Ticket },
-  { code: 'FLAT50', title: 'Discount 50% Off', desc: 'Special promo only valid today', icon: Ticket },
+  { code: 'WELCOME200', title: 'Get 50% OFF', minSpend: 200, icon: Percent },
+  { code: 'CASHBACK12', title: 'Up to ₹100 cashback', minSpend: 150, icon: Ticket },
+  { code: 'FEST2COST', title: 'Get 50% OFF for Combo', minSpend: 400, icon: Ticket },
 ];
 
 const PromoCodeScreen = () => {
@@ -23,13 +24,26 @@ const PromoCodeScreen = () => {
   const { showToast } = useToast();
   const [code, setCode] = useState('');
   const [applyCouponRemote] = useApplyCouponRemoteMutation();
+  const totalPrice = useAppSelector(selectCartTotalPrice);
 
-  const handleApply = async () => {
-    if (!code.trim()) { showToast('Enter a coupon code', 'warning'); return; }
+  const handleApplyCode = async (couponCode) => {
+    const activeCode = couponCode || code;
+    if (!activeCode.trim()) { 
+      showToast('Enter a coupon code', 'warning'); 
+      return; 
+    }
     try {
-      const res = await applyCouponRemote({ code: code.trim() }).unwrap();
-      dispatch(applyCoupon(res.data.coupon));
-      showToast(`${res.data.coupon.code} applied! 🎉`, 'success');
+      // Enforce minimum spend criteria for manual inputs matching the predefined coupons list
+      const matchedCoupon = COUPONS.find(c => c.code.toUpperCase() === activeCode.trim().toUpperCase());
+      if (matchedCoupon && totalPrice < matchedCoupon.minSpend) {
+        const diff = (matchedCoupon.minSpend - totalPrice).toFixed(2);
+        showToast(`Add items worth ₹${diff} more to unlock this coupon`, 'warning');
+        return;
+      }
+
+      const res = await applyCouponRemote({ code: activeCode.trim() }).unwrap();
+      dispatch(applyCoupon(res.coupon));
+      showToast(`${res.coupon.code} applied! 🎉`, 'success');
       navigation.goBack();
     } catch (err) {
       dispatch(setCouponError(err?.data?.message ?? 'Invalid coupon code'));
@@ -41,14 +55,14 @@ const PromoCodeScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.back}>←</Text>
+          <ArrowLeft size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.title}>Apply Promo Code</Text>
-        <View style={{ width: 40 }} />
+        <Text style={styles.title}>Coupon</Text>
+        <View style={{ width: 44 }} />
       </View>
       
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Input box */}
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Custom Input Box */}
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
@@ -58,42 +72,54 @@ const PromoCodeScreen = () => {
             onChangeText={setCode}
             autoCapitalize="characters"
           />
-          <TouchableOpacity style={styles.applyBtn} onPress={handleApply}>
+          <TouchableOpacity style={styles.applyBtn} onPress={() => handleApplyCode()}>
             <Text style={styles.applyBtnText}>Apply</Text>
           </TouchableOpacity>
         </View>
 
+        <Text style={styles.sectionTitle}>Best offers for you</Text>
+
         {/* Coupons List */}
-        {COUPONS.map((coupon, index) => {
+        {COUPONS.map((coupon) => {
           const Icon = coupon.icon;
+          const isUnlocked = totalPrice >= coupon.minSpend;
+          const difference = coupon.minSpend - totalPrice;
+          
           return (
-            <View key={index} style={styles.ticketContainer}>
-              {/* Left Ticket Part */}
-              <View style={styles.ticketLeft}>
-                <View style={styles.iconCircle}>
-                  <Icon size={24} color={colors.primary} />
+            <View key={coupon.code} style={styles.ticketCard}>
+              {/* Left cutout */}
+              <View style={styles.leftCutout} />
+              {/* Right cutout */}
+              <View style={styles.rightCutout} />
+
+              {/* Top content area */}
+              <View style={styles.ticketTop}>
+                <Text style={styles.ticketCode}>{coupon.code}</Text>
+                
+                <Text style={[styles.ticketRequirement, isUnlocked ? styles.unlockedText : styles.lockedText]}>
+                  {isUnlocked ? 'Coupon unlocked!' : `Add items worth ₹${difference} more to unlock`}
+                </Text>
+
+                <View style={styles.badgeRow}>
+                  <View style={styles.badgeIconWrapper}>
+                    <Icon size={12} color="#FFF" />
+                  </View>
+                  <Text style={styles.badgeText}>{coupon.title}</Text>
                 </View>
-                <View style={styles.ticketDetails}>
-                  <Text style={styles.ticketTitle}>{coupon.title}</Text>
-                  <Text style={styles.ticketDesc}>{coupon.desc}</Text>
-                </View>
-              </View>
-              
-              {/* Dashed Line separator */}
-              <View style={styles.dashedLineContainer}>
-                {/* Top cutout */}
-                <View style={[styles.cutout, styles.cutoutTop]} />
-                <View style={styles.dashedLine} />
-                {/* Bottom cutout */}
-                <View style={[styles.cutout, styles.cutoutBottom]} />
               </View>
 
-              {/* Right Ticket Part */}
+              {/* Separator Line */}
+              <View style={styles.separatorLine} />
+
+              {/* Bottom button area */}
               <TouchableOpacity 
-                style={styles.ticketRight}
-                onPress={() => setCode(coupon.code)}
+                style={[styles.ticketBottom, !isUnlocked && styles.disabledBottom]}
+                onPress={() => isUnlocked && handleApplyCode(coupon.code)}
+                disabled={!isUnlocked}
               >
-                <Text style={styles.useText}>Use</Text>
+                <Text style={[styles.bottomBtnText, !isUnlocked && styles.disabledBtnText]}>
+                  {isUnlocked ? 'APPLY CODE' : 'LOCKED'}
+                </Text>
               </TouchableOpacity>
             </View>
           );
@@ -107,17 +133,17 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F8F8' },
   header: { 
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', 
-    padding: spacing[4], paddingTop: spacing[12], 
+    padding: spacing[6], paddingTop: spacing[14], 
     backgroundColor: '#F8F8F8' 
   },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.white, borderWidth: 1, borderColor: '#E0E0E0', alignItems: 'center', justifyContent: 'center' },
-  back:   { fontSize: 18, color: colors.text, fontWeight: '700' },
-  title:  { ...textStyles.h4, color: colors.text, fontWeight: '800' },
-  content:{ padding: spacing[4] },
+  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.white, borderWidth: 1, borderColor: '#EEEEEE', alignItems: 'center', justifyContent: 'center' },
+  title:  { ...textStyles.h3, color: colors.text, fontWeight: '700' },
+  content:{ paddingHorizontal: spacing[6], paddingBottom: spacing[10] },
   inputContainer: { 
     flexDirection: 'row', alignItems: 'center', marginBottom: spacing[8],
     backgroundColor: colors.white, borderRadius: 30,
     paddingLeft: spacing[5], paddingRight: spacing[2], paddingVertical: spacing[2],
+    borderWidth: 1, borderColor: '#EEEEEE'
   },
   input: {
     flex: 1, height: 50,
@@ -129,63 +155,109 @@ const styles = StyleSheet.create({
   },
   applyBtnText: { color: colors.white, fontWeight: '700', fontSize: 16 },
   
-  ticketContainer: {
-    flexDirection: 'row',
+  sectionTitle: {
+    ...textStyles.body1,
+    color: colors.text,
+    fontWeight: '700',
+    marginBottom: spacing[4],
+  },
+
+  ticketCard: {
     backgroundColor: colors.white,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#EAEAEA',
     marginBottom: spacing[4],
+    position: 'relative',
     overflow: 'hidden',
   },
-  ticketLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+  ticketTop: {
     padding: spacing[4],
   },
-  iconCircle: {
-    width: 48, height: 48, borderRadius: 24,
-    backgroundColor: '#F0F0F0',
-    alignItems: 'center', justifyContent: 'center',
-    marginRight: spacing[4]
-  },
-  ticketDetails: {
-    flex: 1,
-  },
-  ticketTitle: { ...textStyles.h5, color: colors.text, fontWeight: '800', marginBottom: spacing[1] },
-  ticketDesc: { ...textStyles.caption, color: colors.textMuted },
-  
-  dashedLineContainer: {
-    width: 20, // space for cutouts and line
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dashedLine: {
-    width: 1,
-    height: '100%',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderStyle: 'dashed',
-    position: 'absolute',
-  },
-  cutout: {
-    width: 20, height: 20,
-    borderRadius: 10,
-    backgroundColor: '#F8F8F8', // matches screen bg
-    position: 'absolute',
-  },
-  cutoutTop: { top: -10 },
-  cutoutBottom: { bottom: -10 },
-  
-  ticketRight: {
-    paddingHorizontal: spacing[6],
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  useText: {
-    color: colors.primary,
+  ticketCode: {
+    ...textStyles.h4,
+    color: colors.text,
     fontWeight: '800',
-    fontSize: 16,
-  }
+    letterSpacing: 0.5,
+  },
+  ticketRequirement: {
+    ...textStyles.caption,
+    marginTop: 4,
+    marginBottom: spacing[3],
+    fontWeight: '500',
+  },
+  lockedText: {
+    color: colors.textMuted,
+  },
+  unlockedText: {
+    color: '#2E7D32',
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  badgeIconWrapper: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#333333',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing[2],
+  },
+  badgeText: {
+    ...textStyles.body2,
+    color: colors.text,
+    fontWeight: '700',
+  },
+  separatorLine: {
+    height: 1,
+    borderWidth: 1,
+    borderColor: '#EAEAEA',
+    borderStyle: 'dashed',
+  },
+  ticketBottom: {
+    backgroundColor: '#F5F5F5',
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disabledBottom: {
+    backgroundColor: '#FAFAFA',
+  },
+  bottomBtnText: {
+    ...textStyles.body2,
+    color: colors.text,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  disabledBtnText: {
+    color: colors.textMuted,
+  },
+  leftCutout: {
+    position: 'absolute',
+    left: -10,
+    bottom: 38, // center aligned with separator line
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#F8F8F8',
+    borderWidth: 1,
+    borderColor: '#EAEAEA',
+    zIndex: 10,
+  },
+  rightCutout: {
+    position: 'absolute',
+    right: -10,
+    bottom: 38, // center aligned with separator line
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#F8F8F8',
+    borderWidth: 1,
+    borderColor: '#EAEAEA',
+    zIndex: 10,
+  },
 });
 
 export default PromoCodeScreen;

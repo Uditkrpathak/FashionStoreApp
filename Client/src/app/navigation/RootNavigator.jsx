@@ -11,6 +11,8 @@ import { getTokens }           from '../../shared/utils/storage';
 import { useAppDispatch }      from '../../shared/hooks/useAppDispatch';
 import { useAppSelector }      from '../../shared/hooks/useAppSelector';
 import { setUser, selectIsAuthenticated } from '../../features/auth/store/authSlice';
+import { useTheme }            from '../../context/ThemeContext';
+import { StatusBar }           from 'expo-status-bar';
 
 import AuthNavigator  from './AuthNavigator';
 import AppNavigator   from './AppNavigator';
@@ -22,6 +24,7 @@ const RootNavigator = () => {
   const dispatch         = useAppDispatch();
   const isAuthenticated  = useAppSelector(selectIsAuthenticated);
   const [isChecking, setIsChecking] = useState(true);
+  const { isDark }       = useTheme();
 
   useEffect(() => {
     // Check secure storage for existing tokens on app start
@@ -51,13 +54,16 @@ const RootNavigator = () => {
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {isAuthenticated ? (
-        <Stack.Screen name="App"  component={AppNavigator} />
-      ) : (
-        <Stack.Screen name="Auth" component={AuthNavigator} />
-      )}
-    </Stack.Navigator>
+    <>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {isAuthenticated ? (
+          <Stack.Screen name="App"  component={AppNavigator} />
+        ) : (
+          <Stack.Screen name="Auth" component={AuthNavigator} />
+        )}
+      </Stack.Navigator>
+    </>
   );
 };
 

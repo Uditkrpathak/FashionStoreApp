@@ -140,8 +140,12 @@ export const selectCouponError    = (state) => state.cart.couponError;
 export const selectDiscountedTotal = (state) => {
   const { totalPrice, coupon } = state.cart;
   if (!coupon) return totalPrice;
-  if (coupon.type === 'percent') return totalPrice * (1 - coupon.discount / 100);
-  return Math.max(0, totalPrice - coupon.discount);
+  const type = coupon.type || coupon.discountType;
+  const discount = coupon.discount !== undefined ? coupon.discount : coupon.discountValue;
+  if (type === 'percent' || type === 'percentage') {
+    return totalPrice * (1 - (discount || 0) / 100);
+  }
+  return Math.max(0, totalPrice - (discount || 0));
 };
 
 export default cartSlice.reducer;

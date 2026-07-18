@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch } from 're
 import { useNavigation } from '@react-navigation/native';
 import { ChevronRight } from 'lucide-react-native';
 import { useToast } from '../../../context/ToastContext';
+import { useTheme } from '../../../context/ThemeContext';
 import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
@@ -11,9 +12,9 @@ import { textStyles } from '../../../theme/typography';
 const SettingsScreen = () => {
   const navigation = useNavigation();
   const { showToast } = useToast();
+  const { isDark, toggleTheme } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [location, setLocation] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
 
   const handleToggle = (setter, name) => (val) => {
     setter(val);
@@ -64,8 +65,8 @@ const SettingsScreen = () => {
           <View style={styles.menuItem}>
             <Text style={styles.menuLabel}>Dark Mode</Text>
             <Switch
-              value={darkMode}
-              onValueChange={handleToggle(setDarkMode, 'Dark Mode')}
+              value={isDark}
+              onValueChange={toggleTheme}
               trackColor={{ false: '#E0E0E0', true: colors.primary }}
               thumbColor={colors.white}
             />

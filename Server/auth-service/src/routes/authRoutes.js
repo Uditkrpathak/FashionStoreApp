@@ -1,24 +1,33 @@
 import express from 'express';
-import { login, register, getMe, updateProfile, verifyOtp, forgotPassword, resetPassword, addAddress, updateAddress, removeAddress, addToWishlist, removeFromWishlist, refreshToken } from '../controllers/authController.js';
+import { 
+  login, register, getMe, updateProfile, verifyOtp, 
+  forgotPassword, resetPassword, addAddress, updateAddress, 
+  removeAddress, addToWishlist, removeFromWishlist, refreshToken 
+} from '../controllers/authController.js';
+import { 
+  validateRequest, loginRules, registerRules, verifyOtpRules, 
+  forgotPasswordRules, resetPasswordRules, updateProfileRules, 
+  addressRules, updateAddressRules, wishlistRules 
+} from '../middleware/validation.js';
 
 const router = express.Router();
 
-router.post('/login', login);
-router.post('/register', register);
-router.post('/verify-otp', verifyOtp);
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
+router.post('/login', loginRules, validateRequest, login);
+router.post('/register', registerRules, validateRequest, register);
+router.post('/verify-otp', verifyOtpRules, validateRequest, verifyOtp);
+router.post('/forgot-password', forgotPasswordRules, validateRequest, forgotPassword);
+router.post('/reset-password', resetPasswordRules, validateRequest, resetPassword);
 router.post('/refresh-token', refreshToken);
 router.get('/me', getMe);
-router.patch('/profile', updateProfile);
+router.patch('/profile', updateProfileRules, validateRequest, updateProfile);
 
 // Addresses
-router.post('/addresses', addAddress);
-router.put('/addresses/:addressId', updateAddress);
+router.post('/addresses', addressRules, validateRequest, addAddress);
+router.put('/addresses/:addressId', updateAddressRules, validateRequest, updateAddress);
 router.delete('/addresses/:addressId', removeAddress);
 
 // Wishlist
-router.post('/wishlist', addToWishlist);
+router.post('/wishlist', wishlistRules, validateRequest, addToWishlist);
 router.delete('/wishlist/:productId', removeFromWishlist);
 
 export default router;

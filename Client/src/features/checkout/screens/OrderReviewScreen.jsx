@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAppDispatch } from '../../../shared/hooks/useAppDispatch';
 import { useAppSelector } from '../../../shared/hooks/useAppSelector';
 import { selectCheckout, resetCheckout } from '../store/checkoutSlice';
-import { selectCartItems, selectDiscountedTotal, clearCart } from '../../cart/store/cartSlice';
+import { selectCartItems, selectDiscountedTotal, selectCoupon, clearCart } from '../../cart/store/cartSlice';
 import { setActiveOrder } from '../../orders/store/orderSlice';
 import { usePlaceOrderMutation, useVerifyPaymentMutation } from '../../orders/api/orderApi';
 import { useToast } from '../../../context/ToastContext';
@@ -23,6 +23,7 @@ const OrderReviewScreen = () => {
   const checkout = useAppSelector(selectCheckout);
   const items = useAppSelector(selectCartItems);
   const total = useAppSelector(selectDiscountedTotal);
+  const coupon = useAppSelector(selectCoupon);
   const [placeOrder, { isLoading }] = usePlaceOrderMutation();
   const [verifyPayment] = useVerifyPaymentMutation();
 
@@ -48,6 +49,7 @@ const OrderReviewScreen = () => {
         shippingAddress: checkout.selectedAddress,
         deliveryOption: checkout.deliveryOption,
         paymentMethod: checkout.paymentMethod,
+        coupon,
       }).unwrap();
 
       const { order, razorpayOrderId } = res;

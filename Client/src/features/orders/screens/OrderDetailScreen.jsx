@@ -23,6 +23,7 @@ const OrderDetailScreen = () => {
   }
 
   const canCancel = ['placed', 'confirmed'].includes(order.orderStatus);
+  const canTrack = !['cancelled', 'returned'].includes(order.orderStatus);
 
   return (
     <View style={styles.container}>
@@ -58,7 +59,9 @@ const OrderDetailScreen = () => {
       </ScrollView>
       <View style={styles.footer}>
         <View style={styles.actionRow}>
-          <Button title="Track Order" onPress={() => navigation.navigate('TrackOrder', { orderId })} style={{ flex: 1 }} />
+          {canTrack && (
+            <Button title="Track Order" onPress={() => navigation.navigate('TrackOrder', { orderId })} style={{ flex: 1 }} />
+          )}
           {canCancel && (
             <Button title="Cancel" variant="outline" onPress={() => navigation.navigate('CancelReturn', { orderId, type: 'cancel' })} style={{ flex: 1 }} />
           )}

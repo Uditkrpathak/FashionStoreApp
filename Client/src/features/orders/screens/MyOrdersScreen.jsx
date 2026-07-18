@@ -1,7 +1,6 @@
-// src/features/orders/screens/MyOrdersScreen.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useGetOrdersQuery } from '../api/orderApi';
 import EmptyState from '../../../shared/components/EmptyState';
 import { OrderCardSkeleton } from '../../../shared/components/SkeletonLoader';
@@ -19,9 +18,16 @@ const STATUS_MAP = {
 
 const MyOrdersScreen = () => {
   const navigation = useNavigation();
+  const isFocused = useIsFocused();
   const [tab, setTab] = useState('Active');
-  const { data, isLoading } = useGetOrdersQuery({ status: STATUS_MAP[tab].join(',') });
+  const { data, isLoading, refetch } = useGetOrdersQuery({ status: STATUS_MAP[tab].join(',') });
   const orders = data?.orders ?? [];
+
+  useEffect(() => {
+    if (isFocused) {
+      refetch();
+    }
+  }, [isFocused]);
 
   return (
     <View style={styles.container}>
@@ -72,17 +78,25 @@ const MyOrdersScreen = () => {
                   </View>
                 </View>
                 
-                <View style={styles.cardFooter}>
-                  {tab === 'Active' ? (
-                    <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('TrackOrder', { orderId: item._id })}>
-                      <Text style={styles.actionBtnText}>Track Order</Text>
-                    </TouchableOpacity>
-                  ) : tab === 'Completed' ? (
-                    <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('WriteReview', { productId: firstItem.productId })}>
-                      <Text style={styles.actionBtnText}>Leave Review</Text>
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
+                {tab !== 'Cancelled' && (
+                  <View style={styles.cardFooter}>
+                    {tab === 'Active' ? (
+                      <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('TrackOrder', { orderId: item._id })}>
+                        <Text style={styles.actionBtnText}>Track Order</Text>
+                      </TouchableOpacity>
+                    ) : tab === 'Completed' ? (
+                      firstItem.userRating ? (
+                        <View style={styles.ratingBadge}>
+                          <Text style={styles.ratingBadgeText}>Rated: {firstItem.userRating} ★</Text>
+                        </View>
+                      ) : (
+                        <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('WriteReview', { productId: firstItem.productId })}>
+                          <Text style={styles.actionBtnText}>Leave Review</Text>
+                        </TouchableOpacity>
+                      )
+                    ) : null}
+                  </View>
+                )}
               </TouchableOpacity>
             )
           }}
@@ -139,6 +153,19 @@ const styles = StyleSheet.create({
     borderRadius: 20 
   },
   actionBtnText: { color: colors.white, fontWeight: '700', fontSize: 14 },
+  ratingBadge: {
+    backgroundColor: '#F0EBE5',
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[1.5],
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  ratingBadgeText: {
+    color: colors.primary,
+    fontWeight: '700',
+    fontSize: 13,
+  },
 });
 
 export default MyOrdersScreen;

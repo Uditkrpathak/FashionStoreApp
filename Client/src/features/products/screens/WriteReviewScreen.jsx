@@ -1,6 +1,6 @@
 // src/features/products/screens/WriteReviewScreen.jsx
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Platform, Image } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Camera } from 'lucide-react-native';
 import { useAddReviewMutation, useGetProductByIdQuery } from '../api/productApi';
@@ -62,7 +62,11 @@ const WriteReviewScreen = () => {
           <ActivityIndicator style={{ marginVertical: 20 }} color={colors.primary} />
         ) : product ? (
           <View style={styles.productCard}>
-            <View style={styles.productImagePlaceholder} />
+            {product.images?.[0] ? (
+              <Image source={{ uri: product.images[0] }} style={styles.productImage} />
+            ) : (
+              <View style={styles.productImagePlaceholder} />
+            )}
             <View style={styles.productInfo}>
               <Text style={styles.productName}>{product.title}</Text>
               <Text style={styles.productMeta}>Size : XL || Qty : 1pcs</Text>
@@ -140,6 +144,7 @@ const styles = StyleSheet.create({
 
   productCard: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing[6] },
   productImagePlaceholder: { width: 80, height: 80, borderRadius: 12, backgroundColor: '#D9D9D9', marginRight: spacing[4] },
+  productImage: { width: 80, height: 80, borderRadius: 12, marginRight: spacing[4], backgroundColor: '#F0F0F0' },
   productInfo: { flex: 1 },
   productName: { ...textStyles.h5, color: colors.text, fontWeight: '700', marginBottom: 2 },
   productMeta: { ...textStyles.caption, color: colors.textMuted, marginBottom: spacing[2] },

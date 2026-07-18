@@ -1,10 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, FlatList, Animated,
   TouchableOpacity, Dimensions, Image
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { setOnboardingSeen } from '../../../shared/utils/storage';
+import { setOnboardingSeen, getOnboardingSeen } from '../../../shared/utils/storage';
 import Button    from '../../../shared/components/Button';
 import { colors }    from '../../../theme/colors';
 import { spacing, layout }   from '../../../theme/spacing';
@@ -43,7 +43,7 @@ const OnboardingScreen = () => {
       flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
     } else {
       await setOnboardingSeen();
-      navigation.replace('SignIn');
+      navigation.replace('Welcome');
     }
   };
 
@@ -55,7 +55,7 @@ const OnboardingScreen = () => {
 
   const handleSkip = async () => {
     await setOnboardingSeen();
-    navigation.replace('SignIn');
+    navigation.replace('Welcome');
   };
 
   return (

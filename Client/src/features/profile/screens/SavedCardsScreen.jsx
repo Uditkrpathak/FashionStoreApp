@@ -5,12 +5,16 @@ import { useNavigation } from '@react-navigation/native';
 import { Plus, CheckCircle2 } from 'lucide-react-native';
 // Note: We use FontAwesome for brand icons if possible, or simple text fallbacks for mock.
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useAppSelector } from '../../../shared/hooks/useAppSelector';
+import { selectUser } from '../../auth/store/authSlice';
 import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
 
 const SavedCardsScreen = () => {
   const navigation = useNavigation();
+  const user = useAppSelector(selectUser);
+  const cards = user?.savedCards ?? [];
 
   return (
     <View style={styles.container}>
@@ -25,16 +29,29 @@ const SavedCardsScreen = () => {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.sectionTitle}>Credit & Debit Card</Text>
 
-        {/* Saved Card */}
-        <TouchableOpacity style={styles.cardItem}>
-          <View style={styles.cardIconBox}>
-            <FontAwesome5 name="cc-visa" size={24} color={colors.primary} />
+        {/* Saved Cards List */}
+        {cards.length === 0 ? (
+          <View style={styles.emptyCardsBox}>
+            <Text style={styles.emptyCardsText}>No saved cards found. Add one below!</Text>
           </View>
-          <View style={styles.cardContent}>
-            <Text style={styles.cardTitle}>Visa •••• 1234</Text>
-          </View>
-          <CheckCircle2 size={24} color={colors.primary} />
-        </TouchableOpacity>
+        ) : (
+          cards.map((card, idx) => (
+            <TouchableOpacity key={card._id || idx} style={styles.cardItem} activeOpacity={0.9}>
+              <View style={styles.cardIconBox}>
+                <FontAwesome5 
+                  name={card.brand.toLowerCase() === 'visa' ? 'cc-visa' : card.brand.toLowerCase() === 'mastercard' ? 'cc-mastercard' : 'credit-card'} 
+                  size={24} 
+                  color={colors.primary} 
+                />
+              </View>
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle}>{card.brand} •••• {card.last4}</Text>
+                <Text style={styles.cardExpiry}>Expires {card.expMonth.toString().padStart(2, '0')}/{card.expYear}</Text>
+              </View>
+              <CheckCircle2 size={24} color={colors.primary} />
+            </TouchableOpacity>
+          ))
+        )}
 
         {/* Add Card Button */}
         <TouchableOpacity style={styles.addCardBtn} onPress={() => navigation.navigate('Modals', { screen: 'AddCard' })}>
@@ -71,6 +88,20 @@ const styles = StyleSheet.create({
   back: { fontSize: 18, color: colors.text, fontWeight: '700' },
   title: { ...textStyles.h4, color: colors.text, fontWeight: '800' },
   content: { padding: spacing[6] },
+  emptyCardsBox: {
+    padding: spacing[8],
+    alignItems: 'center',
+    backgroundColor: '#F8F8F8',
+    borderRadius: 16,
+    marginBottom: spacing[6],
+    borderWidth: 1,
+    borderColor: '#EFEFEF',
+    borderStyle: 'dashed',
+  },
+  emptyCardsText: {
+    ...textStyles.body2,
+    color: colors.textMuted,
+  },
 
   sectionTitle: { ...textStyles.h5, color: colors.text, fontWeight: '800', marginBottom: spacing[4] },
   sectionTitleOptions: { ...textStyles.h5, color: colors.text, fontWeight: '800', marginBottom: spacing[4], marginTop: spacing[6] },

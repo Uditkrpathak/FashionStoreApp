@@ -6,6 +6,7 @@ import { useAppSelector } from '../../../shared/hooks/useAppSelector';
 import { useAppDispatch } from '../../../shared/hooks/useAppDispatch';
 import { selectQuery, selectActiveFilters, selectSortBy } from '../store/searchSlice';
 import { useSearchProductsQuery } from '../../products/api/productApi';
+import { toggleWishlist, selectWishlistItems } from '../../wishlist/store/wishlistSlice';
 import { setSelectedProduct }     from '../../products/store/productSlice';
 import ProductCard from '../../../shared/components/ProductCard';
 import EmptyState  from '../../../shared/components/EmptyState';
@@ -20,8 +21,12 @@ const SearchResultsScreen = () => {
   const query         = useAppSelector(selectQuery);
   const activeFilters = useAppSelector(selectActiveFilters);
   const sortBy        = useAppSelector(selectSortBy);
+  const wishlistItems = useAppSelector(selectWishlistItems);
+
   const { data, isLoading } = useSearchProductsQuery({ q: query, ...activeFilters, sort: sortBy });
   const products = data?.products ?? [];
+
+  const isProductWishlisted = (id) => wishlistItems.some(i => i.productId === id);
 
   const handlePress = (item) => {
     dispatch(setSelectedProduct(item));
@@ -53,7 +58,13 @@ const SearchResultsScreen = () => {
           numColumns={2}
           keyExtractor={(i) => i._id}
           renderItem={({ item }) => (
-            <ProductCard item={item} onPress={handlePress} style={{ flex: 1, margin: spacing[2] }} />
+            <ProductCard 
+              item={item} 
+              onPress={handlePress} 
+              onWishlistPress={(p) => dispatch(toggleWishlist({ productId: p._id, ...p }))}
+              isWishlisted={isProductWishlisted(item._id)}
+              style={{ flex: 1, margin: spacing[2] }} 
+            />
           )}
           contentContainerStyle={styles.list}
           columnWrapperStyle={styles.row}

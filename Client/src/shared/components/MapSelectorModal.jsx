@@ -55,7 +55,7 @@ const MAP_HTML = `
     <input type="text" id="search-input" placeholder="Search address or city..." />
     <button id="locate-btn" title="Current Location">🎯</button>
   </div>
-  <div id="address-box">Locating your position...</div>
+  <div id="address-box">Loading map...</div>
   <div id="map"></div>
   <button id="confirm-btn">Confirm Location</button>
 
@@ -69,8 +69,18 @@ const MAP_HTML = `
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // Marker
-    var marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+    // Custom SVG Pin Icon (Leaflet DivIcon) - avoids broken path assets inside WebView
+    var svgIcon = L.divIcon({
+      html: \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="38" height="38" fill="#704F38">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+      </svg>\`,
+      className: 'custom-pin-icon',
+      iconSize: [38, 38],
+      iconAnchor: [19, 38]
+    });
+
+    // Marker initialized with custom icon
+    var marker = L.marker([defaultLat, defaultLng], { icon: svgIcon, draggable: true }).addTo(map);
     var confirmedData = null;
 
     // Reverse Geocode function using Nominatim
@@ -119,8 +129,14 @@ const MAP_HTML = `
         });
     }
 
-    // Try to locate user on load
-    map.locate({ setView: true, maxZoom: 16 });
+    // Centering configuration
+    var hasInitialLocation = false;
+    if (hasInitialLocation) {
+      reverseGeocode(defaultLat, defaultLng);
+    } else {
+      document.getElementById('address-box').innerText = "Locating your position...";
+      map.locate({ setView: true, maxZoom: 16 });
+    }
     
     map.on('locationfound', function(e) {
       marker.setLatLng(e.latlng);
@@ -214,8 +230,21 @@ const MAP_HTML = `
 </html>
 `;
 
-const MapSelectorModal = ({ visible, onClose, onConfirm }) => {
+const MapSelectorModal = ({ visible, onClose, onConfirm, initialLocation }) => {
   const [loading, setLoading] = useState(true);
+
+  const mapHtml = React.useMemo(() => {
+    const lat = initialLocation?.latitude ?? 20.5937;
+    const lng = initialLocation?.longitude ?? 78.9629;
+    const zoom = initialLocation ? 15 : 5;
+    const hasInit = initialLocation ? 'true' : 'false';
+
+    return MAP_HTML
+      .replace('var defaultLat = 20.5937;', `var defaultLat = ${lat};`)
+      .replace('var defaultLng = 78.9629;', `var defaultLng = ${lng};`)
+      .replace('setView([defaultLat, defaultLng], 5);', `setView([defaultLat, defaultLng], ${zoom});`)
+      .replace('var hasInitialLocation = false;', `var hasInitialLocation = ${hasInit};`);
+  }, [initialLocation]);
 
   const handleMessage = (event) => {
     try {
@@ -245,11 +274,12 @@ const MapSelectorModal = ({ visible, onClose, onConfirm }) => {
         <View style={styles.mapWrapper}>
           <WebView
             originWhitelist={['*']}
-            source={{ html: MAP_HTML }}
+            source={{ html: mapHtml }}
             onLoadEnd={() => setLoading(false)}
             onMessage={handleMessage}
             style={styles.webview}
             geolocationEnabled={true}
+            userAgent="Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Mobile Safari/537.36 FashionStoreApp/1.0"
           />
           {loading && (
             <View style={styles.loadingContainer}>

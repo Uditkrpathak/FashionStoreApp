@@ -1,6 +1,6 @@
 // src/features/orders/screens/TrackOrderScreen.jsx
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { CheckCircle2, Circle, ClipboardList, Package, Truck, PackageCheck } from 'lucide-react-native';
 import { useGetOrderByIdQuery, useTrackOrderQuery } from '../api/orderApi';
@@ -61,10 +61,14 @@ const TrackOrderScreen = () => {
         
         {/* Product Summary */}
         <View style={styles.productCard}>
-          <View style={styles.productImagePlaceholder} />
+          {firstItem.image ? (
+            <Image source={{ uri: firstItem.image }} style={styles.productImage} />
+          ) : (
+            <View style={styles.productImagePlaceholder} />
+          )}
           <View style={styles.productInfo}>
-            <Text style={styles.productName}>{firstItem.productTitle || 'Brown Suite'}</Text>
-            <Text style={styles.productMeta}>Size : XL || Qty : {firstItem.qty}pcs</Text>
+            <Text style={styles.productName}>{firstItem.title || firstItem.productTitle || 'Brown Suite'}</Text>
+            <Text style={styles.productMeta}>Size : {firstItem.size || 'XL'} || Qty : {firstItem.qty}pcs</Text>
             <Text style={styles.productPrice}>{formatPrice(firstItem.priceAtAdd)}</Text>
           </View>
         </View>
@@ -149,6 +153,7 @@ const styles = StyleSheet.create({
 
   productCard: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing[2] },
   productImagePlaceholder: { width: 80, height: 80, borderRadius: 12, backgroundColor: '#D9D9D9', marginRight: spacing[4] },
+  productImage: { width: 80, height: 80, borderRadius: 12, marginRight: spacing[4], backgroundColor: '#F0F0F0' },
   productInfo: { flex: 1, justifyContent: 'center' },
   productName: { ...textStyles.h5, color: colors.text, fontWeight: '700', marginBottom: 2 },
   productMeta: { ...textStyles.caption, color: colors.textMuted, marginBottom: spacing[2] },

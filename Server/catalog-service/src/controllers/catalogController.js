@@ -462,7 +462,7 @@ import Product from '../models/Product.js';
 import Category from '../models/Category.js';
 import Review from '../models/Review.js';
 
-export const seedData = async (req, res) => {
+export const seedData = async (req, res, next) => {
   try {
     // Clear existing data to avoid duplication conflicts
     await Category.deleteMany();
@@ -832,20 +832,20 @@ export const seedData = async (req, res) => {
       message: `Database successfully cleared and re-seeded with ${prods.length} deep category products across Men and Women.`
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    next(err);
   }
 };
 
-export const getCategories = async (req, res) => {
+export const getCategories = async (req, res, next) => {
   try {
     const categories = await Category.find();
     res.json({ success: true, categories });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    next(err);
   }
 };
 
-export const getProducts = async (req, res) => {
+export const getProducts = async (req, res, next) => {
   try {
     const { q, categoryId, sort, limit = 20, isFeatured, brand, gender, rating, priceMin, priceMax } = req.query;
     let filter = {};
@@ -891,21 +891,21 @@ export const getProducts = async (req, res) => {
     const products = await query.limit(parseInt(limit));
     res.json({ success: true, products });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    next(err);
   }
 };
 
-export const getProductById = async (req, res) => {
+export const getProductById = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id).populate('category', 'name');
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
     res.json({ success: true, product });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    next(err);
   }
 };
 
-export const addReview = async (req, res) => {
+export const addReview = async (req, res, next) => {
   try {
     const { productId, rating, comment, userName = 'Anonymous' } = req.body;
     const userId = req.headers['x-user-id'] || 'anonymous';
@@ -919,17 +919,17 @@ export const addReview = async (req, res) => {
 
     res.json({ success: true, review });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    next(err);
   }
 };
 
-export const getProductReviews = async (req, res) => {
+export const getProductReviews = async (req, res, next) => {
   try {
     const { productId } = req.params;
     const reviews = await Review.find({ productId }).sort({ createdAt: -1 });
     res.json({ success: true, reviews });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    next(err);
   }
 };
 

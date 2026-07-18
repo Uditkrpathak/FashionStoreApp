@@ -20,6 +20,7 @@ const LocationAccessScreen = () => {
   const dispatch   = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const [mapVisible, setMapVisible] = useState(false);
+  const [initialCoords, setInitialCoords] = useState(null);
 
   const { user, token } = route.params ?? {};
 
@@ -79,7 +80,29 @@ const LocationAccessScreen = () => {
     }
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
+    try {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const lastLoc = await Location.getLastKnownPositionAsync({});
+        if (lastLoc) {
+          setInitialCoords({
+            latitude: lastLoc.coords.latitude,
+            longitude: lastLoc.coords.longitude,
+          });
+        } else {
+          const currentLoc = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          setInitialCoords({
+            latitude: currentLoc.coords.latitude,
+            longitude: currentLoc.coords.longitude,
+          });
+        }
+      }
+    } catch (e) {
+      console.log('Error obtaining fast location for map:', e);
+    }
     setMapVisible(true);
   };
 
@@ -133,6 +156,7 @@ const LocationAccessScreen = () => {
       <MapSelectorModal
         visible={mapVisible}
         onClose={() => setMapVisible(false)}
+        initialLocation={initialCoords}
         onConfirm={(data) => {
           saveManualLocation(data.shortAddress || data.address);
         }}

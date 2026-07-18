@@ -1,6 +1,6 @@
-// src/context/ThemeContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getTheme, setTheme } from '../shared/utils/storage';
+import { setThemeColorsMode } from '../theme/colors';
 
 const ThemeContext = createContext({
   theme:       'light',
@@ -13,13 +13,17 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     getTheme().then((saved) => {
-      if (saved) setThemeState(saved);
+      if (saved) {
+        setThemeState(saved);
+        setThemeColorsMode(saved);
+      }
     });
   }, []);
 
   const toggleTheme = async () => {
     const next = theme === 'light' ? 'dark' : 'light';
     setThemeState(next);
+    setThemeColorsMode(next);
     await setTheme(next);
   };
 

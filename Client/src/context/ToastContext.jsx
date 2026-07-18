@@ -9,6 +9,12 @@ const ToastContext = createContext({ showToast: () => {} });
 
 const DURATION = 2800;
 
+let globalShowToast = () => {};
+
+export const showGlobalToast = (message, type = 'info') => {
+  globalShowToast(message, type);
+};
+
 export const ToastProvider = ({ children }) => {
   const [toast, setToast]   = useState(null);
   const [opacity]           = useState(() => new Animated.Value(0));
@@ -26,6 +32,9 @@ export const ToastProvider = ({ children }) => {
       }).start(() => setToast(null));
     }, DURATION);
   }, [opacity]);
+
+  // Keep global reference in sync
+  globalShowToast = showToast;
 
   const bgColor = {
     success: colors.success,

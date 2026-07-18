@@ -10,7 +10,7 @@ import { useAppDispatch } from '../../../shared/hooks/useAppDispatch';
 import { useAppSelector } from '../../../shared/hooks/useAppSelector';
 import {
   selectCartItems, selectCartTotalPrice, selectCoupon, selectDiscountedTotal,
-  removeFromCart, updateQty,
+  removeFromCart, updateQty, removeCoupon
 } from '../store/cartSlice';
 import EmptyState from '../../../shared/components/EmptyState';
 import { formatPrice } from '../../../shared/utils/formatters';
@@ -88,13 +88,20 @@ const CartScreen = () => {
         <View style={styles.promoContainer}>
           <TextInput 
             style={styles.promoInput} 
-            placeholder="Promo Code" 
-            placeholderTextColor={colors.textMuted}
-            editable={false} // Would normally handle state here
+            placeholder={coupon ? coupon.code : "Promo Code"} 
+            placeholderTextColor={coupon ? colors.primary : colors.textMuted}
+            value={coupon ? `${coupon.code} Applied (${coupon.discountType === 'percentage' || coupon.type === 'percent' ? `${coupon.discountValue || coupon.discount}%` : `₹${coupon.discountValue || coupon.discount}`} OFF)` : ''}
+            editable={false}
           />
-          <TouchableOpacity style={styles.applyBtn} onPress={() => navigation.navigate('PromoCode')}>
-            <Text style={styles.applyBtnText}>Apply</Text>
-          </TouchableOpacity>
+          {coupon ? (
+            <TouchableOpacity style={[styles.applyBtn, { backgroundColor: '#F0EBE5' }]} onPress={() => dispatch(removeCoupon())}>
+              <Text style={[styles.applyBtnText, { color: colors.primary }]}>Remove</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.applyBtn} onPress={() => navigation.navigate('PromoCode')}>
+              <Text style={styles.applyBtnText}>Apply</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.summaryRow}>

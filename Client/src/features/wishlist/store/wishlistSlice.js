@@ -29,9 +29,18 @@ export const { toggleWishlistLocal, setWishlist, clearWishlist } = wishlistSlice
 
 import { productApi } from '../../products/api/productApi';
 
+import { showGlobalToast } from '../../../context/ToastContext';
+
 export const toggleWishlist = (product) => async (dispatch, getState) => {
   const isWishlisted = getState().wishlist.items.some((i) => i.productId === product.productId);
   dispatch(toggleWishlistLocal(product));
+
+  // Show visual feedback alert
+  if (isWishlisted) {
+    showGlobalToast('Removed from wishlist', 'info');
+  } else {
+    showGlobalToast('Added to wishlist', 'success');
+  }
   
   try {
     if (isWishlisted) {

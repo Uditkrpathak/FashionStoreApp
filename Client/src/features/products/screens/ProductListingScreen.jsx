@@ -8,7 +8,7 @@ import { ProductCardSkeleton } from '../../../shared/components/SkeletonLoader';
 import EmptyState from '../../../shared/components/EmptyState';
 import { useAppDispatch } from '../../../shared/hooks/useAppDispatch';
 import { useAppSelector } from '../../../shared/hooks/useAppSelector';
-import { toggleWishlist } from '../../wishlist/store/wishlistSlice';
+import { toggleWishlist, selectWishlistItems } from '../../wishlist/store/wishlistSlice';
 import { setSelectedProduct } from '../store/productSlice';
 import { selectActiveFilters, selectSortBy, resetFilters } from '../../search/store/searchSlice';
 import { colors } from '../../../theme/colors';
@@ -25,6 +25,9 @@ const ProductListingScreen = () => {
   // Retrieve active filters and sorting options from Redux state
   const activeFilters = useAppSelector(selectActiveFilters);
   const sortBy        = useAppSelector(selectSortBy);
+  const wishlistItems = useAppSelector(selectWishlistItems);
+
+  const isProductWishlisted = (id) => wishlistItems.some(i => i.productId === id);
 
   // Reset active filters when entering a new category list
   useEffect(() => {
@@ -71,6 +74,7 @@ const ProductListingScreen = () => {
               item={item}
               onPress={handlePress}
               onWishlistPress={(p) => dispatch(toggleWishlist({ productId: p._id, ...p }))}
+              isWishlisted={isProductWishlisted(item._id)}
               style={{ flex: 1, margin: spacing[2] }}
             />
           )}
