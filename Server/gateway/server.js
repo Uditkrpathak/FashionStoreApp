@@ -41,7 +41,7 @@ const verifyToken = (req, res, next) => {
 };
 
 const getServiceUrl = (envVar, defaultUrl) => {
-  if (!envVar || envVar.includes('fashion-gateway') || envVar.includes('localhost') || envVar.includes('127.0.0.1')) {
+  if (!envVar || envVar.includes(':') || envVar.includes('fashion-gateway') || envVar.includes('localhost') || envVar.includes('127.0.0.1')) {
     return defaultUrl;
   }
   let url = envVar.trim();
