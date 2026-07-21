@@ -9,7 +9,7 @@ services:
       - key: PORT
         value: 5000
       - key: JWT_SECRET
-        generateValue: true
+        value: supersecret
       - key: AUTH_SERVICE_URL
         fromService:
           type: pserv
@@ -42,11 +42,14 @@ services:
         value: 5001
       - key: MONGO_URI
         sync: false
+      - key: AUTH_MONGO_URI
+        sync: false
       - key: JWT_SECRET
-        fromService:
-          type: web
-          name: fashion-gateway
-          envVarKey: JWT_SECRET
+        value: supersecret
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
 
   # 🛍️ Private Catalog Microservice
   - type: pserv
@@ -58,6 +61,8 @@ services:
       - key: PORT
         value: 5002
       - key: MONGO_URI
+        sync: false
+      - key: CATALOG_MONGO_URI
         sync: false
 
   # 🛒 Private Cart Microservice
@@ -71,6 +76,8 @@ services:
         value: 5003
       - key: MONGO_URI
         sync: false
+      - key: CART_MONGO_URI
+        sync: false
 
   # 📦 Private Order & Payment Microservice
   - type: pserv
@@ -83,6 +90,8 @@ services:
         value: 5004
       - key: MONGO_URI
         sync: false
+      - key: ORDER_MONGO_URI
+        sync: false
       - key: AUTH_SERVICE_URL
         fromService:
           type: pserv
@@ -91,4 +100,6 @@ services:
       - key: RAZORPAY_KEY_ID
         sync: false
       - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
         sync: false
