@@ -11,11 +11,19 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://fashion-gateway.onrender.com/api/v1",
+        "EXPO_PUBLIC_RAZORPAY_KEY_ID": "rzp_test_TDcSlPdmpjHqXj"
       }
     },
     "production": {
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://fashion-gateway.onrender.com/api/v1",
+        "EXPO_PUBLIC_RAZORPAY_KEY_ID": "rzp_test_TDcSlPdmpjHqXj"
       }
     }
   },
