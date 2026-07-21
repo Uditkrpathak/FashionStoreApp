@@ -126,8 +126,12 @@ const seedMockOrders = async (userId) => {
       return;
     }
 
-    // 1. Delete all previous orders
-    await Order.deleteMany({});
+    // Only seed if user has no orders — don't wipe other users' orders
+    const existingCount = await Order.countDocuments({ userId });
+    if (existingCount > 0) {
+      console.log(`User ${userId} already has ${existingCount} orders, skipping seed.`);
+      return;
+    }
     
     // 2. Fetch products from CatalogProduct
     const products = await CatProd.find({}).limit(6);
@@ -459,6 +463,13 @@ export const getAllOrdersAdmin = async (req, res, next) => {
 
     if (status) query.orderStatus = status;
 
+    // Auto-seed demo orders if the collection is completely empty
+    const totalInDb = await Order.countDocuments();
+    if (totalInDb === 0) {
+      const adminUserId = req.headers['x-user-id'] || 'admin-demo-user';
+      await seedMockOrders(adminUserId);
+    }
+
     const orders = await Order.find(query)
       .skip((page - 1) * limit)
       .limit(Number(limit))
@@ -503,7 +514,13 @@ export const updateOrderStatus = async (req, res, next) => {
 
 export const getDashboardStats = async (req, res, next) => {
   try {
-    const totalOrders = await Order.countDocuments();
+    // Auto-seed demo orders if collection is empty
+    let totalOrders = await Order.countDocuments();
+    if (totalOrders === 0) {
+      const adminUserId = req.headers['x-user-id'] || 'admin-demo-user';
+      await seedMockOrders(adminUserId);
+      totalOrders = await Order.countDocuments();
+    }
     const placedCount = await Order.countDocuments({ orderStatus: 'placed' });
     const confirmedCount = await Order.countDocuments({ orderStatus: 'confirmed' });
     const shippedCount = await Order.countDocuments({ orderStatus: 'shipped' });
