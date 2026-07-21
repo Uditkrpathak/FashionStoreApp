@@ -13,8 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const PORT = process.env.PORT || 5001;
 
 if (!MONGO_URI) {
-  console.error('FATAL ERROR: MONGO_URI environment variable is required.');
-  process.exit(1);
+  console.warn('WARNING: MONGO_URI environment variable is not set yet.');
 }
 if (!JWT_SECRET) {
   console.error('FATAL ERROR: JWT_SECRET environment variable is required.');
@@ -55,14 +54,16 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Wait for MongoDB connection before starting the server
-mongoose.connect(MONGO_URI)
-  .then(async () => {
-    console.log('Auth DB Connected');
-    await seedDefaultAdmin();
-    app.listen(PORT, () => console.log(`🔒 Auth Service running on port ${PORT}`));
-  })
-  .catch(err => {
-    console.error('FATAL Database Error: Failed to connect to MongoDB', err);
-    process.exit(1);
-  });
+// Start HTTP server immediately so Render health checks pass cleanly
+app.listen(PORT, () => console.log(`🔒 Auth Service running on port ${PORT}`));
+
+if (MONGO_URI) {
+  mongoose.connect(MONGO_URI)
+    .then(async () => {
+      console.log('Auth DB Connected');
+      await seedDefaultAdmin();
+    })
+    .catch(err => {
+      console.error('Database Error: Failed to connect to MongoDB', err.message);
+    });
+}

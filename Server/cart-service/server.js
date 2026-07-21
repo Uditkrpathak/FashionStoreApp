@@ -46,13 +46,11 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Wait for database connection before listening
-mongoose.connect(MONGO_URI)
-  .then(() => {
-    console.log('Cart DB Connected');
-    app.listen(PORT, () => console.log(`🛒 Cart Service running on port ${PORT}`));
-  })
-  .catch(err => {
-    console.error('FATAL Database Error: Failed to connect to MongoDB', err);
-    process.exit(1);
-  });
+// Start HTTP server immediately so Render health checks pass cleanly
+app.listen(PORT, () => console.log(`🛒 Cart Service running on port ${PORT}`));
+
+if (MONGO_URI) {
+  mongoose.connect(MONGO_URI)
+    .then(() => console.log('Cart DB Connected'))
+    .catch(err => console.error('Database Error: Failed to connect to MongoDB', err.message));
+}
