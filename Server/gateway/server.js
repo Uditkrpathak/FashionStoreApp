@@ -44,7 +44,7 @@ const formatTargetUrl = (url) => {
   if (!url) return '';
   const trimmed = url.trim();
   if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-    return `http://${trimmed}`;
+    return `https://${trimmed}`;
   }
   return trimmed;
 };

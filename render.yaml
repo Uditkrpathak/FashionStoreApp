@@ -14,22 +14,22 @@ services:
         fromService:
           type: web
           name: fashion-auth-service
-          property: hostport
+          property: url
       - key: CATALOG_SERVICE_URL
         fromService:
           type: web
           name: fashion-catalog-service
-          property: hostport
+          property: url
       - key: CART_SERVICE_URL
         fromService:
           type: web
           name: fashion-cart-service
-          property: hostport
+          property: url
       - key: ORDER_SERVICE_URL
         fromService:
           type: web
           name: fashion-order-service
-          property: hostport
+          property: url
 
   # 🔒 Auth & Profile Microservice (Web Service for Free Plan)
   - type: web
