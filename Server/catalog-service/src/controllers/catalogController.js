@@ -933,3 +933,123 @@ export const getProductReviews = async (req, res, next) => {
   }
 };
 
+// ==========================================
+// ADMIN CONTROLLERS (Catalog Service)
+// ==========================================
+
+export const createProduct = async (req, res, next) => {
+  try {
+    const product = new Product(req.body);
+    await product.save();
+
+    // Update category product count
+    if (product.category) {
+      const count = await Product.countDocuments({ category: product.category });
+      await Category.findByIdAndUpdate(product.category, { productCount: count });
+    }
+
+    res.status(201).json({ success: true, product });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findByIdAndUpdate(id, req.body, { new: true });
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+    res.json({ success: true, product });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findByIdAndDelete(id);
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+
+    if (product.category) {
+      const count = await Product.countDocuments({ category: product.category });
+      await Category.findByIdAndUpdate(product.category, { productCount: count });
+    }
+
+    res.json({ success: true, message: 'Product deleted successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createCategory = async (req, res, next) => {
+  try {
+    const category = new Category(req.body);
+    await category.save();
+    res.status(201).json({ success: true, category });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const category = await Category.findByIdAndUpdate(id, req.body, { new: true });
+    if (!category) return res.status(404).json({ success: false, message: 'Category not found' });
+    res.json({ success: true, category });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const category = await Category.findByIdAndDelete(id);
+    if (!category) return res.status(404).json({ success: false, message: 'Category not found' });
+    res.json({ success: true, message: 'Category deleted successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAllReviewsAdmin = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 50 } = req.query;
+    const reviews = await Review.find()
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 });
+
+    const total = await Review.countDocuments();
+    res.json({
+      success: true,
+      reviews,
+      pagination: { total, page: Number(page), pages: Math.ceil(total / limit) }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteReviewAdmin = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const review = await Review.findByIdAndDelete(id);
+    if (!review) return res.status(404).json({ success: false, message: 'Review not found' });
+
+    // Recalculate product rating
+    if (review.productId) {
+      const reviews = await Review.find({ productId: review.productId });
+      const avgRating = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
+      await Product.findByIdAndUpdate(review.productId, { rating: avgRating, reviewsCount: reviews.length });
+    }
+
+    res.json({ success: true, message: 'Review deleted successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+

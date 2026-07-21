@@ -2,6 +2,7 @@ import Order from '../models/Order.js';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import mongoose from 'mongoose';
+import { isValidTransition } from '../utils/orderStateMachine.js';
 
 // Connection to catalog database to retrieve catalog items for seeding completed orders
 const catalogConn = mongoose.createConnection(
@@ -421,3 +422,88 @@ export const paymentWebhook = async (req, res) => {
     res.status(500).json({ status: 'error' });
   }
 };
+
+// ==========================================
+// ADMIN CONTROLLERS (Order Service)
+// ==========================================
+
+export const getAllOrdersAdmin = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20, status, search } = req.query;
+    const query = {};
+
+    if (status) query.orderStatus = status;
+
+    const orders = await Order.find(query)
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 });
+
+    const total = await Order.countDocuments(query);
+    res.json({
+      success: true,
+      orders,
+      pagination: { total, page: Number(page), pages: Math.ceil(total / limit) }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateOrderStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status, reason } = req.body;
+
+    const order = await Order.findById(id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    // Validate State Machine Transition
+    if (!isValidTransition(order.orderStatus, status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Illegal state transition from '${order.orderStatus}' to '${status}'.`
+      });
+    }
+
+    order.orderStatus = status;
+    order.statusHistory.push({ status, timestamp: new Date(), reason: reason || 'Updated by Admin' });
+    await order.save();
+
+    res.json({ success: true, message: `Order status updated to ${status}`, order });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getDashboardStats = async (req, res, next) => {
+  try {
+    const totalOrders = await Order.countDocuments();
+    const placedCount = await Order.countDocuments({ orderStatus: 'placed' });
+    const confirmedCount = await Order.countDocuments({ orderStatus: 'confirmed' });
+    const shippedCount = await Order.countDocuments({ orderStatus: 'shipped' });
+    const deliveredCount = await Order.countDocuments({ orderStatus: 'delivered' });
+    const cancelledCount = await Order.countDocuments({ orderStatus: 'cancelled' });
+
+    // Calculate total revenue from delivered/completed orders
+    const completedOrders = await Order.find({ paymentStatus: 'completed' });
+    const totalRevenue = completedOrders.reduce((sum, o) => sum + (o.totals?.grandTotal || 0), 0);
+
+    res.json({
+      success: true,
+      stats: {
+        totalRevenue,
+        totalOrders,
+        placedCount,
+        confirmedCount,
+        shippedCount,
+        deliveredCount,
+        cancelledCount,
+        pendingFulfillment: placedCount + confirmedCount
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+

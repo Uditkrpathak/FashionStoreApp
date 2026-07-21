@@ -15,6 +15,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// Identity Header Sanitization Middleware - Prevents identity spoofing
+app.use((req, res, next) => {
+  delete req.headers['x-user-id'];
+  delete req.headers['x-user-role'];
+  delete req.headers['x-user-permissions'];
+  next();
+});
+
 // Auth Middleware for protected routes
 const verifyToken = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
@@ -22,8 +30,10 @@ const verifyToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    // Pass user ID to downstream microservices via header
+    // Inject verified user claims into headers for downstream microservices
     req.headers['x-user-id'] = decoded.id;
+    req.headers['x-user-role'] = decoded.role || 'user';
+    req.headers['x-user-permissions'] = JSON.stringify(decoded.permissions || []);
     next();
   } catch (err) {
     return res.status(401).json({ success: false, message: 'Unauthorized: Invalid token' });
@@ -36,25 +46,25 @@ const routes = [
   { 
     path: '/api/v1/auth', 
     target: process.env.AUTH_SERVICE_URL || 'http://localhost:5001',
-    protectedPaths: ['/me', '/profile', '/wishlist', '/addresses', '/notifications']
+    protectedPaths: ['/me', '/profile', '/wishlist', '/addresses', '/notifications', '/admin']
   },
-  // Catalog Service (Public GET, Protected POST/PUT/DELETE ideally, but keeping simple for now)
+  // Catalog Service (Public GET, Protected POST/PUT/DELETE & /admin)
   { 
     path: '/api/v1/products', 
     target: process.env.CATALOG_SERVICE_URL || 'http://localhost:5002',
-    protectedPaths: ['/reviews'] // protect review submission
+    protectedPaths: ['/reviews', '/admin']
   },
   // Cart Service (Fully Protected)
   { 
     path: '/api/v1/cart', 
     target: process.env.CART_SERVICE_URL || 'http://localhost:5003',
-    protectedPaths: ['/'] // everything protected
+    protectedPaths: ['/']
   },
   // Order Service (Fully Protected)
   { 
     path: '/api/v1/orders', 
     target: process.env.ORDER_SERVICE_URL || 'http://localhost:5004',
-    protectedPaths: ['/'] // everything protected
+    protectedPaths: ['/']
   }
 ];
 
@@ -68,7 +78,6 @@ routes.forEach((route) => {
 
   app.use(route.path, (req, res, next) => {
     // Check if current request path starts with any protected path
-    // For exact matching in auth like /api/v1/auth/me -> req.path will be /me here
     const isProtected = route.protectedPaths.some(p => req.path.startsWith(p));
     
     // Exception for webhooks

@@ -1,4 +1,5 @@
 import User from '../models/User.js';
+import AuditLog from '../models/AuditLog.js';
 import jwt from 'jsonwebtoken';
 import { sendOtpEmail } from '../utils/emailService.js';
 
@@ -11,8 +12,13 @@ export const login = async (req, res) => {
     let user = await User.findOne({ email });
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     if (user.password !== password) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    if (user.status === 'blocked') return res.status(403).json({ success: false, message: 'Account is blocked. Contact support.' });
     
-    const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role, permissions: user.permissions || [] },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
     res.json({ success: true, token, user });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -26,19 +32,16 @@ export const register = async (req, res) => {
     let user = await User.findOne({ email });
     if (user) {
       if (user.isVerified) return res.status(400).json({ success: false, message: 'Email already exists' });
-      // If not verified, we can resend OTP (update existing unverified user)
     } else {
       user = new User({ name, email, password, phone });
     }
     
-    // Generate 6 digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.otp = otp;
-    user.otpExpires = new Date(Date.now() + 10 * 60000); // 10 minutes
+    user.otpExpires = new Date(Date.now() + 10 * 60000);
     
     await user.save();
     
-    // Send email asynchronously but await its result to confirm
     const emailSent = await sendOtpEmail(email, otp);
     if (!emailSent) {
       return res.status(500).json({ success: false, message: 'Failed to send OTP email. Please try again.' });
@@ -65,7 +68,11 @@ export const verifyOtp = async (req, res) => {
     user.otpExpires = undefined;
     await user.save();
     
-    const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role, permissions: user.permissions || [] },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
     res.json({ success: true, token, user });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -78,13 +85,11 @@ export const forgotPassword = async (req, res) => {
     let user = await User.findOne({ email });
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     
-    // Generate 6 digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.otp = otp;
-    user.otpExpires = new Date(Date.now() + 10 * 60000); // 10 minutes
+    user.otpExpires = new Date(Date.now() + 10 * 60000);
     await user.save();
     
-    // Send email asynchronously but await its result
     const emailSent = await sendOtpEmail(email, otp);
     if (!emailSent) {
       return res.status(500).json({ success: false, message: 'Failed to send OTP email. Please try again.' });
@@ -98,16 +103,15 @@ export const forgotPassword = async (req, res) => {
 
 export const resetPassword = async (req, res) => {
   try {
-    // If the user went through verifyOtp, they have a valid token
     const userId = req.headers['x-user-id'];
-    const email = req.body.email?.toLowerCase(); // fallback to email if not protected, but we will protect it
+    const email = req.body.email?.toLowerCase();
     const { password } = req.body;
 
     let user;
     if (userId) {
       user = await User.findById(userId);
     } else if (email) {
-      user = await User.findOne({ email }); // Fallback if someone didn't protect it
+      user = await User.findOne({ email });
     }
     
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
@@ -123,7 +127,6 @@ export const resetPassword = async (req, res) => {
 
 export const getMe = async (req, res) => {
   try {
-    // Gateway verifies JWT and passes x-user-id header
     const userId = req.headers['x-user-id'];
     if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
     
@@ -259,9 +262,147 @@ export const refreshToken = async (req, res) => {
     const user = await User.findById(decoded.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    const newAccessToken = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const newAccessToken = jwt.sign(
+      { id: user._id, email: user.email, role: user.role, permissions: user.permissions || [] },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
     res.json({ success: true, data: { accessToken: newAccessToken } });
   } catch (err) {
     res.status(401).json({ success: false, message: 'Invalid refresh token' });
   }
 };
+
+// ==========================================
+// ADMIN CONTROLLERS (Auth Service)
+// ==========================================
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, search, role, status } = req.query;
+    const query = {};
+
+    if (role) query.role = role;
+    if (status) query.status = status;
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const users = await User.find(query)
+      .select('-password -otp -otpExpires')
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 });
+
+    const total = await User.countDocuments(query);
+
+    res.json({
+      success: true,
+      users,
+      pagination: { total, page: Number(page), pages: Math.ceil(total / limit) }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id).select('-password -otp -otpExpires');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const updateUserRole = async (req, res) => {
+  try {
+    const adminId = req.headers['x-user-id'];
+    const { id } = req.params;
+    const { role, permissions } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const oldRole = user.role;
+    user.role = role || user.role;
+    if (Array.isArray(permissions)) {
+      user.permissions = permissions;
+    }
+    await user.save();
+
+    // Audit Event
+    await AuditLog.create({
+      adminId,
+      action: 'UPDATE_USER_ROLE',
+      targetEntity: 'User',
+      targetId: id,
+      details: { oldRole, newRole: user.role, permissions: user.permissions }
+    });
+
+    res.json({ success: true, message: 'User role updated successfully', user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const toggleUserStatus = async (req, res) => {
+  try {
+    const adminId = req.headers['x-user-id'];
+    const { id } = req.params;
+    const { status, reason } = req.body;
+
+    if (!['active', 'blocked', 'suspended'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status value' });
+    }
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const oldStatus = user.status;
+    user.status = status;
+    await user.save();
+
+    // Audit Event
+    await AuditLog.create({
+      adminId,
+      action: 'TOGGLE_USER_STATUS',
+      targetEntity: 'User',
+      targetId: id,
+      details: { oldStatus, newStatus: status, reason: reason || 'N/A' }
+    });
+
+    res.json({ success: true, message: `User status changed to ${status}`, user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getAuditLogs = async (req, res) => {
+  try {
+    const { page = 1, limit = 50, action } = req.query;
+    const query = {};
+    if (action) query.action = action;
+
+    const logs = await AuditLog.find(query)
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 });
+
+    const total = await AuditLog.countDocuments(query);
+    res.json({
+      success: true,
+      logs,
+      pagination: { total, page: Number(page), pages: Math.ceil(total / limit) }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+

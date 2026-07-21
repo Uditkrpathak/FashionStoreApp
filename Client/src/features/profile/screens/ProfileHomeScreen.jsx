@@ -63,7 +63,7 @@ const ProfileHomeScreen = () => {
           {user?.avatar ? (
             <Image source={{ uri: user.avatar }} style={styles.avatarImage} />
           ) : (
-            <View style={[styles.avatarImage, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary }]}>
+            <View style={[styles.avatarImage, { alignItems: 'center', justifyContent: 'center', backgroundColor: '#1F2029' }]}>
               <Text style={{ color: colors.white, fontSize: 32, fontWeight: 'bold' }}>
                 {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
               </Text>
@@ -72,17 +72,19 @@ const ProfileHomeScreen = () => {
           <Text style={styles.name}>{user?.name ?? 'User'}</Text>
         </View>
 
-        {/* Menu */}
+        {/* Menu Items with Bold Black Icons */}
         <View style={styles.menu}>
           {MENU.map((item) => {
             const Icon = item.icon;
+            const isLogout = item.action === 'logout';
+            const iconColor = isLogout ? '#E57373' : '#1F2029';
             return (
               <TouchableOpacity key={item.label} style={styles.menuItem} onPress={() => handleNav(item)}>
                 <View style={styles.menuIconContainer}>
-                  <Icon size={24} color={colors.text} />
+                  <Icon size={22} width={22} height={22} color={iconColor} stroke={iconColor} strokeWidth={2.2} />
                 </View>
-                <Text style={styles.menuLabel}>{item.label}</Text>
-                <ChevronRight size={20} color={colors.text} />
+                <Text style={[styles.menuLabel, isLogout && { color: '#E57373' }]}>{item.label}</Text>
+                <ChevronRight size={18} width={18} height={18} color={isLogout ? '#E57373' : '#1F2029'} stroke={isLogout ? '#E57373' : '#1F2029'} strokeWidth={2.2} />
               </TouchableOpacity>
             );
           })}
@@ -99,7 +101,7 @@ const styles = StyleSheet.create({
     padding: spacing[4], paddingTop: spacing[12],
     backgroundColor: colors.white,
   },
-  title: { ...textStyles.h3, color: colors.text, fontWeight: '800' },
+  title: { ...textStyles.h3, color: '#1F2029', fontWeight: '800' },
   scrollContent: {
     paddingBottom: 100, // padding for tab bar
   },
@@ -112,7 +114,7 @@ const styles = StyleSheet.create({
     width: 100, height: 100, borderRadius: 50,
     marginBottom: spacing[4],
   },
-  name: { ...textStyles.h4, color: colors.text, fontWeight: '700' },
+  name: { ...textStyles.h4, color: '#1F2029', fontWeight: '700' },
   menu: {
     paddingHorizontal: spacing[6],
   },
@@ -122,7 +124,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
   menuIconContainer: { width: 32, marginRight: spacing[3] },
-  menuLabel: { ...textStyles.body1, color: colors.text, flex: 1, fontWeight: '600' },
+  menuLabel: { ...textStyles.body1, color: '#1F2029', flex: 1, fontWeight: '600' },
 });
 
 export default ProfileHomeScreen;

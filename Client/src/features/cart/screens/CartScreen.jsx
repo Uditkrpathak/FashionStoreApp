@@ -31,7 +31,7 @@ const CartScreen = () => {
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <ArrowLeft size={24} color={colors.text} />
+            <ArrowLeft size={20} width={20} height={20} color="#1F2029" stroke="#1F2029" strokeWidth={2.2} />
           </TouchableOpacity>
           <Text style={styles.title}>My Cart</Text>
           <View style={{ width: 44 }} />
@@ -45,7 +45,7 @@ const CartScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <ArrowLeft size={24} color={colors.text} />
+          <ArrowLeft size={20} width={20} height={20} color="#1F2029" stroke="#1F2029" strokeWidth={2.2} />
         </TouchableOpacity>
         <Text style={styles.title}>My Cart</Text>
         <View style={{ width: 44 }} />

@@ -1,16 +1,15 @@
 # 🛍️ FashionStoreApp - Microservices E-Commerce Application
 
-FashionStoreApp is a modern, premium, containerized e-commerce platform built using a **Node.js Microservices Backend** and an **Expo (React Native) Mobile/Web Client**. The system uses a centralized API Gateway to handle authentication and route traffic to service-specific MongoDB databases.
+FashionStoreApp is a modern, enterprise e-commerce platform built as a monorepo featuring a **Node.js Microservices Backend**, an **Expo (React Native) Mobile Client for Customers**, and a **Dedicated Web Admin Panel**. The system uses a centralized API Gateway with identity header sanitization to handle authentication, enforce RBAC, and proxy traffic to service-specific MongoDB databases.
 
 ---
 
 ## 🏗️ Architecture & System Flow
 
-The following diagram illustrates how the frontend mobile app communicates with our backend microservices layer, which is hosted within a private Docker/VPC network:
-
 ```mermaid
 graph TD
-    Client["📱 Expo Client App (React Native / Web)"]
+    Client["📱 Expo Customer App (/Client)"]
+    AdminWeb["💻 Web Admin Panel (/Admin)"]
     Gateway["🔌 API Gateway (Express Proxy - Port 5000)"]
     DB_Auth[(🍃 Auth DB)]
     DB_Catalog[(🍃 Catalog DB)]
@@ -24,14 +23,15 @@ graph TD
         OrderService["📦 Order & Payment Service (Port 5004)"]
     end
 
-    %% Client communication
-    Client -->|1. REST API Request| Gateway
+    %% Client & Admin communication
+    Client -->|1. REST API Requests| Gateway
+    AdminWeb -->|1. REST API Admin Requests| Gateway
 
-    %% Gateway Routing & Auth Check
-    Gateway -->|2. Validates JWT / Proxies| AuthService
-    Gateway -->|2. Proxies Products| CatalogService
-    Gateway -->|2. Requires Auth / Proxies| CartService
-    Gateway -->|2. Requires Auth / Proxies| OrderService
+    %% Gateway Routing & Header Sanitization
+    Gateway -->|2. Sanitizes Headers & Proxies Auth/RBAC| AuthService
+    Gateway -->|2. Proxies Products & Inventory| CatalogService
+    Gateway -->|2. Requires Auth / Proxies Cart & Coupons| CartService
+    Gateway -->|2. Enforces Order State Machine| OrderService
 
     %% Database connections
     AuthService --> DB_Auth
@@ -44,6 +44,15 @@ graph TD
 ```
 
 ---
+
+## 🛠️ Monorepo Application Modules
+
+| Directory | Module | Technology Stack | Description |
+| :--- | :--- | :--- | :--- |
+| **`/Client`** | Customer Mobile & Web App | Expo 57, React Native, RTK Query | iOS, Android, and Web customer app for browsing catalog, managing wishlist/cart, and checkout. |
+| **`/Admin`** | Dedicated Web Admin Panel | React 18, Vite, Redux Toolkit, Lucide Icons | Operational admin dashboard for KPIs, RBAC user management, product CRUD, coupon management, and order fulfillment. |
+| **`/Server`** | Microservices Backend | Node.js 20, Express, MongoDB, Mongoose | Decoupled microservices architecture (`gateway`, `auth-service`, `catalog-service`, `cart-service`, `order-service`). |
+
 
 ## 🛠️ Technology Stack & Libraries
 

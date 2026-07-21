@@ -119,13 +119,13 @@ const HomeScreen = () => {
           <TouchableOpacity onPress={() => setMapVisible(true)} activeOpacity={0.8}>
             <Text style={styles.greeting}>Location</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <MapPin size={16} color={colors.primary} fill={colors.primary} style={{ marginRight: 4 }} />
+              <MapPin size={16} width={16} height={16} color="#1F2029" fill="#1F2029" style={{ marginRight: 4 }} />
               <Text style={styles.tagline}>{user?.location ?? 'New York, USA'}</Text>
-              <ChevronDown size={16} color={colors.text} style={{ marginLeft: 4 }} />
+              <ChevronDown size={16} width={16} height={16} color="#1F2029" stroke="#1F2029" strokeWidth={2.2} style={{ marginLeft: 4 }} />
             </View>
           </TouchableOpacity>
           <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('ProfileTab')}>
-            <Bell size={20} color={colors.text} fill={colors.text} />
+            <Bell size={20} width={20} height={20} color="#1F2029" stroke="#1F2029" strokeWidth={2} />
             <View style={styles.bellDot} />
           </TouchableOpacity>
         </View>
@@ -137,14 +137,14 @@ const HomeScreen = () => {
             activeOpacity={0.9}
             onPress={() => navigation.navigate('SearchTab')}
           >
-            <Search size={20} color={colors.textMuted} style={{ marginRight: spacing[3] }} />
-            <Text style={styles.searchPlaceholder}>Search</Text>
+            <Search size={20} width={20} height={20} color="#1F2029" stroke="#1F2029" strokeWidth={2} style={{ marginRight: spacing[3] }} />
+            <Text style={styles.searchPlaceholder}>Search "Product Name"</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.filterBtn}
-            onPress={() => navigation.navigate('SearchTab', { screen: 'Filter' })}
+            onPress={() => navigation.navigate('Filter')}
           >
-            <SlidersHorizontal size={20} color={colors.white} />
+            <SlidersHorizontal size={18} width={18} height={18} color="#1F2029" stroke="#1F2029" strokeWidth={2.2} />
           </TouchableOpacity>
         </View>
 

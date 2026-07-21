@@ -30,8 +30,9 @@ import SortScreen from '../../features/search/screens/SortScreen';
 const Tab = createTabNav();
 const Stack = createNativeStackNavigator();
 
-// ── Tab icon helper ───────────────────────────────────────────────────────────
+// ── Tab icon helper with solid black icon ──────────────────────────────────────
 const TabIcon = ({ IconComponent, focused, count }) => {
+  const iconColor = '#1F2029';
   return (
     <View style={tabStyles.iconContainer}>
       <View
@@ -40,11 +41,16 @@ const TabIcon = ({ IconComponent, focused, count }) => {
           focused && tabStyles.iconWrapperFocused,
         ]}
       >
-        <IconComponent
-          size={22}
-          color={focused ? '#6B4A32' : '#A7A8B5'}
-          strokeWidth={2.2}
-        />
+        {IconComponent && (
+          <IconComponent
+            size={22}
+            width={22}
+            height={22}
+            color={iconColor}
+            stroke={iconColor}
+            strokeWidth={2.4}
+          />
+        )}
       </View>
 
       {count > 0 && <Badge count={count} />}
@@ -112,8 +118,6 @@ const BottomTabs = () => {
     </Tab.Navigator>
   );
 };
-
-
 
 // ── App root: Tabs + Modal stack ──────────────────────────────────────────────
 const AppNavigator = () => {

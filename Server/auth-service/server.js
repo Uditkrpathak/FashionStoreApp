@@ -5,9 +5,10 @@ import morgan from 'morgan';
 import mongoose from 'mongoose';
 import authRoutes from './src/routes/authRoutes.js';
 import notificationRoutes from './src/routes/notificationRoutes.js';
+import { seedDefaultAdmin } from './src/utils/seedAdmin.js';
 
 // Environment variable validation
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_URI = process.env.AUTH_MONGO_URI || process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
 const PORT = process.env.PORT || 5001;
 
@@ -56,8 +57,9 @@ app.use((err, req, res, next) => {
 
 // Wait for MongoDB connection before starting the server
 mongoose.connect(MONGO_URI)
-  .then(() => {
+  .then(async () => {
     console.log('Auth DB Connected');
+    await seedDefaultAdmin();
     app.listen(PORT, () => console.log(`🔒 Auth Service running on port ${PORT}`));
   })
   .catch(err => {

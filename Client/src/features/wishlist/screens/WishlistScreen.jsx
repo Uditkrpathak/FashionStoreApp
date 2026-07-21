@@ -51,7 +51,7 @@ const WishlistScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={20} color={colors.text} />
+          <ArrowLeft size={20} width={20} height={20} color="#1F2029" stroke="#1F2029" strokeWidth={2.2} />
         </TouchableOpacity>
         <Text style={styles.title}>My Wishlist</Text>
         <View style={{ width: 40 }} /> {/* Spacer to center title */}

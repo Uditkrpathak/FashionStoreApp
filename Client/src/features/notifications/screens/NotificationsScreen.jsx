@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Truck, Percent, Star, Wallet, Bell } from 'lucide-react-native';
+import { Truck, Percent, Star, Wallet, Bell, ArrowLeft } from 'lucide-react-native';
 import { useGetNotificationsQuery, useMarkAsReadMutation } from '../api/notificationApi';
 import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
@@ -26,9 +26,7 @@ const NotificationsScreen = () => {
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  // Group notifications safely
   const grouped = notifications.reduce((acc, curr) => {
-    // Determine if today or yesterday based on createdAt
     const date = new Date(curr.createdAt);
     const today = new Date();
     const isToday = date.getDate() === today.getDate() && date.getMonth() === today.getMonth();
@@ -45,7 +43,7 @@ const NotificationsScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.back}>←</Text>
+          <ArrowLeft size={20} width={20} height={20} color="#1F2029" stroke="#1F2029" strokeWidth={2.2} />
         </TouchableOpacity>
         <Text style={styles.title}>Notification</Text>
         <View style={styles.pill}>
@@ -54,7 +52,7 @@ const NotificationsScreen = () => {
       </View>
 
       {isLoading ? (
-        <ActivityIndicator style={{ marginTop: 50 }} color={colors.primary} />
+        <ActivityIndicator style={{ marginTop: 50 }} color="#1F2029" />
       ) : (
         <FlatList
           data={sections}
@@ -70,7 +68,6 @@ const NotificationsScreen = () => {
               </View>
               {item.data.map((notif) => {
                 const Icon = getIconForType(notif.type);
-                // Calculate relative time (e.g., 1h, 1d)
                 const hours = Math.floor((new Date() - new Date(notif.createdAt)) / 3600000);
                 const timeStr = hours < 24 ? `${hours}h` : `${Math.floor(hours / 24)}d`;
                 return (
@@ -80,7 +77,7 @@ const NotificationsScreen = () => {
                     onPress={() => markAsRead(notif._id)}
                   >
                     <View style={styles.iconContainer}>
-                      <Icon size={24} color={colors.text} />
+                      <Icon size={24} width={24} height={24} color="#1F2029" stroke="#1F2029" strokeWidth={2.2} />
                     </View>
                     <View style={styles.cardContent}>
                       <Text style={styles.cardTitle}>{notif.title}</Text>
@@ -106,39 +103,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9F9F9'
   },
   backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.white, borderWidth: 1, borderColor: '#E0E0E0', alignItems: 'center', justifyContent: 'center' },
-  back:    { fontSize: 18, color: colors.text, fontWeight: '700' },
-  title:   { ...textStyles.h4, color: colors.text, fontWeight: '700' },
-  pill:    { backgroundColor: colors.text, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  title:   { ...textStyles.h4, color: '#1F2029', fontWeight: '700' },
+  pill:    { backgroundColor: '#1F2029', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
   pillText:{ color: colors.white, fontSize: 12, fontWeight: '700' },
   
   list: { padding: spacing[6], paddingBottom: spacing[10] },
   section: { marginBottom: spacing[6] },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[4] },
   sectionTitle: { ...textStyles.label, color: colors.textMuted, letterSpacing: 1 },
-  markReadText: { ...textStyles.body2, color: colors.text, fontWeight: '600' },
+  markReadText: { ...textStyles.body2, color: '#1F2029', fontWeight: '600' },
   
   card: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: colors.white,
-    padding: spacing[4],
-    marginBottom: spacing[2],
+    flexDirection: 'row', alignItems: 'center', padding: spacing[4], backgroundColor: colors.white,
+    borderRadius: 16, marginBottom: spacing[3], borderWidth: 1, borderColor: '#F0F0F0',
   },
-  unreadCard: {
-    backgroundColor: '#FFFFFF',
-    borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
-  },
-  iconContainer: {
-    width: 50, height: 50, borderRadius: 25,
-    alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#F0F0F0',
-    marginRight: spacing[4]
-  },
+  unreadCard: { backgroundColor: '#FDFBF9', borderColor: '#D4C4B7' },
+  iconContainer: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F0F0F0', alignItems: 'center', justifyContent: 'center', marginRight: spacing[4] },
   cardContent: { flex: 1, marginRight: spacing[2] },
-  cardTitle: { ...textStyles.body1, color: colors.text, fontWeight: '700', marginBottom: spacing[1] },
-  cardDesc:  { ...textStyles.body2, color: colors.textMuted, lineHeight: 20 },
-  timeText:  { ...textStyles.caption, color: colors.textMuted, marginTop: 2 },
+  cardTitle: { ...textStyles.body1, color: '#1F2029', fontWeight: '700', marginBottom: 2 },
+  cardDesc: { ...textStyles.caption, color: colors.textMuted },
+  timeText: { ...textStyles.caption, color: colors.textMuted, fontSize: 11 },
 });
 
 export default NotificationsScreen;

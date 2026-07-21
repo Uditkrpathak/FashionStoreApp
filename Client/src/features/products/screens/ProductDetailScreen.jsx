@@ -97,7 +97,7 @@ const ProductDetailScreen = () => {
           
           <View style={styles.headerIcons}>
             <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
-              <ArrowLeft size={24} color={colors.text} />
+              <ArrowLeft size={24} width={24} height={24} color="#1F2029" stroke="#1F2029" strokeWidth={2.2} />
             </TouchableOpacity>
             
             <Text style={styles.headerTitle}>Product Details</Text>
@@ -106,7 +106,7 @@ const ProductDetailScreen = () => {
               style={styles.iconBtn} 
               onPress={() => dispatch(toggleWishlist({ productId: product._id, ...product }))}
             >
-              <Heart size={24} color={isWishlisted ? colors.sale : colors.text} fill={isWishlisted ? colors.sale : 'transparent'} />
+              <Heart size={24} width={24} height={24} color={isWishlisted ? '#E57373' : '#1F2029'} stroke={isWishlisted ? '#E57373' : '#1F2029'} strokeWidth={2.2} fill={isWishlisted ? '#E57373' : 'transparent'} />
             </TouchableOpacity>
           </View>
 

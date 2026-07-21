@@ -282,3 +282,49 @@ export const deleteAddress = async (req, res, next) => {
     next(err);
   }
 };
+
+// ==========================================
+// ADMIN CONTROLLERS (Cart / Coupon Service)
+// ==========================================
+
+export const getAllCoupons = async (req, res, next) => {
+  try {
+    const coupons = await Coupon.find().sort({ createdAt: -1 });
+    res.json({ success: true, coupons });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createCoupon = async (req, res, next) => {
+  try {
+    const coupon = new Coupon(req.body);
+    await coupon.save();
+    res.status(201).json({ success: true, coupon });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateCoupon = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const coupon = await Coupon.findByIdAndUpdate(id, req.body, { new: true });
+    if (!coupon) return res.status(404).json({ success: false, message: 'Coupon not found' });
+    res.json({ success: true, coupon });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteCoupon = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const coupon = await Coupon.findByIdAndDelete(id);
+    if (!coupon) return res.status(404).json({ success: false, message: 'Coupon not found' });
+    res.json({ success: true, message: 'Coupon deleted successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
