@@ -119,11 +119,18 @@ const seededUsers = new Set();
 
 const seedMockOrders = async (userId) => {
   try {
+    // Ensure catalog connection is initialized
+    const { CatalogProduct: CatProd } = getCatalogModels();
+    if (!CatProd) {
+      console.log('Catalog connection not available, cannot seed orders.');
+      return;
+    }
+
     // 1. Delete all previous orders
     await Order.deleteMany({});
     
     // 2. Fetch products from CatalogProduct
-    const products = await CatalogProduct.find({}).limit(6);
+    const products = await CatProd.find({}).limit(6);
     if (!products || products.length === 0) {
       console.log('No products found in catalog to seed orders.');
       return;
@@ -236,6 +243,9 @@ const seedMockOrders = async (userId) => {
 
 export const getOrders = async (req, res, next) => {
   try {
+    // Ensure catalog connection is initialized for reviews lookup
+    const { CatalogReview: CatReview } = getCatalogModels();
+
     const userId = req.headers['x-user-id'];
     if (userId && !seededUsers.has(userId)) {
       await seedMockOrders(userId);
@@ -251,9 +261,10 @@ export const getOrders = async (req, res, next) => {
     let orders = await Order.find(filter).sort({ createdAt: -1 });
 
     // Fallback: If no completed orders exist, check the Completed tab and inject a completed order dynamically
-    if (orders.length === 0 && status && status.includes('delivered')) {
+    const { CatalogProduct: CatProdFallback } = getCatalogModels();
+    if (orders.length === 0 && status && status.includes('delivered') && CatProdFallback) {
       try {
-        const product = await CatalogProduct.findOne({});
+        const product = await CatProdFallback.findOne({});
         if (product) {
           const mockOrder = {
             userId: req.headers['x-user-id'],
@@ -296,7 +307,8 @@ export const getOrders = async (req, res, next) => {
         const orderObj = order.toObject ? order.toObject() : order;
         orderObj.items = await Promise.all(orderObj.items.map(async (item) => {
           try {
-            const review = await CatalogReview.findOne({
+            if (!CatReview) return item;
+            const review = await CatReview.findOne({
               productId: item.productId,
               userId: orderObj.userId
             });
