@@ -40,22 +40,22 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-const getServiceUrl = (envVar, defaultUrl) => {
-  if (!envVar) return defaultUrl;
-  const str = String(envVar).toLowerCase().trim();
-  if (str.includes('gateway') || str.includes('localhost') || str.includes('127.0.0.1') || str.includes(':') || !str.includes('.onrender.com')) {
-    return defaultUrl;
+const isRender = process.env.RENDER === 'true' || process.env.NODE_ENV === 'production';
+
+const getServiceUrl = (envVar, liveUrl, localPort) => {
+  if (isRender) {
+    return liveUrl;
   }
-  if (!str.startsWith('http://') && !str.startsWith('https://')) {
-    return `https://${str}`;
+  if (envVar && !envVar.includes('gateway') && !envVar.includes('localhost') && !envVar.includes('127.0.0.1')) {
+    return envVar.trim().startsWith('http') ? envVar.trim() : `https://${envVar.trim()}`;
   }
-  return envVar.trim();
+  return `http://localhost:${localPort}`;
 };
 
-const AUTH_TARGET = getServiceUrl(process.env.AUTH_SERVICE_URL, 'https://fashion-auth-service.onrender.com');
-const CATALOG_TARGET = getServiceUrl(process.env.CATALOG_SERVICE_URL, 'https://fashion-catalog-service.onrender.com');
-const CART_TARGET = getServiceUrl(process.env.CART_SERVICE_URL, 'https://fashion-cart-service.onrender.com');
-const ORDER_TARGET = getServiceUrl(process.env.ORDER_SERVICE_URL, 'https://fashion-order-service.onrender.com');
+const AUTH_TARGET = getServiceUrl(process.env.AUTH_SERVICE_URL, 'https://fashion-auth-service.onrender.com', 5001);
+const CATALOG_TARGET = getServiceUrl(process.env.CATALOG_SERVICE_URL, 'https://fashion-catalog-service.onrender.com', 5002);
+const CART_TARGET = getServiceUrl(process.env.CART_SERVICE_URL, 'https://fashion-cart-service.onrender.com', 5003);
+const ORDER_TARGET = getServiceUrl(process.env.ORDER_SERVICE_URL, 'https://fashion-order-service.onrender.com', 5004);
 
 console.log(`[GATEWAY TARGETS] Auth: ${AUTH_TARGET} | Catalog: ${CATALOG_TARGET} | Cart: ${CART_TARGET} | Order: ${ORDER_TARGET}`);
 
