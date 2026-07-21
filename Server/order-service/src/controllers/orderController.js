@@ -4,29 +4,42 @@ import crypto from 'crypto';
 import mongoose from 'mongoose';
 import { isValidTransition } from '../utils/orderStateMachine.js';
 
-// Connection to catalog database to retrieve catalog items for seeding completed orders
-const catalogConn = mongoose.createConnection(
-  process.env.MONGO_URI ? process.env.MONGO_URI.replace('fashion_orders', 'fashion_catalog') : 'mongodb://127.0.0.1:27017/fashion_catalog'
-);
+let catalogConn = null;
+let CatalogProduct = null;
+let CatalogReview = null;
 
-const ProductSchema = new mongoose.Schema({
-  title: String,
-  price: Number,
-  images: [String],
-  sizes: [String],
-  colors: [String],
-});
+const getCatalogModels = () => {
+  if (!CatalogProduct) {
+    const rawUri = process.env.CATALOG_MONGO_URI || process.env.MONGO_URI || '';
+    const isValidScheme = typeof rawUri === 'string' && (rawUri.startsWith('mongodb://') || rawUri.startsWith('mongodb+srv://'));
+    const uri = isValidScheme ? rawUri.replace('fashion_orders', 'fashion_catalog') : 'mongodb://127.0.0.1:27017/fashion_catalog';
+    try {
+      catalogConn = mongoose.createConnection(uri);
+      catalogConn.on('error', (err) => console.error('[CatalogConn Error]', err.message));
+      
+      const ProductSchema = new mongoose.Schema({
+        title: String,
+        price: Number,
+        images: [String],
+        sizes: [String],
+        colors: [String],
+      });
+      CatalogProduct = catalogConn.model('Product', ProductSchema);
 
-const CatalogProduct = catalogConn.model('Product', ProductSchema);
-
-const ReviewSchema = new mongoose.Schema({
-  productId: mongoose.Schema.Types.ObjectId,
-  userId: String,
-  rating: Number,
-  comment: String
-});
-
-const CatalogReview = catalogConn.model('Review', ReviewSchema);
+      const ReviewSchema = new mongoose.Schema({
+        productId: mongoose.Schema.Types.ObjectId,
+        userId: String,
+        rating: Number,
+        comment: String
+      });
+      CatalogReview = catalogConn.model('Review', ReviewSchema);
+    } catch (err) {
+      console.error('[CatalogConn Init Error]', err.message);
+      return {};
+    }
+  }
+  return { CatalogProduct, CatalogReview };
+};
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_mock_key_id',
