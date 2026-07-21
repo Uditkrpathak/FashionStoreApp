@@ -41,14 +41,15 @@ const verifyToken = (req, res, next) => {
 };
 
 const getServiceUrl = (envVar, defaultUrl) => {
-  if (!envVar || envVar.includes(':') || envVar.includes('fashion-gateway') || envVar.includes('localhost') || envVar.includes('127.0.0.1')) {
+  if (!envVar) return defaultUrl;
+  const str = String(envVar).toLowerCase().trim();
+  if (str.includes('gateway') || str.includes('localhost') || str.includes('127.0.0.1') || str.includes(':') || !str.includes('.onrender.com')) {
     return defaultUrl;
   }
-  let url = envVar.trim();
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    url = `https://${url}`;
+  if (!str.startsWith('http://') && !str.startsWith('https://')) {
+    return `https://${str}`;
   }
-  return url;
+  return envVar.trim();
 };
 
 const AUTH_TARGET = getServiceUrl(process.env.AUTH_SERVICE_URL, 'https://fashion-auth-service.onrender.com');
