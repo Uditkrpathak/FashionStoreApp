@@ -58,7 +58,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => console.log(`🔒 Auth Service running on port ${PORT}`));
 
 if (MONGO_URI) {
-  mongoose.connect(MONGO_URI)
+  mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 5000 })
     .then(async () => {
       console.log('Auth DB Connected');
       await seedDefaultAdmin();
@@ -66,4 +66,6 @@ if (MONGO_URI) {
     .catch(err => {
       console.error('Database Error: Failed to connect to MongoDB', err.message);
     });
+} else {
+  console.error('CRITICAL: MONGO_URI environment variable is missing on Render!');
 }

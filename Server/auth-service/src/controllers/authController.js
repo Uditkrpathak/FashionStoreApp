@@ -1,12 +1,20 @@
 import User from '../models/User.js';
 import AuditLog from '../models/AuditLog.js';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import { sendOtpEmail } from '../utils/emailService.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 
 export const login = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Database Error: MONGO_URI is missing or database is not connected on Render. Please check MONGO_URI environment variable on Render.' 
+      });
+    }
+
     const email = req.body.email?.toLowerCase();
     const { password } = req.body;
     let user = await User.findOne({ email });
