@@ -5,12 +5,11 @@ import morgan from 'morgan';
 import mongoose from 'mongoose';
 import cartRoutes from './src/routes/cartRoutes.js';
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/fashion_cart';
+const MONGO_URI = process.env.CART_MONGO_URI || process.env.MONGO_URI;
 const PORT = process.env.PORT || 5003;
 
 if (!MONGO_URI) {
-  console.error('FATAL ERROR: MONGO_URI environment variable is required.');
-  process.exit(1);
+  console.warn('WARNING: MONGO_URI environment variable is not set yet.');
 }
 
 const app = express();
