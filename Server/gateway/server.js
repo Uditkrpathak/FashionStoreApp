@@ -40,42 +40,48 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-const formatTargetUrl = (url, fallback) => {
-  let trimmed = (url || '').trim();
-  // Prevent circular proxy loops if env var is missing or points to gateway itself
-  if (!trimmed || trimmed.includes('fashion-gateway') || trimmed === 'localhost') {
-    trimmed = fallback;
+const getServiceUrl = (envVar, defaultUrl) => {
+  if (!envVar || envVar.includes('fashion-gateway') || envVar.includes('localhost') || envVar.includes('127.0.0.1')) {
+    return defaultUrl;
   }
-  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-    return `https://${trimmed}`;
+  let url = envVar.trim();
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = `https://${url}`;
   }
-  return trimmed;
+  return url;
 };
+
+const AUTH_TARGET = getServiceUrl(process.env.AUTH_SERVICE_URL, 'https://fashion-auth-service.onrender.com');
+const CATALOG_TARGET = getServiceUrl(process.env.CATALOG_SERVICE_URL, 'https://fashion-catalog-service.onrender.com');
+const CART_TARGET = getServiceUrl(process.env.CART_SERVICE_URL, 'https://fashion-cart-service.onrender.com');
+const ORDER_TARGET = getServiceUrl(process.env.ORDER_SERVICE_URL, 'https://fashion-order-service.onrender.com');
+
+console.log(`[GATEWAY TARGETS] Auth: ${AUTH_TARGET} | Catalog: ${CATALOG_TARGET} | Cart: ${CART_TARGET} | Order: ${ORDER_TARGET}`);
 
 // Define Routes & Protections
 const routes = [
   // Auth Service (Mixed Public/Protected)
   { 
     path: '/api/v1/auth', 
-    target: formatTargetUrl(process.env.AUTH_SERVICE_URL, 'https://fashion-auth-service.onrender.com'),
+    target: AUTH_TARGET,
     protectedPaths: ['/me', '/profile', '/wishlist', '/addresses', '/notifications', '/admin']
   },
   // Catalog Service (Public GET, Protected POST/PUT/DELETE & /admin)
   { 
     path: '/api/v1/products', 
-    target: formatTargetUrl(process.env.CATALOG_SERVICE_URL, 'https://fashion-catalog-service.onrender.com'),
+    target: CATALOG_TARGET,
     protectedPaths: ['/reviews', '/admin']
   },
   // Cart Service (Fully Protected)
   { 
     path: '/api/v1/cart', 
-    target: formatTargetUrl(process.env.CART_SERVICE_URL, 'https://fashion-cart-service.onrender.com'),
+    target: CART_TARGET,
     protectedPaths: ['/']
   },
   // Order Service (Fully Protected)
   { 
     path: '/api/v1/orders', 
-    target: formatTargetUrl(process.env.ORDER_SERVICE_URL, 'https://fashion-order-service.onrender.com'),
+    target: ORDER_TARGET,
     protectedPaths: ['/']
   }
 ];
@@ -101,7 +107,7 @@ routes.forEach((route) => {
       }
     },
     onError: (err, req, res) => {
-      console.error(`[PROXY ERROR] Proxying ${req.method} ${req.url} to ${route.target} failed:`, err.message);
+      console.error(`[PROXY ERROR] Proxying ${req.method} ${req.url} to ${targetUrl} failed:`, err.message);
       if (!res.headersSent) {
         res.status(502).json({ success: false, message: 'Bad Gateway: Microservice connection failed.' });
       }
