@@ -42,8 +42,6 @@ services:
         value: 5001
       - key: MONGO_URI
         sync: false
-      - key: AUTH_MONGO_URI
-        sync: false
       - key: JWT_SECRET
         value: supersecret
       - key: SMTP_USER
@@ -62,8 +60,6 @@ services:
         value: 5002
       - key: MONGO_URI
         sync: false
-      - key: CATALOG_MONGO_URI
-        sync: false
 
   # 🛒 Private Cart Microservice
   - type: pserv
@@ -76,8 +72,6 @@ services:
         value: 5003
       - key: MONGO_URI
         sync: false
-      - key: CART_MONGO_URI
-        sync: false
 
   # 📦 Private Order & Payment Microservice
   - type: pserv
@@ -89,8 +83,6 @@ services:
       - key: PORT
         value: 5004
       - key: MONGO_URI
-        sync: false
-      - key: ORDER_MONGO_URI
         sync: false
       - key: AUTH_SERVICE_URL
         fromService:

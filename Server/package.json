@@ -9,7 +9,8 @@
     "dev:catalog": "node --env-file=catalog-service/.env catalog-service/server.js",
     "dev:cart": "node --env-file=cart-service/.env cart-service/server.js",
     "dev:order": "node --env-file=order-service/.env order-service/server.js",
-    "dev": "concurrently \"npm run dev:gateway\" \"npm run dev:auth\" \"npm run dev:catalog\" \"npm run dev:cart\" \"npm run dev:order\""
+    "dev": "concurrently \"npm run dev:gateway\" \"npm run dev:auth\" \"npm run dev:catalog\" \"npm run dev:cart\" \"npm run dev:order\"",
+    "start": "concurrently \"node gateway/server.js\" \"node auth-service/server.js\" \"node catalog-service/server.js\" \"node cart-service/server.js\" \"node order-service/server.js\""
   },
   "keywords": [],
   "author": "",
@@ -17,6 +18,7 @@
   "type": "module",
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "concurrently": "^10.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -29,7 +31,5 @@
     "nodemailer": "^9.0.3",
     "razorpay": "^2.9.6"
   },
-  "devDependencies": {
-    "concurrently": "^10.0.3"
-  }
+  "devDependencies": {}
 }
