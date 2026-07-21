@@ -82,10 +82,24 @@ const routes = [
 
 // Setup proxy routes with selective middleware
 routes.forEach((route) => {
+  const targetUrl = route.target;
+  let targetHost = '';
+  try {
+    targetHost = new URL(targetUrl).host;
+  } catch (e) {
+    targetHost = '';
+  }
+
   const proxy = createProxyMiddleware({
-    target: route.target,
+    target: targetUrl,
     changeOrigin: true,
+    secure: false,
     pathRewrite: (path, req) => path.replace(route.path, ''),
+    onProxyReq: (proxyReq, req, res) => {
+      if (targetHost) {
+        proxyReq.setHeader('host', targetHost);
+      }
+    },
     onError: (err, req, res) => {
       console.error(`[PROXY ERROR] Proxying ${req.method} ${req.url} to ${route.target} failed:`, err.message);
       if (!res.headersSent) {
