@@ -40,9 +40,12 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-const formatTargetUrl = (url) => {
-  if (!url) return '';
-  const trimmed = url.trim();
+const formatTargetUrl = (url, fallback) => {
+  let trimmed = (url || '').trim();
+  // Prevent circular proxy loops if env var is missing or points to gateway itself
+  if (!trimmed || trimmed.includes('fashion-gateway') || trimmed === 'localhost') {
+    trimmed = fallback;
+  }
   if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
     return `https://${trimmed}`;
   }
@@ -54,25 +57,25 @@ const routes = [
   // Auth Service (Mixed Public/Protected)
   { 
     path: '/api/v1/auth', 
-    target: formatTargetUrl(process.env.AUTH_SERVICE_URL || 'http://localhost:5001'),
+    target: formatTargetUrl(process.env.AUTH_SERVICE_URL, 'https://fashion-auth-service.onrender.com'),
     protectedPaths: ['/me', '/profile', '/wishlist', '/addresses', '/notifications', '/admin']
   },
   // Catalog Service (Public GET, Protected POST/PUT/DELETE & /admin)
   { 
     path: '/api/v1/products', 
-    target: formatTargetUrl(process.env.CATALOG_SERVICE_URL || 'http://localhost:5002'),
+    target: formatTargetUrl(process.env.CATALOG_SERVICE_URL, 'https://fashion-catalog-service.onrender.com'),
     protectedPaths: ['/reviews', '/admin']
   },
   // Cart Service (Fully Protected)
   { 
     path: '/api/v1/cart', 
-    target: formatTargetUrl(process.env.CART_SERVICE_URL || 'http://localhost:5003'),
+    target: formatTargetUrl(process.env.CART_SERVICE_URL, 'https://fashion-cart-service.onrender.com'),
     protectedPaths: ['/']
   },
   // Order Service (Fully Protected)
   { 
     path: '/api/v1/orders', 
-    target: formatTargetUrl(process.env.ORDER_SERVICE_URL || 'http://localhost:5004'),
+    target: formatTargetUrl(process.env.ORDER_SERVICE_URL, 'https://fashion-order-service.onrender.com'),
     protectedPaths: ['/']
   }
 ];
