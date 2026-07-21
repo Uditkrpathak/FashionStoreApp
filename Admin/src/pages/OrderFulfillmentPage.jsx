@@ -43,7 +43,7 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
   return (
     <div className="space-y-6">
       {/* Sticky Status Tabs Filter */}
-      <div className="bg-white p-3 rounded-2xl border border-[#EDEDED] shadow-sm flex gap-2 overflow-x-auto">
+      <div className="bg-white p-3 rounded-xl border border-[#EDEDED] shadow-sm flex gap-2 overflow-x-auto">
         {STATUS_TABS.map((tab) => {
           const isActive = activeStatus === tab.id;
           return (
@@ -63,7 +63,7 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
       </div>
 
       {/* Table-First Orders Listing */}
-      <div className="bg-white rounded-2xl border border-[#EDEDED] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-[#EDEDED] shadow-sm overflow-hidden">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[11px] font-extrabold uppercase tracking-wider">
@@ -147,23 +147,31 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
       {/* Details Drawer Modal */}
       {drawerVisible && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl border border-[#EDEDED] space-y-5">
+          <div className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl border border-[#EDEDED] space-y-5">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-black text-[#1F2029]">Order Details #{selectedOrder?._id?.slice(-8)?.toUpperCase()}</h3>
               <button onClick={() => setDrawerVisible(false)} className="text-[#797979] hover:text-[#1F2029]"><X className="w-5 h-5" /></button>
             </div>
 
-            <div className="bg-[#FDFBF9] rounded-2xl p-4 border border-[#EDEDED]">
+            <div className="bg-[#FDFBF9] rounded-xl p-4 border border-[#EDEDED]">
               <div className="flex items-center gap-2 font-bold text-xs text-[#704F38] uppercase tracking-wider mb-2">
                 <MapPin className="w-4 h-4 text-[#704F38]" /> Shipping Address
               </div>
-              <div className="font-extrabold text-sm text-[#1F2029]">{selectedOrder?.shippingAddress?.name || 'Customer'}</div>
+              <div className="font-extrabold text-sm text-[#1F2029]">
+                {selectedOrder?.shippingAddress?.name || selectedOrder?.shippingAddress?.fullName || 'Customer'}
+                {selectedOrder?.shippingAddress?.phone ? ` • ${selectedOrder.shippingAddress.phone}` : ''}
+              </div>
               <div className="text-xs text-[#797979] font-medium mt-1">
-                {selectedOrder?.shippingAddress?.line1}, {selectedOrder?.shippingAddress?.city}, {selectedOrder?.shippingAddress?.state} - {selectedOrder?.shippingAddress?.pincode}
+                {[
+                  selectedOrder?.shippingAddress?.line1 || selectedOrder?.shippingAddress?.address,
+                  selectedOrder?.shippingAddress?.city,
+                  selectedOrder?.shippingAddress?.state,
+                  selectedOrder?.shippingAddress?.pincode || selectedOrder?.shippingAddress?.zip
+                ].filter(Boolean).join(', ') || 'No address specified'}
               </div>
             </div>
 
-            <div className="bg-[#FDFBF9] rounded-2xl p-4 border border-[#EDEDED]">
+            <div className="bg-[#FDFBF9] rounded-xl p-4 border border-[#EDEDED]">
               <div className="font-bold text-xs text-[#1F2029] uppercase tracking-wider mb-3">Order Items</div>
               <div className="divide-y divide-[#EDEDED]">
                 {selectedOrder?.items?.map((item, idx) => (
@@ -176,7 +184,7 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
               </div>
             </div>
 
-            <div className="bg-[#FDFBF9] rounded-2xl p-4 border border-[#EDEDED]">
+            <div className="bg-[#FDFBF9] rounded-xl p-4 border border-[#EDEDED]">
               <div className="font-bold text-xs text-[#1F2029] uppercase tracking-wider mb-3">Lifecycle Timeline</div>
               <div className="space-y-2">
                 {selectedOrder?.statusHistory?.map((hist, idx) => (

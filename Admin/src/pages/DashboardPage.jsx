@@ -38,7 +38,7 @@ export const DashboardPage = ({ onNavigateToOrders }) => {
           {kpiCards.map((card, idx) => {
             const Icon = card.icon;
             return (
-              <div key={idx} className="bg-white p-5 rounded-2xl border border-[#EDEDED] shadow-sm hover:shadow-md transition-shadow flex items-center">
+              <div key={idx} className="bg-white p-5 rounded-xl border border-[#EDEDED] shadow-sm hover:shadow-md transition-shadow flex items-center">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mr-4 flex-shrink-0" style={{ backgroundColor: card.bg }}>
                   <Icon className="w-6 h-6" style={{ color: card.color }} />
                 </div>
@@ -55,7 +55,7 @@ export const DashboardPage = ({ onNavigateToOrders }) => {
       {/* Fulfillment Status Breakdown */}
       <div>
         <h3 className="text-sm font-extrabold text-[#1F2029] uppercase tracking-wider mb-4">Fulfillment Breakdown</h3>
-        <div className="bg-white p-5 rounded-2xl border border-[#EDEDED] shadow-sm flex flex-wrap gap-3">
+        <div className="bg-white p-5 rounded-xl border border-[#EDEDED] shadow-sm flex flex-wrap gap-3">
           <div className="px-4 py-2 rounded-full bg-[#FFFBEB] text-[#B45309] font-bold text-xs border border-[#FDE68A]">
             Placed: {stats.placedCount}
           </div>
@@ -88,7 +88,7 @@ export const DashboardPage = ({ onNavigateToOrders }) => {
           )}
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#EDEDED] shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-[#EDEDED] shadow-sm overflow-hidden">
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[11px] font-extrabold uppercase tracking-wider">

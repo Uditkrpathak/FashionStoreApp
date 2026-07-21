@@ -63,7 +63,7 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
   return (
     <div className="space-y-6">
       {/* Sticky Filter & Top Bar */}
-      <div className="flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-2xl border border-[#EDEDED] shadow-sm items-center">
+      <div className="flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-xl border border-[#EDEDED] shadow-sm items-center">
         <div className="w-full sm:w-72 flex items-center bg-[#FDFBF9] border border-[#EDEDED] rounded-xl px-3.5">
           <Search className="w-4 h-4 text-[#797979] mr-2" />
           <input
@@ -113,7 +113,7 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
       </div>
 
       {/* Table-First Product Inventory */}
-      <div className="bg-white rounded-2xl border border-[#EDEDED] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-[#EDEDED] shadow-sm overflow-hidden">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[11px] font-extrabold uppercase tracking-wider">
@@ -170,7 +170,7 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
       {/* Category Modal */}
       {categoryModalVisible && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-[#EDEDED]">
+          <div className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-[#EDEDED]">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-black text-[#1F2029]">Add New Category</h3>
               <button onClick={() => setCategoryModalVisible(false)} className="text-[#797979] hover:text-[#1F2029]"><X className="w-5 h-5" /></button>
@@ -207,7 +207,7 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
       {/* Review Moderation Modal */}
       {reviewsModalVisible && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-xl max-h-[80vh] overflow-y-auto shadow-2xl border border-[#EDEDED]">
+          <div className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-xl max-h-[80vh] overflow-y-auto shadow-2xl border border-[#EDEDED]">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-black text-[#1F2029]">Customer Reviews Moderation</h3>
               <button onClick={() => setReviewsModalVisible(false)} className="text-[#797979] hover:text-[#1F2029]"><X className="w-5 h-5" /></button>

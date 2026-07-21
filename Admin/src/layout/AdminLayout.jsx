@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectAdminUser, logout } from '../app/authSlice';
 import { hasPermission } from './PermissionGuard';
+import brandIcon from '../assets/icon.png';
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -46,8 +47,8 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
         <div>
           {/* Brand Header */}
           <div className="flex items-center px-5 py-5 border-b border-[#2D2E3A] gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#704F38] flex items-center justify-center shadow-md">
-              <ShieldCheck className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-xl overflow-hidden bg-white flex items-center justify-center shadow-md p-1">
+              <img src={brandIcon} alt="FashionStore Admin" className="w-full h-full object-contain" />
             </div>
             {!sidebarCollapsed && (
               <div>

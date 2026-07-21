@@ -52,7 +52,7 @@ export const PermissionGuard = ({ requiredPermission, allowedRoles, children, on
   if (!isAuthorized) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] p-6 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-[#FEF2F2] flex items-center justify-center mb-4">
+        <div className="w-16 h-16 rounded-xl bg-[#FEF2F2] flex items-center justify-center mb-4">
           <ShieldAlert className="w-8 h-8 text-[#E57373]" />
         </div>
         <h2 className="text-xl font-black text-[#1F2029]">403 - Access Denied</h2>

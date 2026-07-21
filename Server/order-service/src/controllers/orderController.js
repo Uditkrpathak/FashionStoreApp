@@ -158,6 +158,7 @@ const seedMockOrders = async (userId) => {
       userId,
       orderStatus: 'placed',
       items: [getProductItem(0)],
+      shippingAddress: { name: 'Rahul Sharma', line1: '42 MG Road, Block C', city: 'Mumbai', state: 'Maharashtra', pincode: '400001', phone: '+91 9876543210' },
       totals: { subtotal: products[0].price, shipping: 100, discount: 0, grandTotal: products[0].price + 100 },
       paymentStatus: 'pending',
       statusHistory: [{ status: 'placed', timestamp: new Date(Date.now() - 3600000) }]
@@ -167,6 +168,7 @@ const seedMockOrders = async (userId) => {
       userId,
       orderStatus: 'shipped',
       items: [getProductItem(1 % products.length)],
+      shippingAddress: { name: 'Priya Patel', line1: '15 CG Highway, Sector 4', city: 'Ahmedabad', state: 'Gujarat', pincode: '380009', phone: '+91 9812345678' },
       totals: { subtotal: products[1 % products.length].price, shipping: 0, discount: 0, grandTotal: products[1 % products.length].price },
       paymentStatus: 'completed',
       statusHistory: [
@@ -181,6 +183,7 @@ const seedMockOrders = async (userId) => {
       userId,
       orderStatus: 'delivered',
       items: [getProductItem(2 % products.length)],
+      shippingAddress: { name: 'Ananya Verma', line1: '78 Park Street, Apt 3B', city: 'Kolkata', state: 'West Bengal', pincode: '700016', phone: '+91 9765432109' },
       totals: { subtotal: products[2 % products.length].price, shipping: 0, discount: 0, grandTotal: products[2 % products.length].price },
       paymentStatus: 'completed',
       statusHistory: [
@@ -195,6 +198,7 @@ const seedMockOrders = async (userId) => {
       userId,
       orderStatus: 'delivered',
       items: [getProductItem(3 % products.length)],
+      shippingAddress: { name: 'Vikram Singh', line1: '102 Indiranagar 10th Main', city: 'Bengaluru', state: 'Karnataka', pincode: '560038', phone: '+91 9654321098' },
       totals: { subtotal: products[3 % products.length].price, shipping: 150, discount: 50, grandTotal: products[3 % products.length].price + 100 },
       paymentStatus: 'completed',
       statusHistory: [
@@ -210,6 +214,7 @@ const seedMockOrders = async (userId) => {
       userId,
       orderStatus: 'cancelled',
       items: [getProductItem(4 % products.length)],
+      shippingAddress: { name: 'Sneha Kapoor', line1: '88 Connaught Place', city: 'New Delhi', state: 'Delhi', pincode: '110001', phone: '+91 9543210987' },
       totals: { subtotal: products[4 % products.length].price, shipping: 0, discount: 0, grandTotal: products[4 % products.length].price },
       paymentStatus: 'pending',
       statusHistory: [
@@ -222,6 +227,7 @@ const seedMockOrders = async (userId) => {
       userId,
       orderStatus: 'cancelled',
       items: [getProductItem(5 % products.length)],
+      shippingAddress: { name: 'Amit Roy', line1: '55 Jubilee Hills, Road No 36', city: 'Hyderabad', state: 'Telangana', pincode: '500033', phone: '+91 9432109876' },
       totals: { subtotal: products[5 % products.length].price, shipping: 100, discount: 0, grandTotal: products[5 % products.length].price + 100 },
       paymentStatus: 'pending',
       statusHistory: [
@@ -468,6 +474,34 @@ export const getAllOrdersAdmin = async (req, res, next) => {
     if (totalInDb === 0) {
       const adminUserId = req.headers['x-user-id'] || 'admin-demo-user';
       await seedMockOrders(adminUserId);
+    } else {
+      // Backfill shippingAddress for existing orders missing name or line1
+      const ordersWithoutAddress = await Order.find({
+        $or: [
+          { shippingAddress: { $exists: false } },
+          { shippingAddress: null },
+          { 'shippingAddress.name': { $exists: false } },
+          { 'shippingAddress.name': '' },
+          { 'shippingAddress.line1': { $exists: false } },
+          { 'shippingAddress.line1': '' }
+        ]
+      });
+
+      if (ordersWithoutAddress.length > 0) {
+        const mockAddresses = [
+          { name: 'Rahul Sharma', line1: '42 MG Road, Block C', city: 'Mumbai', state: 'Maharashtra', pincode: '400001', phone: '+91 9876543210' },
+          { name: 'Priya Patel', line1: '15 CG Highway, Sector 4', city: 'Ahmedabad', state: 'Gujarat', pincode: '380009', phone: '+91 9812345678' },
+          { name: 'Ananya Verma', line1: '78 Park Street, Apt 3B', city: 'Kolkata', state: 'West Bengal', pincode: '700016', phone: '+91 9765432109' },
+          { name: 'Vikram Singh', line1: '102 Indiranagar 10th Main', city: 'Bengaluru', state: 'Karnataka', pincode: '560038', phone: '+91 9654321098' },
+          { name: 'Sneha Kapoor', line1: '88 Connaught Place', city: 'New Delhi', state: 'Delhi', pincode: '110001', phone: '+91 9543210987' },
+          { name: 'Amit Roy', line1: '55 Jubilee Hills, Road No 36', city: 'Hyderabad', state: 'Telangana', pincode: '500033', phone: '+91 9432109876' }
+        ];
+
+        for (let i = 0; i < ordersWithoutAddress.length; i++) {
+          ordersWithoutAddress[i].shippingAddress = mockAddresses[i % mockAddresses.length];
+          await ordersWithoutAddress[i].save();
+        }
+      }
     }
 
     const orders = await Order.find(query)

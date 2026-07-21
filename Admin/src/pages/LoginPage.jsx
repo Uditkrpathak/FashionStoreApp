@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useAdminLoginMutation } from '../services/adminAuthApi';
 import { setCredentials } from '../app/authSlice';
+import brandIcon from '../assets/icon.png';
 import { ShieldCheck, Lock, Mail } from 'lucide-react';
 
 export const LoginPage = () => {
@@ -33,10 +34,10 @@ export const LoginPage = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[#1F2029] p-5">
-      <div className="bg-white p-8 sm:p-10 rounded-3xl w-full max-w-md shadow-2xl border border-[#D4C4B7]/20">
+      <div className="bg-white p-8 sm:p-10 rounded-xl w-full max-w-md shadow-xl border border-[#D4C4B7]/20">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-[#704F38] flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#704F38]/30">
-            <ShieldCheck className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 bg-white  flex items-center justify-center mx-auto mb-4 p-2">
+            <img src={brandIcon} alt="FashionStore Admin Logo" className="w-full h-full " />
           </div>
           <h2 className="text-2xl font-black text-[#1F2029] tracking-tight">FashionStore</h2>
           <span className="text-[11px] font-black text-[#704F38] tracking-widest uppercase mt-1 block">
@@ -90,9 +91,7 @@ export const LoginPage = () => {
           </button>
         </form>
 
-        <div className="mt-8 text-center text-xs text-[#797979]">
-          Default Super Admin: <span className="font-bold text-[#704F38]">admin@fashionstore.com</span> / <span className="font-bold text-[#704F38]">Admin@123</span>
-        </div>
+
       </div>
     </div>
   );

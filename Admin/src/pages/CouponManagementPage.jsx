@@ -76,7 +76,7 @@ export const CouponManagementPage = () => {
   return (
     <div className="space-y-6">
       {/* Top Header Bar */}
-      <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-[#EDEDED] shadow-sm">
+      <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-[#EDEDED] shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#FFFBEB] flex items-center justify-center border border-[#FDE68A]">
             <Ticket className="w-5 h-5 text-[#B45309]" />
@@ -89,7 +89,7 @@ export const CouponManagementPage = () => {
       </div>
 
       {/* Table-First Coupons List */}
-      <div className="bg-white rounded-2xl border border-[#EDEDED] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-[#EDEDED] shadow-sm overflow-hidden">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[11px] font-extrabold uppercase tracking-wider">
@@ -142,7 +142,7 @@ export const CouponManagementPage = () => {
       {/* Modal */}
       {modalVisible && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-[#EDEDED]">
+          <div className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-[#EDEDED]">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-black text-[#1F2029]">{editingCoupon ? 'Edit Promo Coupon' : 'Create New Promo Coupon'}</h3>
               <button onClick={() => setModalVisible(false)} className="text-[#797979] hover:text-[#1F2029]"><X className="w-5 h-5" /></button>

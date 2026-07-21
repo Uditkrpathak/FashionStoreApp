@@ -73,7 +73,7 @@ export const ProductFormPage = ({ productToEdit, onBack }) => {
   return (
     <div className="space-y-6">
       {/* Top Header Bar */}
-      <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-[#EDEDED] shadow-sm">
+      <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-[#EDEDED] shadow-sm">
         <button onClick={onBack} className="inline-flex items-center gap-2 text-xs font-bold text-[#1F2029] hover:text-[#704F38] transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back to Inventory List
         </button>
@@ -86,7 +86,7 @@ export const ProductFormPage = ({ productToEdit, onBack }) => {
       {/* Multi-Section Form */}
       <form onSubmit={handleSave} className="space-y-6">
         {/* Section 1: Basic Info */}
-        <div className="bg-white rounded-2xl p-6 border border-[#EDEDED] shadow-sm space-y-4">
+        <div className="bg-white rounded-xl p-6 border border-[#EDEDED] shadow-sm space-y-4">
           <h3 className="text-sm font-extrabold text-[#1F2029] uppercase tracking-wider">1. Basic Product Information</h3>
 
           <div>
@@ -125,7 +125,7 @@ export const ProductFormPage = ({ productToEdit, onBack }) => {
         </div>
 
         {/* Section 2: Financials */}
-        <div className="bg-white rounded-2xl p-6 border border-[#EDEDED] shadow-sm space-y-4">
+        <div className="bg-white rounded-xl p-6 border border-[#EDEDED] shadow-sm space-y-4">
           <h3 className="text-sm font-extrabold text-[#1F2029] uppercase tracking-wider">2. Pricing & Description</h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -147,7 +147,7 @@ export const ProductFormPage = ({ productToEdit, onBack }) => {
         </div>
 
         {/* Section 3: Variants */}
-        <div className="bg-white rounded-2xl p-6 border border-[#EDEDED] shadow-sm space-y-4">
+        <div className="bg-white rounded-xl p-6 border border-[#EDEDED] shadow-sm space-y-4">
           <h3 className="text-sm font-extrabold text-[#1F2029] uppercase tracking-wider">3. Variant Matrix (Sizes & Colors)</h3>
 
           <div>
@@ -174,7 +174,7 @@ export const ProductFormPage = ({ productToEdit, onBack }) => {
         </div>
 
         {/* Section 4: Media */}
-        <div className="bg-white rounded-2xl p-6 border border-[#EDEDED] shadow-sm space-y-4">
+        <div className="bg-white rounded-xl p-6 border border-[#EDEDED] shadow-sm space-y-4">
           <h3 className="text-sm font-extrabold text-[#1F2029] uppercase tracking-wider">4. Media & Primary Image</h3>
           <label className="block text-xs font-bold text-[#1F2029] uppercase tracking-wider mb-2">Primary Image URL</label>
           <input type="text" placeholder="https://images.unsplash.com/photo-..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="w-full p-3 rounded-xl border border-[#EDEDED] bg-[#FDFBF9] text-sm font-medium outline-none focus:border-[#704F38]" />
