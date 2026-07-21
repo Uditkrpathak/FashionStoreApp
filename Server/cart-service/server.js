@@ -48,8 +48,13 @@ app.use((err, req, res, next) => {
 // Start HTTP server immediately so Render health checks pass cleanly
 app.listen(PORT, () => console.log(`🛒 Cart Service running on port ${PORT}`));
 
-if (MONGO_URI) {
-  mongoose.connect(MONGO_URI)
+const rawUri = process.env.CART_MONGO_URI || process.env.MONGO_URI;
+const isValidScheme = typeof rawUri === 'string' && (rawUri.startsWith('mongodb://') || rawUri.startsWith('mongodb+srv://'));
+
+if (isValidScheme) {
+  mongoose.connect(rawUri)
     .then(() => console.log('Cart DB Connected'))
     .catch(err => console.error('Database Error: Failed to connect to MongoDB', err.message));
+} else {
+  console.warn('WARNING: Valid MONGO_URI (starting with mongodb:// or mongodb+srv://) is not provided yet.');
 }

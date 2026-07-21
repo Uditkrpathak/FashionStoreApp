@@ -3,20 +3,32 @@ import Address from '../models/Address.js';
 import Coupon from '../models/Coupon.js';
 import Cart from '../models/Cart.js';
 
-// Connection to catalog database to validate client inputs and retrieve verified price/title/image
-const catalogConn = mongoose.createConnection(
-  process.env.MONGO_URI ? process.env.MONGO_URI.replace('fashion_cart', 'fashion_catalog') : 'mongodb://127.0.0.1:27017/fashion_catalog'
-);
+let catalogConn = null;
+let CatalogProduct = null;
 
-const ProductSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  price: { type: Number, required: true },
-  images: [String],
-  sizes: [String],
-  colors: [String],
-});
-
-const CatalogProduct = catalogConn.model('Product', ProductSchema);
+const getCatalogProductModel = () => {
+  if (!CatalogProduct) {
+    const rawUri = process.env.CATALOG_MONGO_URI || process.env.MONGO_URI || '';
+    const isValidScheme = typeof rawUri === 'string' && (rawUri.startsWith('mongodb://') || rawUri.startsWith('mongodb+srv://'));
+    const uri = isValidScheme ? rawUri.replace('fashion_cart', 'fashion_catalog') : 'mongodb://127.0.0.1:27017/fashion_catalog';
+    try {
+      catalogConn = mongoose.createConnection(uri);
+      catalogConn.on('error', (err) => console.error('[CatalogConn Error]', err.message));
+      const ProductSchema = new mongoose.Schema({
+        title: { type: String, required: true },
+        price: { type: Number, required: true },
+        images: [String],
+        sizes: [String],
+        colors: [String],
+      });
+      CatalogProduct = catalogConn.model('Product', ProductSchema);
+    } catch (err) {
+      console.error('[CatalogConn Init Error]', err.message);
+      return null;
+    }
+  }
+  return CatalogProduct;
+};
 
 const recalcCartTotals = (cart) => {
   cart.totalQty = cart.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -47,7 +59,8 @@ export const addToCart = async (req, res, next) => {
     }
 
     // Fetch from official catalog DB — NEVER trust client price, title, or image
-    const product = await CatalogProduct.findById(productId);
+    const CatalogModel = getCatalogProductModel();
+    const product = CatalogModel ? await CatalogModel.findById(productId) : null;
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found in catalog' });
     }
@@ -127,7 +140,8 @@ export const updateCartQty = async (req, res, next) => {
       }
 
       // Sync catalog values just in case
-      const product = await CatalogProduct.findById(productId);
+      const CatalogModel = getCatalogProductModel();
+      const product = CatalogModel ? await CatalogModel.findById(productId) : null;
       if (product) {
         item.price = product.price;
         item.title = product.title;
