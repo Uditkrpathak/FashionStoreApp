@@ -186,16 +186,30 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
 
             <div className="bg-[#FDFBF9] rounded-xl p-4 border border-[#EDEDED]">
               <div className="font-bold text-xs text-[#1F2029] uppercase tracking-wider mb-3">Lifecycle Timeline</div>
-              <div className="space-y-2">
-                {selectedOrder?.statusHistory?.map((hist, idx) => (
-                  <div key={idx} className="flex items-center gap-3 text-xs">
-                    <Clock className="w-3.5 h-3.5 text-[#797979]" />
-                    <div>
-                      <span className="font-extrabold text-[#1F2029]">{hist.status?.toUpperCase()}</span>
-                      <span className="text-[#797979] font-medium ml-2">{new Date(hist.timestamp).toLocaleString()} - {hist.reason || 'N/A'}</span>
+              <div className="space-y-2.5">
+                {selectedOrder?.statusHistory?.map((hist, idx) => {
+                  const statusNote = hist.reason || (
+                    hist.status === 'placed' ? 'Order placed successfully' :
+                    hist.status === 'confirmed' ? 'Order confirmed' :
+                    hist.status === 'shipped' ? 'Dispatched for delivery' :
+                    hist.status === 'delivered' ? 'Package delivered' :
+                    hist.status === 'cancelled' ? 'Order cancelled' : 'Updated'
+                  );
+                  return (
+                    <div key={idx} className="flex items-center gap-3 text-xs">
+                      <Clock className="w-3.5 h-3.5 text-[#704F38]" />
+                      <div>
+                        <span className="font-extrabold text-[#1F2029]">{hist.status?.toUpperCase()}</span>
+                        <span className="text-[#797979] font-medium ml-2">
+                          {hist.timestamp ? new Date(hist.timestamp).toLocaleString() : ''}
+                        </span>
+                        <span className="text-[#704F38] font-semibold ml-2">
+                          • {statusNote}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

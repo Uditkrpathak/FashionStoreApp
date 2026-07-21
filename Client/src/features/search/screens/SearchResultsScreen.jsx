@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   },
   count:   { ...textStyles.caption, color: colors.textMuted },
   sortBtn: { ...textStyles.label, color: colors.primary },
-  list:    { padding: spacing[2] },
+  list:    { padding: spacing[2], paddingBottom: 120 },
   row:     { justifyContent: 'space-between' },
 });
 

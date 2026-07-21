@@ -43,8 +43,8 @@ const ProductCard = ({
         >
           <Heart 
             size={16} 
-            color={isWishlisted ? colors.text : colors.textMuted} 
-            fill={isWishlisted ? colors.text : 'transparent'} 
+            color={isWishlisted ? '#0B0805' : colors.textMuted} 
+            fill={isWishlisted ? '#0B0805' : 'transparent'} 
           />
         </Pressable>
       </View>

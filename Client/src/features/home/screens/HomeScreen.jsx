@@ -29,6 +29,8 @@ const BANNERS = [
     buttonText: 'Shop Now',
     image: require('../../../../assets/images/banner_collection.jpg'),
     backgroundColor: '#F1E9DE', // Earthy beige color
+    imageStyle: { right: -5, bottom: -5, width: 140, height: 165 },
+    resizeMode: 'cover',
   },
   {
     id: '2',
@@ -37,6 +39,8 @@ const BANNERS = [
     buttonText: 'Explore',
     image: require('../../../../assets/images/banner_summer.jpg'),
     backgroundColor: '#EAE1DF',
+    imageStyle: { right: -5, bottom: -5, width: 140, height: 165 },
+    resizeMode: 'cover',
   },
   {
     id: '3',
@@ -45,6 +49,8 @@ const BANNERS = [
     buttonText: 'View Details',
     image: require('../../../../assets/images/banner_trending.jpg'),
     backgroundColor: '#E2E6E3',
+    imageStyle: { right: 0, bottom: 0, width: 145, height: 160, borderRadius: 16 },
+    resizeMode: 'cover',
   }
 ];
 
@@ -180,8 +186,8 @@ const HomeScreen = () => {
                 </View>
                 <Image
                   source={banner.image}
-                  style={styles.bannerImage}
-                  resizeMode="cover"
+                  style={[styles.bannerImage, banner.imageStyle]}
+                  resizeMode={banner.resizeMode || 'cover'}
                 />
               </View>
             ))}

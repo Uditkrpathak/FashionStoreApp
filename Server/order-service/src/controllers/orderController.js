@@ -266,10 +266,6 @@ export const getOrders = async (req, res, next) => {
     const { CatalogReview: CatReview } = getCatalogModels();
 
     const userId = req.headers['x-user-id'];
-    if (userId && !seededUsers.has(userId)) {
-      await seedMockOrders(userId);
-      seededUsers.add(userId);
-    }
 
     const status = req.query.status || req.query['status[]'];
     let filter = { userId: req.headers['x-user-id'] };
@@ -478,12 +474,7 @@ export const getAllOrdersAdmin = async (req, res, next) => {
 
     if (status) query.orderStatus = status;
 
-    // Auto-seed demo orders if the collection is completely empty
-    const totalInDb = await Order.countDocuments();
-    if (totalInDb === 0) {
-      const adminUserId = req.headers['x-user-id'] || 'admin-demo-user';
-      await seedMockOrders(adminUserId);
-    }
+
 
     const orders = await Order.find(query)
       .skip((page - 1) * limit)
@@ -529,13 +520,7 @@ export const updateOrderStatus = async (req, res, next) => {
 
 export const getDashboardStats = async (req, res, next) => {
   try {
-    // Auto-seed demo orders if collection is empty
-    let totalOrders = await Order.countDocuments();
-    if (totalOrders === 0) {
-      const adminUserId = req.headers['x-user-id'] || 'admin-demo-user';
-      await seedMockOrders(adminUserId);
-      totalOrders = await Order.countDocuments();
-    }
+    const totalOrders = await Order.countDocuments();
     const placedCount = await Order.countDocuments({ orderStatus: 'placed' });
     const confirmedCount = await Order.countDocuments({ orderStatus: 'confirmed' });
     const shippedCount = await Order.countDocuments({ orderStatus: 'shipped' });

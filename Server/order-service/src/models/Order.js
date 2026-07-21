@@ -34,8 +34,8 @@ const OrderSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 OrderSchema.pre('save', function() {
-  if (this.isNew) {
-    this.statusHistory.push({ status: 'placed' });
+  if (this.isNew && (!this.statusHistory || this.statusHistory.length === 0)) {
+    this.statusHistory.push({ status: 'placed', reason: 'Order placed by customer' });
   }
 });
 

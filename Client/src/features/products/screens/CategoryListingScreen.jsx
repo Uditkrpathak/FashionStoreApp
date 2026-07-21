@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   },
   back:  { fontSize: 22, color: colors.text },
   title: { ...textStyles.h5, color: colors.text },
-  list:  { padding: spacing[3] },
+  list:  { padding: spacing[3], paddingBottom: 120 },
   row:   { justifyContent: 'space-between' },
   card: {
     flex: 1, margin: spacing[2], padding: spacing[5],

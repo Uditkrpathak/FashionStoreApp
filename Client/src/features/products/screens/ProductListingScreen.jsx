@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  list:   { padding: spacing[2] },
+  list:   { padding: spacing[2], paddingBottom: 120 },
   row:    { justifyContent: 'space-between' },
 });
 
