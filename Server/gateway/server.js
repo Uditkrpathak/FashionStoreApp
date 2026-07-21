@@ -20,6 +20,8 @@ app.use((req, res, next) => {
   delete req.headers['x-user-id'];
   delete req.headers['x-user-role'];
   delete req.headers['x-user-permissions'];
+  delete req.headers['x-user-name'];
+  delete req.headers['x-user-email'];
   next();
 });
 
@@ -34,6 +36,8 @@ const verifyToken = (req, res, next) => {
     req.headers['x-user-id'] = decoded.id;
     req.headers['x-user-role'] = decoded.role || 'user';
     req.headers['x-user-permissions'] = JSON.stringify(decoded.permissions || []);
+    if (decoded.name) req.headers['x-user-name'] = decoded.name;
+    if (decoded.email) req.headers['x-user-email'] = decoded.email;
     next();
   } catch (err) {
     return res.status(401).json({ success: false, message: 'Unauthorized: Invalid token' });

@@ -78,12 +78,21 @@ export const createOrder = async (req, res, next) => {
       razorpayOrderId = rzpOrder.id;
     }
 
+    const userNameHeader = req.headers['x-user-name'];
+    const finalShippingAddress = {
+      ...(shippingAddress || {}),
+      name: shippingAddress?.name || shippingAddress?.fullName || userNameHeader || 'Customer'
+    };
+
     const order = new Order({
       userId: req.headers['x-user-id'],
-      items, shippingAddress, deliveryOption, paymentMethod,
+      items,
+      shippingAddress: finalShippingAddress,
+      deliveryOption,
+      paymentMethod,
       totals: { subtotal, shipping, discount, grandTotal },
       razorpayOrderId,
-      paymentStatus: (paymentMethod && paymentMethod.type === 'cod') ? 'completed' : 'pending' // Just for demo, COD implies pending collection, but we mark it differently or leave it pending. We'll leave it pending actually.
+      paymentStatus: (paymentMethod && paymentMethod.type === 'cod') ? 'pending' : 'pending'
     });
 
     if (paymentMethod && paymentMethod.type === 'cod') {
@@ -474,34 +483,6 @@ export const getAllOrdersAdmin = async (req, res, next) => {
     if (totalInDb === 0) {
       const adminUserId = req.headers['x-user-id'] || 'admin-demo-user';
       await seedMockOrders(adminUserId);
-    } else {
-      // Backfill shippingAddress for existing orders missing name or line1
-      const ordersWithoutAddress = await Order.find({
-        $or: [
-          { shippingAddress: { $exists: false } },
-          { shippingAddress: null },
-          { 'shippingAddress.name': { $exists: false } },
-          { 'shippingAddress.name': '' },
-          { 'shippingAddress.line1': { $exists: false } },
-          { 'shippingAddress.line1': '' }
-        ]
-      });
-
-      if (ordersWithoutAddress.length > 0) {
-        const mockAddresses = [
-          { name: 'Rahul Sharma', line1: '42 MG Road, Block C', city: 'Mumbai', state: 'Maharashtra', pincode: '400001', phone: '+91 9876543210' },
-          { name: 'Priya Patel', line1: '15 CG Highway, Sector 4', city: 'Ahmedabad', state: 'Gujarat', pincode: '380009', phone: '+91 9812345678' },
-          { name: 'Ananya Verma', line1: '78 Park Street, Apt 3B', city: 'Kolkata', state: 'West Bengal', pincode: '700016', phone: '+91 9765432109' },
-          { name: 'Vikram Singh', line1: '102 Indiranagar 10th Main', city: 'Bengaluru', state: 'Karnataka', pincode: '560038', phone: '+91 9654321098' },
-          { name: 'Sneha Kapoor', line1: '88 Connaught Place', city: 'New Delhi', state: 'Delhi', pincode: '110001', phone: '+91 9543210987' },
-          { name: 'Amit Roy', line1: '55 Jubilee Hills, Road No 36', city: 'Hyderabad', state: 'Telangana', pincode: '500033', phone: '+91 9432109876' }
-        ];
-
-        for (let i = 0; i < ordersWithoutAddress.length; i++) {
-          ordersWithoutAddress[i].shippingAddress = mockAddresses[i % mockAddresses.length];
-          await ordersWithoutAddress[i].save();
-        }
-      }
     }
 
     const orders = await Order.find(query)

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingV
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { MapPin } from 'lucide-react-native';
+import { useAppSelector } from '../../../shared/hooks/useAppSelector';
 import { useAddAddressMutation, useUpdateAddressMutation } from '../../cart/api/cartApi';
 import { useToast } from '../../../context/ToastContext';
 import Input  from '../../../shared/components/Input';
@@ -19,18 +20,20 @@ const AddEditAddressScreen = () => {
   const existing   = route.params?.address;
   const isEdit     = !!existing;
   const { showToast } = useToast();
+  const user = useAppSelector((state) => state.auth.user);
   const [addAddress,    { isLoading: adding }]   = useAddAddressMutation();
   const [updateAddress, { isLoading: updating }] = useUpdateAddressMutation();
   const [mapVisible, setMapVisible] = useState(false);
 
   const { control, handleSubmit, setValue, formState: { errors } } = useForm({
     defaultValues: {
+      name:   existing?.name   ?? user?.name ?? '',
       label:  existing?.label  ?? 'Home',
       line1:  existing?.line1  ?? '',
       city:   existing?.city   ?? '',
       state:  existing?.state  ?? '',
       pincode:existing?.pincode ?? '',
-      phone:  existing?.phone  ?? '',
+      phone:  existing?.phone  ?? user?.phone ?? '',
     },
   });
 
@@ -92,6 +95,11 @@ const AddEditAddressScreen = () => {
             <MapPin size={16} color={colors.primary} style={{ marginRight: spacing[2] }} />
             <Text style={styles.mapPickBtnText}>Pick Location from Map</Text>
           </TouchableOpacity>
+
+          <Controller control={control} name="name" rules={{ validate: required('Full Name') }}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input label="Full Name" placeholder="e.g. Udit Kumar Pathak" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.name?.message} />
+            )} />
 
           <Controller control={control} name="label"
             render={({ field: { onChange, onBlur, value } }) => (

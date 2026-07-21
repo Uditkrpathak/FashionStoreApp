@@ -23,7 +23,7 @@ export const login = async (req, res) => {
     if (user.status === 'blocked') return res.status(403).json({ success: false, message: 'Account is blocked. Contact support.' });
     
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role, permissions: user.permissions || [] },
+      { id: user._id, email: user.email, name: user.name, role: user.role, permissions: user.permissions || [] },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -77,7 +77,7 @@ export const verifyOtp = async (req, res) => {
     await user.save();
     
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role, permissions: user.permissions || [] },
+      { id: user._id, email: user.email, name: user.name, role: user.role, permissions: user.permissions || [] },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
