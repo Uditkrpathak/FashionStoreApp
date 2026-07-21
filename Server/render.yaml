@@ -1,8 +1,9 @@
 services:
-  # 🔌 Public API Gateway (Single Entrypoint)
+  # 🔌 Public API Gateway
   - type: web
     name: fashion-gateway
     env: node
+    plan: free
     buildCommand: npm install
     startCommand: node gateway/server.js
     envVars:
@@ -12,29 +13,30 @@ services:
         value: supersecret
       - key: AUTH_SERVICE_URL
         fromService:
-          type: pserv
+          type: web
           name: fashion-auth-service
           property: hostport
       - key: CATALOG_SERVICE_URL
         fromService:
-          type: pserv
+          type: web
           name: fashion-catalog-service
           property: hostport
       - key: CART_SERVICE_URL
         fromService:
-          type: pserv
+          type: web
           name: fashion-cart-service
           property: hostport
       - key: ORDER_SERVICE_URL
         fromService:
-          type: pserv
+          type: web
           name: fashion-order-service
           property: hostport
 
-  # 🔒 Private Auth & Profile Microservice
-  - type: pserv
+  # 🔒 Auth & Profile Microservice (Isolated Web Service)
+  - type: web
     name: fashion-auth-service
     env: node
+    plan: free
     buildCommand: npm install
     startCommand: node auth-service/server.js
     envVars:
@@ -49,10 +51,12 @@ services:
       - key: SMTP_PASS
         sync: false
 
-  # 🛍️ Private Catalog Microservice
-  - type: pserv
+  # 🛍️ Catalog Microservice (Isolated Web Service)
+  - type: web
     name: fashion-catalog-service
     env: node
+    plan: free
+    rootDir: Server
     buildCommand: npm install
     startCommand: node catalog-service/server.js
     envVars:
@@ -61,10 +65,12 @@ services:
       - key: MONGO_URI
         sync: false
 
-  # 🛒 Private Cart Microservice
-  - type: pserv
+  # 🛒 Cart Microservice (Isolated Web Service)
+  - type: web
     name: fashion-cart-service
     env: node
+    plan: free
+    rootDir: Server
     buildCommand: npm install
     startCommand: node cart-service/server.js
     envVars:
@@ -73,10 +79,12 @@ services:
       - key: MONGO_URI
         sync: false
 
-  # 📦 Private Order & Payment Microservice
-  - type: pserv
+  # 📦 Order & Payment Microservice (Isolated Web Service)
+  - type: web
     name: fashion-order-service
     env: node
+    plan: free
+    rootDir: Server
     buildCommand: npm install
     startCommand: node order-service/server.js
     envVars:
@@ -86,7 +94,7 @@ services:
         sync: false
       - key: AUTH_SERVICE_URL
         fromService:
-          type: pserv
+          type: web
           name: fashion-auth-service
           property: hostport
       - key: RAZORPAY_KEY_ID
