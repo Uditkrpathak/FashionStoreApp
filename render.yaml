@@ -105,13 +105,3 @@ services:
         sync: false
       - key: RAZORPAY_WEBHOOK_SECRET
         sync: false
-
-  # 📊 Admin Dashboard (Static Web App)
-  - type: static
-    name: fashion-admin-dashboard
-    rootDir: Admin
-    buildCommand: npm install && npm run build
-    publishPath: dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://fashion-gateway.onrender.com/api/v1
