@@ -2,7 +2,6 @@
 import { baseApi } from '../../../shared/services/baseApi';
 
 export const orderApi = baseApi.injectEndpoints({
-  overrideExisting: true,
   endpoints: (builder) => ({
 
     placeOrder: builder.mutation({
