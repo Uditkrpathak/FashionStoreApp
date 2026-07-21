@@ -15,8 +15,10 @@ export const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    const cleanEmail = email.trim();
+    const cleanPassword = password.trim();
     try {
-      const res = await adminLogin({ email, password }).unwrap();
+      const res = await adminLogin({ email: cleanEmail, password: cleanPassword }).unwrap();
       if (res.token && res.user) {
         if (res.user.role === 'user') {
           setError('Access Denied: Standard user accounts cannot log in to Admin Portal.');

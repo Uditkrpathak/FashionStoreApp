@@ -19,16 +19,13 @@ export const seedDefaultAdmin = async () => {
       await adminUser.save();
       console.log('✅ [Seed Admin] Default Super Admin account created: admin@fashionstore.com / Admin@123');
     } else {
-      // Ensure role is admin/super_admin
-      if (adminUser.role === 'user') {
-        adminUser.role = 'super_admin';
-        adminUser.permissions = ['*'];
-        adminUser.status = 'active';
-        await adminUser.save();
-        console.log('✅ [Seed Admin] Promoted admin@fashionstore.com to super_admin role.');
-      } else {
-        console.log('ℹ️ [Seed Admin] Admin account exists: admin@fashionstore.com');
-      }
+      adminUser.password = 'Admin@123';
+      adminUser.role = 'super_admin';
+      adminUser.permissions = ['*'];
+      adminUser.status = 'active';
+      adminUser.isVerified = true;
+      await adminUser.save();
+      console.log('✅ [Seed Admin] Updated admin@fashionstore.com credentials & super_admin role.');
     }
   } catch (err) {
     console.error('⚠️ [Seed Admin] Failed to seed default admin:', err.message);
