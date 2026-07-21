@@ -40,30 +40,39 @@ const verifyToken = (req, res, next) => {
   }
 };
 
+const formatTargetUrl = (url) => {
+  if (!url) return '';
+  const trimmed = url.trim();
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    return `http://${trimmed}`;
+  }
+  return trimmed;
+};
+
 // Define Routes & Protections
 const routes = [
   // Auth Service (Mixed Public/Protected)
   { 
     path: '/api/v1/auth', 
-    target: process.env.AUTH_SERVICE_URL || 'http://localhost:5001',
+    target: formatTargetUrl(process.env.AUTH_SERVICE_URL || 'http://localhost:5001'),
     protectedPaths: ['/me', '/profile', '/wishlist', '/addresses', '/notifications', '/admin']
   },
   // Catalog Service (Public GET, Protected POST/PUT/DELETE & /admin)
   { 
     path: '/api/v1/products', 
-    target: process.env.CATALOG_SERVICE_URL || 'http://localhost:5002',
+    target: formatTargetUrl(process.env.CATALOG_SERVICE_URL || 'http://localhost:5002'),
     protectedPaths: ['/reviews', '/admin']
   },
   // Cart Service (Fully Protected)
   { 
     path: '/api/v1/cart', 
-    target: process.env.CART_SERVICE_URL || 'http://localhost:5003',
+    target: formatTargetUrl(process.env.CART_SERVICE_URL || 'http://localhost:5003'),
     protectedPaths: ['/']
   },
   // Order Service (Fully Protected)
   { 
     path: '/api/v1/orders', 
-    target: process.env.ORDER_SERVICE_URL || 'http://localhost:5004',
+    target: formatTargetUrl(process.env.ORDER_SERVICE_URL || 'http://localhost:5004'),
     protectedPaths: ['/']
   }
 ];
@@ -74,6 +83,12 @@ routes.forEach((route) => {
     target: route.target,
     changeOrigin: true,
     pathRewrite: (path, req) => path.replace(route.path, ''),
+    onError: (err, req, res) => {
+      console.error(`[PROXY ERROR] Proxying ${req.method} ${req.url} to ${route.target} failed:`, err.message);
+      if (!res.headersSent) {
+        res.status(502).json({ success: false, message: 'Bad Gateway: Microservice connection failed.' });
+      }
+    }
   });
 
   app.use(route.path, (req, res, next) => {
