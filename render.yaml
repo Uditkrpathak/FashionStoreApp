@@ -12,27 +12,27 @@ services:
         value: supersecret
       - key: AUTH_SERVICE_URL
         fromService:
-          type: pserv
+          type: web
           name: fashion-auth-service
           property: hostport
       - key: CATALOG_SERVICE_URL
         fromService:
-          type: pserv
+          type: web
           name: fashion-catalog-service
           property: hostport
       - key: CART_SERVICE_URL
         fromService:
-          type: pserv
+          type: web
           name: fashion-cart-service
           property: hostport
       - key: ORDER_SERVICE_URL
         fromService:
-          type: pserv
+          type: web
           name: fashion-order-service
           property: hostport
 
-  # 🔒 Auth & Profile Microservice (Private Service)
-  - type: pserv
+  # 🔒 Auth & Profile Microservice (Web Service for Free Plan)
+  - type: web
     name: fashion-auth-service
     env: node
     plan: free
@@ -49,8 +49,8 @@ services:
       - key: SMTP_PASS
         sync: false
 
-  # 🛍️ Catalog Microservice (Private Service)
-  - type: pserv
+  # 🛍️ Catalog Microservice (Web Service for Free Plan)
+  - type: web
     name: fashion-catalog-service
     env: node
     plan: free
@@ -61,8 +61,8 @@ services:
       - key: MONGO_URI
         sync: false
 
-  # 🛒 Cart Microservice (Private Service)
-  - type: pserv
+  # 🛒 Cart Microservice (Web Service for Free Plan)
+  - type: web
     name: fashion-cart-service
     env: node
     plan: free
@@ -73,8 +73,8 @@ services:
       - key: MONGO_URI
         sync: false
 
-  # 📦 Order & Payment Microservice (Private Service)
-  - type: pserv
+  # 📦 Order & Payment Microservice (Web Service for Free Plan)
+  - type: web
     name: fashion-order-service
     env: node
     plan: free
@@ -86,7 +86,7 @@ services:
         sync: false
       - key: AUTH_SERVICE_URL
         fromService:
-          type: pserv
+          type: web
           name: fashion-auth-service
           property: hostport
       - key: RAZORPAY_KEY_ID
