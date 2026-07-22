@@ -549,14 +549,30 @@ export const replyToMyTicket = async (req, res) => {
     if (!text) return res.status(400).json({ success: false, message: 'Message text is required' });
 
     let ticket = await Ticket.findOne({ userId });
-    if (!ticket) return res.status(404).json({ success: false, message: 'Support ticket thread not found' });
-
-    ticket.messages.push({
-      sender: 'customer',
-      text,
-      timestamp: new Date()
-    });
-    ticket.status = 'open'; // Auto reopen/mark open when customer sends message
+    if (!ticket) {
+      ticket = new Ticket({
+        userId,
+        title: 'Customer Helpdesk Chat',
+        status: 'open',
+        priority: 'medium',
+        messages: [{
+          sender: 'admin',
+          text: 'Hello! How can we assist you today?',
+          timestamp: new Date(Date.now() - 1000) // 1 second in the past so order is correct
+        }, {
+          sender: 'customer',
+          text,
+          timestamp: new Date()
+        }]
+      });
+    } else {
+      ticket.messages.push({
+        sender: 'customer',
+        text,
+        timestamp: new Date()
+      });
+      ticket.status = 'open'; // Auto reopen when customer sends a message
+    }
 
     await ticket.save();
     res.json({ success: true, ticket });
