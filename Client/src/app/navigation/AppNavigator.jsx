@@ -32,7 +32,7 @@ const Stack = createNativeStackNavigator();
 
 // ── Tab icon helper with solid black icon ──────────────────────────────────────
 const TabIcon = ({ IconComponent, focused, count }) => {
-  const iconColor = '#1F2029';
+  const iconColor = '#FFFFFF';
   return (
     <View style={tabStyles.iconContainer}>
       <View
@@ -159,7 +159,7 @@ const tabStyles = StyleSheet.create({
     width: 62,
     height: 62,
     borderRadius: 31,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.primary,
 
     marginTop: 28,
 
