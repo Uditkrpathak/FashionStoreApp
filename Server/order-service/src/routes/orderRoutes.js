@@ -1,8 +1,7 @@
 import express from 'express';
 import { 
   createOrder, getOrders, getOrderById, trackOrder, cancelOrder, returnOrder, 
-  paymentWebhook, verifyPayment, getAllOrdersAdmin, updateOrderStatus, getDashboardStats,
-  updateOrderShipment, updateOrderReturn, getOrderInvoice 
+  paymentWebhook, verifyPayment, getAllOrdersAdmin, updateOrderStatus, getDashboardStats 
 } from '../controllers/orderController.js';
 import {
   validateRequest,
@@ -23,9 +22,6 @@ router.get('/', getOrders);
 router.get('/admin/orders', requireAdmin, requirePermission('orders.view'), getAllOrdersAdmin);
 router.patch('/admin/orders/:id/status', requireAdmin, requirePermission('orders.status.update'), updateOrderStatus);
 router.get('/admin/dashboard/stats', requireAdmin, requirePermission('dashboard.view'), getDashboardStats);
-router.patch('/admin/orders/:id/ship', requireAdmin, requirePermission('orders.status.update'), updateOrderShipment);
-router.patch('/admin/orders/:id/return', requireAdmin, requirePermission('orders.status.update'), updateOrderReturn);
-router.get('/admin/orders/:id/invoice', requireAdmin, requirePermission('orders.view'), getOrderInvoice);
 
 router.get('/:id', orderIdParamRules, validateRequest, getOrderById);
 router.get('/:id/track', orderIdParamRules, validateRequest, trackOrder);

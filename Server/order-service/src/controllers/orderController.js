@@ -509,12 +509,6 @@ export const updateOrderStatus = async (req, res, next) => {
     }
 
     order.orderStatus = status;
-    
-    // Auto mark COD orders as paid/completed upon delivery
-    if (status === 'delivered' && order.paymentMethod?.type === 'cod') {
-      order.paymentStatus = 'completed';
-    }
-
     order.statusHistory.push({ status, timestamp: new Date(), reason: reason || 'Updated by Admin' });
     await order.save();
 
@@ -550,99 +544,6 @@ export const getDashboardStats = async (req, res, next) => {
         pendingFulfillment: placedCount + confirmedCount
       }
     });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const updateOrderShipment = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { courier, trackingId } = req.body;
-
-    const order = await Order.findById(id);
-    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
-
-    order.shipmentDetails = {
-      courier,
-      trackingId,
-      shippedAt: new Date()
-    };
-
-    if (isValidTransition(order.orderStatus, 'shipped')) {
-      order.orderStatus = 'shipped';
-      order.statusHistory.push({ status: 'shipped', timestamp: new Date(), reason: `Shipment created: courier ${courier}, trackingId ${trackingId}` });
-    }
-
-    await order.save();
-    res.json({ success: true, message: 'Shipment registered successfully', order });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const updateOrderReturn = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { status, reason, refundAmount } = req.body;
-
-    const order = await Order.findById(id);
-    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
-
-    order.returnRequest = {
-      reason: reason || order.returnRequest?.reason || 'Admin Action',
-      status: status || 'approved',
-      refundAmount: refundAmount || order.totals?.grandTotal || 0,
-      requestedAt: order.returnRequest?.requestedAt || new Date()
-    };
-
-    if (status === 'approved') {
-      order.orderStatus = 'returned';
-      order.paymentStatus = 'refunded';
-      order.statusHistory.push({ status: 'returned', timestamp: new Date(), reason: `Return approved: ${reason || 'Processed by Admin'}` });
-    } else {
-      order.statusHistory.push({ status: order.orderStatus, timestamp: new Date(), reason: `Return request rejected: ${reason || 'Processed by Admin'}` });
-    }
-
-    await order.save();
-    res.json({ success: true, message: `Return request processed: ${status}`, order });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const getOrderInvoice = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const order = await Order.findById(id);
-    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
-
-    const invoice = {
-      invoiceNumber: `INV-${order._id.toString().slice(-8).toUpperCase()}`,
-      issueDate: new Date(order.createdAt).toLocaleDateString(),
-      orderId: order._id,
-      customer: {
-        name: order.shippingAddress?.name || 'Customer',
-        email: order.shippingAddress?.email || 'N/A',
-        phone: order.shippingAddress?.phone || 'N/A',
-        address: [
-          order.shippingAddress?.line1 || order.shippingAddress?.address,
-          order.shippingAddress?.city,
-          order.shippingAddress?.state,
-          order.shippingAddress?.pincode || order.shippingAddress?.zip
-        ].filter(Boolean).join(', ')
-      },
-      items: (order.items || []).map((item) => ({
-        sku: item.variantSku || 'N/A',
-        title: item.title,
-        price: item.priceAtAdd || item.price || 0,
-        qty: item.qty,
-        total: (item.priceAtAdd || item.price || 0) * item.qty
-      })),
-      totals: order.totals
-    };
-
-    res.json({ success: true, invoice });
   } catch (err) {
     next(err);
   }

@@ -101,7 +101,7 @@ const HelpCenterScreen = () => {
   const navigation = useNavigation();
   const [tab, setTab] = useState('FAQ');
   const [expandedFAQ, setExpandedFAQ] = useState(0); // first open by default
-  const [expandedContact, setExpandedContact] = useState(0); // first open by default (Customer Service Chat)
+  const [expandedContact, setExpandedContact] = useState(1); // second open by default (WhatsApp)
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -301,10 +301,7 @@ const styles = StyleSheet.create({
     borderColor: '#ECECEC',
   },
   searchInput: { flex: 1, marginLeft: spacing[2], ...textStyles.body1, color: colors.text },
-  scrollContent: {
-    padding: spacing[4],
-    paddingBottom: 100,
-  },
+  
   categoryScrollView: {
     paddingHorizontal: spacing[4],
     alignItems: 'center',

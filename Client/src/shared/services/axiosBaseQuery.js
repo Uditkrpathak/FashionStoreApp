@@ -51,12 +51,7 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const original = error.config;
 
-    if (
-      original.url?.includes('/auth/login') ||
-      original.url?.includes('/auth/register') ||
-      error.response?.status !== 401 ||
-      original._retry
-    ) {
+    if (error.response?.status !== 401 || original._retry) {
       return Promise.reject(error);
     }
 
@@ -106,13 +101,13 @@ axiosInstance.interceptors.response.use(
  */
 const axiosBaseQuery =
   ({ baseUrl } = { baseUrl: '' }) =>
-  async ({ url, method = 'GET', data, body, params, headers }, api) => {
+  async ({ url, method = 'GET', data, params, headers }, api) => {
     try {
       axiosInstance.defaults.baseURL = baseUrl;
       const result = await axiosInstance({
         url,
         method,
-        data: data !== undefined ? data : body,
+        data,
         params,
         headers,
       });

@@ -9,27 +9,16 @@ import Button from '../../../shared/components/Button';
 import { colors } from '../../../theme/colors';
 import { spacing, shadows } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
-import { useGetPublicSettingsQuery } from '../../profile/store/userApi';
+
+const METHODS = [
+  { id: 'razorpay', label: 'Razorpay',            icon: '⚡', sub: 'Pay via UPI, Cards, NetBanking' },
+  { id: 'card',     label: 'Credit / Debit Card', icon: '💳', sub: 'Visa, Mastercard, RuPay' },
+];
 
 const CheckoutPaymentScreen = () => {
   const navigation = useNavigation();
   const dispatch   = useAppDispatch();
   const selected   = useAppSelector(selectPaymentMethod);
-
-  // Fetch settings dynamically
-  const { data: settingsData } = useGetPublicSettingsQuery(undefined, { refetchOnMountOrArgChange: true });
-  const settings = settingsData?.settings || [];
-  const codSetting = settings.find(s => s.key === 'cod_enabled');
-  const isCodEnabled = codSetting ? (codSetting.value === 'true' || codSetting.value === true) : true;
-
-  const baseMethods = [
-    { id: 'razorpay', label: 'Razorpay',            icon: '⚡', sub: 'Pay via UPI, Cards, NetBanking' },
-    { id: 'card',     label: 'Credit / Debit Card', icon: '💳', sub: 'Visa, Mastercard, RuPay' },
-  ];
-
-  const methods = isCodEnabled
-    ? [...baseMethods, { id: 'cod', label: 'Cash on Delivery', icon: '💵', sub: 'Pay cash upon delivery' }]
-    : baseMethods;
 
   return (
     <View style={styles.container}>
@@ -39,7 +28,7 @@ const CheckoutPaymentScreen = () => {
         <View style={{ width: 32 }} />
       </View>
       <View style={styles.content}>
-        {methods.map((m) => (
+        {METHODS.map((m) => (
           <TouchableOpacity key={m.id} style={[styles.card, selected?.type === m.id && styles.cardActive]}
             onPress={() => dispatch(setPaymentMethod({ type: m.id }))}>
             <Text style={styles.icon}>{m.icon}</Text>

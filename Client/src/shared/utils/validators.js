@@ -21,7 +21,6 @@ export const maxLength = (max) => (value) =>
   String(value).length <= max || `Maximum ${max} characters allowed`;
 
 export const isStrongPassword = (value) => {
-  if (!value)                      return 'Password is required';
   if (value.length < 8)            return 'Password must be at least 8 characters';
   if (!/[A-Z]/.test(value))        return 'Include at least one uppercase letter';
   if (!/[0-9]/.test(value))        return 'Include at least one number';

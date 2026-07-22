@@ -15,7 +15,6 @@ import { formatPrice } from '../../../shared/utils/formatters';
 import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
-import { useGetPublicSettingsQuery } from '../../profile/store/userApi';
 
 const OrderReviewScreen = () => {
   const navigation = useNavigation();
@@ -28,15 +27,7 @@ const OrderReviewScreen = () => {
   const [placeOrder, { isLoading }] = usePlaceOrderMutation();
   const [verifyPayment] = useVerifyPaymentMutation();
 
-  // Load public store settings
-  const { data: settingsData } = useGetPublicSettingsQuery(undefined, { refetchOnMountOrArgChange: true });
-  const settings = settingsData?.settings || [];
-  const shippingSet = settings.find(s => s.key === 'free_shipping_limit');
-  const freeShippingLimit = shippingSet ? Number(shippingSet.value) : 999999;
-
-  const isFreeShipping = total >= freeShippingLimit;
-  const deliveryPrice = isFreeShipping ? 0 : (checkout.deliveryOption?.price ?? 0);
-  const grandTotal = total + deliveryPrice;
+  const grandTotal = total + (checkout.deliveryOption?.price ?? 0);
 
   const handlePlaceOrder = async () => {
     try {
@@ -120,7 +111,7 @@ const OrderReviewScreen = () => {
           <Text style={styles.info}>{checkout.selectedAddress?.line1}, {checkout.selectedAddress?.city}</Text>
         </Section>
         <Section title="Delivery Method">
-          <Text style={styles.info}>{checkout.deliveryOption?.label} · {formatPrice(deliveryPrice)}</Text>
+          <Text style={styles.info}>{checkout.deliveryOption?.label} · {formatPrice(checkout.deliveryOption?.price ?? 0)}</Text>
         </Section>
         <Section title="Payment">
           <Text style={styles.info}>{checkout.paymentMethod?.type?.toUpperCase()}</Text>
@@ -140,7 +131,7 @@ const OrderReviewScreen = () => {
           </View>
           <View style={styles.priceRow}>
             <Text style={styles.label}>Delivery</Text>
-            <Text style={styles.value}>{formatPrice(deliveryPrice)}</Text>
+            <Text style={styles.value}>{formatPrice(checkout.deliveryOption?.price ?? 0)}</Text>
           </View>
           <View style={[styles.priceRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Grand Total</Text>

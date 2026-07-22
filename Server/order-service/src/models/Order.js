@@ -30,18 +30,7 @@ const OrderSchema = new mongoose.Schema({
   razorpayOrderId: String,
   razorpayPaymentId: String,
   paymentStatus: { type: String, default: 'pending', enum: ['pending', 'completed', 'failed', 'refunded'] },
-  paymentGateway: { type: String, default: 'razorpay' },
-  shipmentDetails: {
-    courier: String,
-    trackingId: String,
-    shippedAt: { type: Date }
-  },
-  returnRequest: {
-    reason: String,
-    status: { type: String, enum: ['pending', 'approved', 'rejected'] },
-    refundAmount: Number,
-    requestedAt: { type: Date }
-  }
+  paymentGateway: { type: String, default: 'razorpay' }
 }, { timestamps: true });
 
 OrderSchema.pre('save', function() {

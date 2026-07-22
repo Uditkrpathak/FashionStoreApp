@@ -25,28 +25,6 @@ export const adminOrderApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Order', 'AdminStats', 'AuditLog'],
     }),
-    shipOrder: builder.mutation({
-      query: ({ id, courier, trackingId }) => ({
-        url: `/orders/admin/orders/${id}/ship`,
-        method: 'PATCH',
-        data: { courier, trackingId },
-      }),
-      invalidatesTags: ['Order', 'AuditLog'],
-    }),
-    processReturn: builder.mutation({
-      query: ({ id, status, reason, refundAmount }) => ({
-        url: `/orders/admin/orders/${id}/return`,
-        method: 'PATCH',
-        data: { status, reason, refundAmount },
-      }),
-      invalidatesTags: ['Order', 'AdminStats', 'AuditLog'],
-    }),
-    getOrderInvoice: builder.query({
-      query: (id) => ({
-        url: `/orders/admin/orders/${id}/invoice`,
-        method: 'GET',
-      }),
-    }),
   }),
 });
 
@@ -54,8 +32,4 @@ export const {
   useGetDashboardStatsQuery,
   useGetAdminOrdersQuery,
   useUpdateOrderStatusMutation,
-  useShipOrderMutation,
-  useProcessReturnMutation,
-  useGetOrderInvoiceQuery,
-  useLazyGetOrderInvoiceQuery,
 } = adminOrderApi;

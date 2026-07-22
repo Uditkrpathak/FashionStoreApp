@@ -42,37 +42,6 @@ export const adminAuthApi = baseApi.injectEndpoints({
       }),
       providesTags: ['AuditLog'],
     }),
-    getTickets: builder.query({
-      query: (params) => ({
-        url: '/auth/admin/tickets',
-        method: 'GET',
-        params,
-      }),
-      providesTags: ['Ticket'],
-    }),
-    replyToTicket: builder.mutation({
-      query: ({ id, text, status, priority }) => ({
-        url: `/auth/admin/tickets/${id}/reply`,
-        method: 'POST',
-        data: { text, status, priority },
-      }),
-      invalidatesTags: ['Ticket', 'AuditLog'],
-    }),
-    getSettings: builder.query({
-      query: () => ({
-        url: '/auth/admin/settings',
-        method: 'GET',
-      }),
-      providesTags: ['Setting'],
-    }),
-    updateSetting: builder.mutation({
-      query: ({ key, value }) => ({
-        url: '/auth/admin/settings',
-        method: 'PUT',
-        data: { key, value },
-      }),
-      invalidatesTags: ['Setting', 'AuditLog'],
-    }),
   }),
 });
 
@@ -82,8 +51,4 @@ export const {
   useUpdateUserRoleMutation,
   useToggleUserStatusMutation,
   useGetAuditLogsQuery,
-  useGetTicketsQuery,
-  useReplyToTicketMutation,
-  useGetSettingsQuery,
-  useUpdateSettingMutation,
 } = adminAuthApi;
