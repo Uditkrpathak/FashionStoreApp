@@ -20,6 +20,9 @@ export const sendOtpEmail = async (email, otp) => {
         user: smtpUser,
         pass: smtpPass,
       },
+      connectionTimeout: 2500, // 2.5 seconds
+      greetingTimeout: 2500,   // 2.5 seconds
+      socketTimeout: 5000,     // 5 seconds
     });
 
     const info = await transporter.sendMail({

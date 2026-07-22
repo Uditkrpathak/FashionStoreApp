@@ -35,11 +35,21 @@ export const login = async (req, res) => {
 
 export const register = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Database Error: MONGO_URI is missing or database is not connected on Render. Please check MONGO_URI environment variable on Render.' 
+      });
+    }
+
     const email = req.body.email?.toLowerCase();
     const { name, password, phone } = req.body;
     let user = await User.findOne({ email });
     if (user) {
       if (user.isVerified) return res.status(400).json({ success: false, message: 'Email already exists' });
+      user.name = name;
+      user.password = password;
+      if (phone) user.phone = phone;
     } else {
       user = new User({ name, email, password, phone });
     }
