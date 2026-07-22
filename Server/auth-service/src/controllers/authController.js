@@ -542,6 +542,8 @@ export const getOrCreateMyTicket = async (req, res) => {
 export const replyToMyTicket = async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];
+    console.log('[DEBUG replyToMyTicket] Headers:', req.headers);
+    console.log('[DEBUG replyToMyTicket] Body:', req.body);
     const { text } = req.body || {};
     if (!userId) return res.status(401).json({ success: false, message: 'User identity missing' });
     if (!text) return res.status(400).json({ success: false, message: 'Message text is required' });
