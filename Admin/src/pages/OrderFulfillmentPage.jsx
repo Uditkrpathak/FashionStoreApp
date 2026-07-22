@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGetAdminOrdersQuery, useUpdateOrderStatusMutation } from '../services/adminOrderApi';
 import { Check, Truck, CheckCircle2, XCircle, Clock, X, MapPin } from 'lucide-react';
+import { Loader } from '../shared/components/Loader';
 
 const STATUS_TABS = [
   { id: '', label: 'All Orders' },
@@ -77,7 +78,11 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
           </thead>
           <tbody className="divide-y divide-[#EDEDED]">
             {isLoading ? (
-              <tr><td colSpan="6" className="p-8 text-center text-[#797979]">Loading Orders...</td></tr>
+              <tr>
+                <td colSpan="6">
+                  <Loader message="Loading Orders..." />
+                </td>
+              </tr>
             ) : data?.orders?.length === 0 ? (
               <tr><td colSpan="6" className="p-8 text-center text-[#797979]">No orders found matching criteria.</td></tr>
             ) : (

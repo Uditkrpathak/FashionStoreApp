@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGetAdminUsersQuery, useUpdateUserRoleMutation, useToggleUserStatusMutation } from '../services/adminAuthApi';
 import { Search, Shield, UserX, UserCheck, RefreshCw, X, Check } from 'lucide-react';
+import { Loader } from '../shared/components/Loader';
 
 const PERMISSION_OPTIONS = [
   { key: 'users.view', label: 'View Users' },
@@ -132,7 +133,11 @@ export const UserManagementPage = () => {
           </thead>
           <tbody className="divide-y divide-[#EDEDED]">
             {isLoading ? (
-              <tr><td colSpan="5" className="p-8 text-center text-[#797979]">Loading Users...</td></tr>
+              <tr>
+                <td colSpan="5">
+                  <Loader message="Loading Users..." />
+                </td>
+              </tr>
             ) : data?.users?.length === 0 ? (
               <tr><td colSpan="5" className="p-8 text-center text-[#797979]">No users match criteria.</td></tr>
             ) : (

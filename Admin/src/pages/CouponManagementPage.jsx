@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGetAdminCouponsQuery, useCreateCouponMutation, useUpdateCouponMutation, useDeleteCouponMutation } from '../services/adminCouponApi';
 import { Ticket, Plus, Trash2, Edit3, X } from 'lucide-react';
+import { Loader } from '../shared/components/Loader';
 
 export const CouponManagementPage = () => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -103,7 +104,11 @@ export const CouponManagementPage = () => {
           </thead>
           <tbody className="divide-y divide-[#EDEDED]">
             {isLoading ? (
-              <tr><td colSpan="6" className="p-8 text-center text-[#797979]">Loading Coupons...</td></tr>
+              <tr>
+                <td colSpan="6">
+                  <Loader message="Loading Coupons..." />
+                </td>
+              </tr>
             ) : data?.coupons?.length === 0 ? (
               <tr><td colSpan="6" className="p-8 text-center text-[#797979]">No promo coupons created yet.</td></tr>
             ) : (

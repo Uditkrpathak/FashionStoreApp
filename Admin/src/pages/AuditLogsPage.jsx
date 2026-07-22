@@ -1,6 +1,7 @@
 import React from 'react';
 import { useGetAuditLogsQuery } from '../services/adminAuthApi';
 import { FileText, RefreshCw, Clock, ShieldAlert } from 'lucide-react';
+import { Loader } from '../shared/components/Loader';
 
 export const AuditLogsPage = () => {
   const { data, isLoading, refetch } = useGetAuditLogsQuery({});
@@ -34,7 +35,11 @@ export const AuditLogsPage = () => {
           </thead>
           <tbody className="divide-y divide-[#EDEDED]">
             {isLoading ? (
-              <tr><td colSpan="5" className="p-8 text-center text-[#797979]">Loading Audit Trail...</td></tr>
+              <tr>
+                <td colSpan="5">
+                  <Loader message="Loading Audit Trail..." />
+                </td>
+              </tr>
             ) : data?.logs?.length === 0 ? (
               <tr>
                 <td colSpan="5" className="p-10 text-center text-[#797979]">

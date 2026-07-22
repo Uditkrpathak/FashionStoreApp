@@ -1,6 +1,7 @@
 import React from 'react';
 import { useGetDashboardStatsQuery, useGetAdminOrdersQuery } from '../services/adminOrderApi';
 import { IndianRupee, ShoppingBag, Clock, CheckCircle, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Loader } from '../shared/components/Loader';
 
 export const DashboardPage = ({ onNavigateToOrders }) => {
   const { data: statsData, isLoading: isStatsLoading } = useGetDashboardStatsQuery();
@@ -26,7 +27,7 @@ export const DashboardPage = ({ onNavigateToOrders }) => {
   ];
 
   if (isStatsLoading) {
-    return <div className="text-center py-16 text-[#797979] font-medium">Loading Platform Metrics...</div>;
+    return <Loader message="Loading Platform Metrics..." />;
   }
 
   return (
@@ -101,7 +102,11 @@ export const DashboardPage = ({ onNavigateToOrders }) => {
             </thead>
             <tbody className="divide-y divide-[#EDEDED]">
               {isPendingLoading ? (
-                <tr><td colSpan="5" className="p-8 text-center text-[#797979]">Loading Action Queue...</td></tr>
+                <tr>
+                  <td colSpan="5">
+                    <Loader message="Loading Action Queue..." />
+                  </td>
+                </tr>
               ) : pendingOrdersData?.orders?.length === 0 ? (
                 <tr><td colSpan="5" className="p-8 text-center text-[#4CAF50] font-bold">✓ Action queue is clear! All pending orders processed.</td></tr>
               ) : (

@@ -3,12 +3,13 @@ import { useDispatch } from 'react-redux';
 import { useAdminLoginMutation } from '../services/adminAuthApi';
 import { setCredentials } from '../app/authSlice';
 import brandIcon from '../assets/icon.png';
-import { ShieldCheck, Lock, Mail } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, Eye, EyeOff } from 'lucide-react';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [adminLogin, { isLoading }] = useAdminLoginMutation();
   const dispatch = useDispatch();
@@ -72,13 +73,21 @@ export const LoginPage = () => {
             <div className="flex items-center bg-[#FDFBF9] border border-[#EDEDED] focus-within:border-[#704F38] rounded-xl px-3.5 py-1 transition-colors">
               <Lock className="w-4 h-4 text-[#797979] mr-2" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full py-2.5 bg-transparent border-none outline-none text-sm text-[#1F2029] font-medium"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="p-1 text-[#797979] hover:text-[#704F38] focus:outline-none transition-colors"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 

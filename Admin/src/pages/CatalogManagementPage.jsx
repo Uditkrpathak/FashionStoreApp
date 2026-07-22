@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGetAdminProductsQuery, useGetAdminCategoriesQuery, useDeleteProductMutation, useCreateCategoryMutation, useGetAdminReviewsQuery, useDeleteReviewMutation } from '../services/adminCatalogApi';
 import { Search, Plus, Trash2, Edit3, Layers, Star, X } from 'lucide-react';
+import { Loader } from '../shared/components/Loader';
 
 export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToEditProduct }) => {
   const [search, setSearch] = useState('');
@@ -127,7 +128,11 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
           </thead>
           <tbody className="divide-y divide-[#EDEDED]">
             {isLoading ? (
-              <tr><td colSpan="6" className="p-8 text-center text-[#797979]">Loading Products...</td></tr>
+              <tr>
+                <td colSpan="6">
+                  <Loader message="Loading Products..." />
+                </td>
+              </tr>
             ) : productsData?.products?.length === 0 ? (
               <tr><td colSpan="6" className="p-8 text-center text-[#797979]">No products found in catalog.</td></tr>
             ) : (
