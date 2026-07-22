@@ -65,7 +65,7 @@ export const register = async (req, res) => {
       return res.status(500).json({ success: false, message: 'Failed to send OTP email. Please try again.' });
     }
     
-    res.json({ success: true, message: 'OTP sent successfully', userId: user._id });
+    res.json({ success: true, message: 'OTP sent successfully', userId: user._id, devOtp: otp });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

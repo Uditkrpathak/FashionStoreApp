@@ -2,7 +2,7 @@
 import React from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, KeyboardAvoidingView, Platform,
+  TouchableOpacity, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation }   from '@react-navigation/native';
@@ -28,6 +28,9 @@ const SignUpScreen = () => {
   const onSubmit = async (data) => {
     try {
       const res = await register({ name: data.name, email: data.email, password: data.password }).unwrap();
+      if (res.devOtp) {
+        Alert.alert('Development OTP', `Your verification code is: ${res.devOtp}`);
+      }
       navigation.navigate('VerifyOTP', { email: data.email });
     } catch (err) {
       showToast(err?.data?.message ?? 'Registration failed.', 'error');
