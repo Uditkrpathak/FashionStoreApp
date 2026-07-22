@@ -73,12 +73,12 @@ export const ProductFormPage = ({ productToEdit, onBack }) => {
   return (
     <div className="space-y-6">
       {/* Top Header Bar */}
-      <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-[#EDEDED] shadow-sm">
-        <button onClick={onBack} className="inline-flex items-center gap-2 text-xs font-bold text-[#1F2029] hover:text-[#704F38] transition-colors">
+      <div className="flex flex-col md:flex-row gap-3 md:items-center justify-between bg-white p-4 rounded-xl border border-[#EDEDED] shadow-sm">
+        <button onClick={onBack} className="inline-flex items-center gap-2 text-xs font-bold text-[#1F2029] hover:text-[#704F38] transition-colors self-start md:self-auto">
           <ArrowLeft className="w-4 h-4" /> Back to Inventory List
         </button>
-        <h2 className="text-base font-black text-[#1F2029]">{isEditing ? 'Edit Product Listing' : 'Create New Product Listing'}</h2>
-        <button onClick={handleSave} disabled={isCreating || isUpdating} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#704F38] hover:bg-[#8C6244] text-white text-xs font-extrabold shadow-md shadow-[#704F38]/20 transition-all">
+        <h2 className="text-base font-black text-[#1F2029] text-center md:text-left">{isEditing ? 'Edit Product Listing' : 'Create New Product Listing'}</h2>
+        <button onClick={handleSave} disabled={isCreating || isUpdating} className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#704F38] hover:bg-[#8C6244] text-white text-xs font-extrabold shadow-md shadow-[#704F38]/20 transition-all w-full md:w-auto">
           <Save className="w-4 h-4" /> {isEditing ? 'Update Listing' : 'Publish Product'}
         </button>
       </div>

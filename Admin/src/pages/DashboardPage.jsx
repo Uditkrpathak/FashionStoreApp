@@ -35,7 +35,7 @@ export const DashboardPage = ({ onNavigateToOrders }) => {
       {/* 4-6 Top KPIs */}
       <div>
         <h3 className="text-sm font-extrabold text-[#1F2029] uppercase tracking-wider mb-4">Key Performance Indicators</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
           {kpiCards.map((card, idx) => {
             const Icon = card.icon;
             return (
@@ -90,49 +90,51 @@ export const DashboardPage = ({ onNavigateToOrders }) => {
         </div>
 
         <div className="bg-white rounded-xl border border-[#EDEDED] shadow-sm overflow-hidden">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[11px] font-extrabold uppercase tracking-wider">
-                <th className="px-5 py-3.5">Order ID</th>
-                <th className="px-5 py-3.5">Customer</th>
-                <th className="px-5 py-3.5">Total Amount</th>
-                <th className="px-5 py-3.5">Status</th>
-                <th className="px-5 py-3.5 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#EDEDED]">
-              {isPendingLoading ? (
-                <tr>
-                  <td colSpan="5">
-                    <Loader message="Loading Action Queue..." />
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm min-w-[650px]">
+              <thead>
+                <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[11px] font-extrabold uppercase tracking-wider">
+                  <th className="px-5 py-3.5">Order ID</th>
+                  <th className="px-5 py-3.5">Customer</th>
+                  <th className="px-5 py-3.5">Total Amount</th>
+                  <th className="px-5 py-3.5">Status</th>
+                  <th className="px-5 py-3.5 text-right">Action</th>
                 </tr>
-              ) : pendingOrdersData?.orders?.length === 0 ? (
-                <tr><td colSpan="5" className="p-8 text-center text-[#4CAF50] font-bold">✓ Action queue is clear! All pending orders processed.</td></tr>
-              ) : (
-                pendingOrdersData?.orders?.map((order) => (
-                  <tr key={order._id} className="hover:bg-[#FDFBF9]/50 transition-colors">
-                    <td className="px-5 py-4 font-black text-[#1F2029]">#{order._id.slice(-8).toUpperCase()}</td>
-                    <td className="px-5 py-4 font-medium text-[#1F2029]">{order.shippingAddress?.name || 'Customer'}</td>
-                    <td className="px-5 py-4 font-extrabold text-[#704F38]">₹{order.totals?.grandTotal?.toLocaleString('en-IN') || '0'}</td>
-                    <td className="px-5 py-4">
-                      <span className="px-2.5 py-1 rounded-md bg-[#FFFBEB] text-[#B45309] text-[10px] font-black tracking-wider uppercase border border-[#FDE68A]">
-                        REQUIRES FULFILLMENT
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <button
-                        onClick={() => onNavigateToOrders && onNavigateToOrders('placed')}
-                        className="px-3.5 py-1.5 rounded-lg bg-[#704F38] hover:bg-[#8C6244] text-white font-extrabold text-xs shadow-md shadow-[#704F38]/20 transition-all"
-                      >
-                        Process →
-                      </button>
+              </thead>
+              <tbody className="divide-y divide-[#EDEDED]">
+                {isPendingLoading ? (
+                  <tr>
+                    <td colSpan="5">
+                      <Loader message="Loading Action Queue..." />
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : pendingOrdersData?.orders?.length === 0 ? (
+                  <tr><td colSpan="5" className="p-8 text-center text-[#4CAF50] font-bold">✓ Action queue is clear! All pending orders processed.</td></tr>
+                ) : (
+                  pendingOrdersData?.orders?.map((order) => (
+                    <tr key={order._id} className="hover:bg-[#FDFBF9]/50 transition-colors">
+                      <td className="px-5 py-4 font-black text-[#1F2029]">#{order._id.slice(-8).toUpperCase()}</td>
+                      <td className="px-5 py-4 font-medium text-[#1F2029]">{order.shippingAddress?.name || 'Customer'}</td>
+                      <td className="px-5 py-4 font-extrabold text-[#704F38]">₹{order.totals?.grandTotal?.toLocaleString('en-IN') || '0'}</td>
+                      <td className="px-5 py-4">
+                        <span className="px-2.5 py-1 rounded-md bg-[#FFFBEB] text-[#B45309] text-[10px] font-black tracking-wider uppercase border border-[#FDE68A]">
+                          REQUIRES FULFILLMENT
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <button
+                          onClick={() => onNavigateToOrders && onNavigateToOrders('placed')}
+                          className="px-3.5 py-1.5 rounded-lg bg-[#704F38] hover:bg-[#8C6244] text-white font-extrabold text-xs shadow-md shadow-[#704F38]/20 transition-all"
+                        >
+                          Process →
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

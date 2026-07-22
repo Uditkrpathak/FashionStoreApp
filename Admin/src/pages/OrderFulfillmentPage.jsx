@@ -65,7 +65,8 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
 
       {/* Table-First Orders Listing */}
       <div className="bg-white rounded-xl border border-[#EDEDED] shadow-sm overflow-hidden">
-        <table className="w-full text-left text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm min-w-[850px]">
           <thead>
             <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[11px] font-extrabold uppercase tracking-wider">
               <th className="px-5 py-4">Order ID</th>
@@ -146,7 +147,8 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
               })
             )}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
 
       {/* Details Drawer Modal */}

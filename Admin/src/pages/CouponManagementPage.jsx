@@ -77,7 +77,7 @@ export const CouponManagementPage = () => {
   return (
     <div className="space-y-6">
       {/* Top Header Bar */}
-      <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-[#EDEDED] shadow-sm">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-white p-4 rounded-xl border border-[#EDEDED] shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#FFFBEB] flex items-center justify-center border border-[#FDE68A]">
             <Ticket className="w-5 h-5 text-[#B45309]" />
@@ -91,7 +91,8 @@ export const CouponManagementPage = () => {
 
       {/* Table-First Coupons List */}
       <div className="bg-white rounded-xl border border-[#EDEDED] shadow-sm overflow-hidden">
-        <table className="w-full text-left text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm min-w-[700px]">
           <thead>
             <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[11px] font-extrabold uppercase tracking-wider">
               <th className="px-5 py-4">Promo Code</th>
@@ -141,7 +142,8 @@ export const CouponManagementPage = () => {
               ))
             )}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
 
       {/* Modal */}

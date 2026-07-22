@@ -98,7 +98,7 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
           ))}
         </div>
 
-        <div className="flex gap-2 w-full sm:w-auto justify-end">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
           <button onClick={() => setCategoryModalVisible(true)} className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#FDFBF9] border border-[#EDEDED] hover:border-[#704F38] text-xs font-bold text-[#1F2029] transition-colors">
             <Layers className="w-4 h-4 text-[#704F38]" /> Categories
           </button>
@@ -115,7 +115,8 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
 
       {/* Table-First Product Inventory */}
       <div className="bg-white rounded-xl border border-[#EDEDED] shadow-sm overflow-hidden">
-        <table className="w-full text-left text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm min-w-[800px]">
           <thead>
             <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[11px] font-extrabold uppercase tracking-wider">
               <th className="px-5 py-4">Product</th>
@@ -157,7 +158,7 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
                       <span className="text-xs text-[#797979]">({item.reviewsCount || 0})</span>
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-right space-x-1.5">
+                  <td className="px-5 py-4 text-right space-x-1.5 whitespace-nowrap">
                     <button onClick={() => onNavigateToEditProduct && onNavigateToEditProduct(item)} title="Edit Product" className="p-2 bg-[#FDFBF9] border border-[#EDEDED] hover:border-[#704F38] rounded-lg text-[#3B82F6] transition-colors">
                       <Edit3 className="w-4 h-4" />
                     </button>
@@ -169,7 +170,8 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
               ))
             )}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
 
       {/* Category Modal */}

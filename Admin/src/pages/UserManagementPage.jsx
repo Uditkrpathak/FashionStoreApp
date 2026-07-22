@@ -121,7 +121,8 @@ export const UserManagementPage = () => {
 
       {/* Table-First User List */}
       <div className="bg-white rounded-xl border border-[#EDEDED] shadow-sm overflow-hidden">
-        <table className="w-full text-left text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm min-w-[700px]">
           <thead>
             <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[11px] font-extrabold uppercase tracking-wider">
               <th className="px-5 py-4">User Name</th>
@@ -175,7 +176,8 @@ export const UserManagementPage = () => {
               ))
             )}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
 
       {/* Role Modal */}

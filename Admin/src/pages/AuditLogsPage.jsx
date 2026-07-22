@@ -9,7 +9,7 @@ export const AuditLogsPage = () => {
   return (
     <div className="space-y-6">
       {/* Top Bar */}
-      <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-[#EDEDED] shadow-sm">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-white p-4 rounded-xl border border-[#EDEDED] shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#FDFBF9] flex items-center justify-center border border-[#EDEDED]">
             <FileText className="w-5 h-5 text-[#704F38]" />
@@ -23,7 +23,8 @@ export const AuditLogsPage = () => {
 
       {/* Table-First Audit Log */}
       <div className="bg-white rounded-xl border border-[#EDEDED] shadow-sm overflow-hidden">
-        <table className="w-full text-left text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm min-w-[800px]">
           <thead>
             <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[11px] font-extrabold uppercase tracking-wider">
               <th className="px-5 py-4">Timestamp</th>
@@ -70,7 +71,8 @@ export const AuditLogsPage = () => {
               ))
             )}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     </div>
   );

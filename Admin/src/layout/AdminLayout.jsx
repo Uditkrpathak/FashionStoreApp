@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectAdminUser, logout } from '../app/authSlice';
 import { hasPermission } from './PermissionGuard';
@@ -21,6 +21,17 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
   const dispatch = useDispatch();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setSidebarCollapsed(true);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, perm: 'dashboard.view' },
     { id: 'catalog', label: 'Products & Categories', icon: ShoppingBag, perm: 'products.view' },
@@ -38,10 +49,20 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
 
   return (
     <div className="flex min-h-screen bg-[#FDFBF9] text-[#1F2029]">
+      {/* Sidebar Backdrop (only visible on mobile when sidebar is open) */}
+      {!sidebarCollapsed && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden transition-opacity duration-300"
+          onClick={() => setSidebarCollapsed(true)}
+        />
+      )}
+
       {/* Sidebar - Client Primary Dark Theme with Solid Colors */}
       <aside
-        className={`bg-[#1F2029] text-white flex flex-col justify-between transition-all duration-300 z-50 border-r border-[#2E303F]/20 ${sidebarCollapsed ? 'w-[72px]' : 'w-64'
-          }`}
+        className={`bg-[#1F2029] text-white flex flex-col justify-between transition-all duration-300 z-50 border-r border-[#2E303F]/20
+          fixed inset-y-0 left-0 md:sticky md:top-0 md:h-screen
+          ${sidebarCollapsed ? '-translate-x-full md:translate-x-0 md:w-[72px]' : 'translate-x-0 w-64'}
+        `}
       >
         <div>
           {/* Brand Header */}
@@ -136,22 +157,22 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
       {/* Main Workspace */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-[#EDEDED] flex items-center justify-between px-7 sticky top-0 z-40 shadow-sm">
-          <div className="flex items-center gap-4">
+        <header className="h-16 bg-white border-b border-[#EDEDED] flex items-center justify-between px-4 md:px-7 sticky top-0 z-40 shadow-sm">
+          <div className="flex items-center gap-4 min-w-0">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-1.5 rounded-lg hover:bg-[#FDFBF9] text-[#797979] hover:text-[#1F2029] transition-colors"
+              className="p-1.5 rounded-lg hover:bg-[#FDFBF9] text-[#797979] hover:text-[#1F2029] transition-colors flex-shrink-0"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div>
-              <h1 className="text-lg font-black text-[#1F2029] tracking-tight">{title || 'Overview'}</h1>
+            <div className="min-w-0">
+              <h1 className="text-base md:text-lg font-black text-[#1F2029] tracking-tight truncate max-w-[200px] sm:max-w-none">{title || 'Overview'}</h1>
             </div>
           </div>
         </header>
 
         {/* Content Body */}
-        <main className="flex-1 p-7 max-w-7xl mx-auto w-full">{children}</main>
+        <main className="flex-1 p-4 md:p-7 max-w-7xl mx-auto w-full min-w-0">{children}</main>
       </div>
     </div>
   );
