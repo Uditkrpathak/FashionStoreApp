@@ -442,7 +442,7 @@ export const getAllTicketsAdmin = async (req, res) => {
 export const replyToTicketAdmin = async (req, res) => {
   try {
     const { id } = req.params;
-    const { text, status, priority } = req.body;
+    const { text, status, priority } = req.body || {};
     const adminId = req.headers['x-user-id'];
 
     const ticket = await Ticket.findById(id);
@@ -488,7 +488,7 @@ export const getStoreSettingsAdmin = async (req, res) => {
 export const updateStoreSettingAdmin = async (req, res) => {
   try {
     const adminId = req.headers['x-user-id'];
-    const { key, value } = req.body;
+    const { key, value } = req.body || {};
 
     if (!key) return res.status(400).json({ success: false, message: 'Key is required' });
 
@@ -542,7 +542,7 @@ export const getOrCreateMyTicket = async (req, res) => {
 export const replyToMyTicket = async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];
-    const { text } = req.body;
+    const { text } = req.body || {};
     if (!userId) return res.status(401).json({ success: false, message: 'User identity missing' });
     if (!text) return res.status(400).json({ success: false, message: 'Message text is required' });
 

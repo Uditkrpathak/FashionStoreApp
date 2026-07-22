@@ -101,13 +101,13 @@ axiosInstance.interceptors.response.use(
  */
 const axiosBaseQuery =
   ({ baseUrl } = { baseUrl: '' }) =>
-  async ({ url, method = 'GET', data, params, headers }, api) => {
+  async ({ url, method = 'GET', data, body, params, headers }, api) => {
     try {
       axiosInstance.defaults.baseURL = baseUrl;
       const result = await axiosInstance({
         url,
         method,
-        data,
+        data: data !== undefined ? data : body,
         params,
         headers,
       });
