@@ -97,7 +97,7 @@ const ProductDetailScreen = () => {
           
           <View style={styles.headerIcons}>
             <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
-              <ArrowLeft size={24} width={24} height={24} color="#1F2029" stroke="#1F2029" strokeWidth={2.2} />
+              <ArrowLeft size={24} width={24} height={24} color="#000000" stroke="#000000" strokeWidth={2.2} />
             </TouchableOpacity>
             
             <Text style={styles.headerTitle}>Product Details</Text>

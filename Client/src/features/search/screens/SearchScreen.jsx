@@ -56,6 +56,7 @@ const SearchScreen = () => {
           <FlatList
             data={recentSearches}
             keyExtractor={(i, idx) => `${i}-${idx}`}
+            contentContainerStyle={{ paddingBottom: 120 }}
             renderItem={({ item }) => (
               <TouchableOpacity style={styles.recentItem} onPress={() => {
                 setInput(item);

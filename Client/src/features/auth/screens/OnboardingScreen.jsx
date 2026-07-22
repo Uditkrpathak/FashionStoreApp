@@ -94,7 +94,7 @@ const OnboardingScreen = () => {
                   onPress={handleBack}
                   disabled={index === 0}
                 >
-                  <Text style={[styles.arrowText, { color: colors.primary }]}>←</Text>
+                  <Text style={[styles.arrowText, { color: '#000000' }]}>←</Text>
                 </TouchableOpacity>
 
                 {/* Pagination Dots */}

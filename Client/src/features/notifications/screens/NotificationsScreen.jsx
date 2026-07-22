@@ -52,7 +52,7 @@ const NotificationsScreen = () => {
       {/* Header Bar */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.8}>
-          <ArrowLeft size={20} color="#1F2029" strokeWidth={2} />
+          <ArrowLeft size={20} color="#000000" strokeWidth={2} />
         </TouchableOpacity>
         <Text style={styles.title}>Notification</Text>
         <View style={styles.pill}>

@@ -27,7 +27,7 @@ const CheckoutAddressScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <ArrowLeft size={24} color={colors.text} />
+          <ArrowLeft size={24} color="#000000" stroke="#000000" strokeWidth={2.2} />
         </TouchableOpacity>
         <Text style={styles.title}>Shipping Address</Text>
         <View style={{ width: 44 }} />

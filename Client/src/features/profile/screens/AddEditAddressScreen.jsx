@@ -143,9 +143,9 @@ const AddEditAddressScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing[4], paddingTop: spacing[12], backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.border },
-  back:   { fontSize: 22, color: colors.text },
+  back:   { fontSize: 22, color: '#000000' },
   title:  { ...textStyles.h5, color: colors.text },
-  content:{ padding: spacing[4] },
+  content:{ padding: spacing[4], paddingBottom: 120 },
   row:    { flexDirection: 'row' },
   btn:    { marginTop: spacing[2] },
   mapPickBtn: {

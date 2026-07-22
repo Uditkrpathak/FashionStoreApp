@@ -50,10 +50,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white 
   },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.white, borderWidth: 1, borderColor: '#E0E0E0', alignItems: 'center', justifyContent: 'center' },
-  back:    { fontSize: 18, color: colors.text, fontWeight: '700' },
+  back:    { fontSize: 18, color: '#000000', fontWeight: '700' },
   title:   { ...textStyles.h4, color: colors.text, fontWeight: '800' },
   
-  content: { padding: spacing[6], paddingBottom: spacing[10] },
+  content: { padding: spacing[6], paddingBottom: 120 },
   sectionTitle: { ...textStyles.h5, color: colors.text, fontWeight: '700', marginTop: spacing[4], marginBottom: spacing[3] },
   paragraph: { ...textStyles.body2, color: colors.textMuted, lineHeight: 22, marginBottom: spacing[4] },
 });

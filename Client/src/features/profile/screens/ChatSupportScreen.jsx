@@ -203,7 +203,7 @@ const ChatSupportScreen = () => {
       {/* Header section matching exact layout */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerCircleBtn}>
-          <ArrowLeft size={20} color={colors.text} />
+          <ArrowLeft size={20} color="#000000" />
         </TouchableOpacity>
 
         <View style={styles.userInfo}>

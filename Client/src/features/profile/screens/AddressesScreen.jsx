@@ -28,7 +28,7 @@ const AddressesScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}><ArrowLeft size={24} color={colors.text} /></TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.goBack()}><ArrowLeft size={24} color="#000000" /></TouchableOpacity>
         <Text style={styles.title}>My Addresses</Text>
         <View style={{ width: 32 }} />
       </View>

@@ -49,7 +49,7 @@ const ForgotPasswordScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, padding: spacing[6], paddingTop: spacing[14] },
   back:      { marginBottom: spacing[6] },
-  backText:  { ...textStyles.label, color: colors.primary },
+  backText:  { ...textStyles.label, color: '#000000' },
   heading:   { ...textStyles.h2, color: colors.text, marginBottom: spacing[2] },
   sub:       { ...textStyles.body1, color: colors.textMuted, marginBottom: spacing[8], lineHeight: 24 },
   btn:       { marginTop: spacing[2] },

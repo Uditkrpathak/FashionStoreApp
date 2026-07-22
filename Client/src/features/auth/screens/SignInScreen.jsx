@@ -110,16 +110,15 @@ const SignInScreen = () => {
           <View style={styles.dividerLine} />
         </View>
 
-        {/* Social Icons */}
         <View style={styles.socialRow}>
           <TouchableOpacity style={styles.socialBtn}>
-            <FontAwesome5 name="apple" size={24} color={colors.text} />
+            <FontAwesome5 name="apple" size={24} color="#000000" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.socialBtn}>
-            <FontAwesome5 name="google" size={24} color={colors.text} />
+            <FontAwesome5 name="google" size={24} color="#000000" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.socialBtn}>
-            <FontAwesome5 name="facebook-f" size={24} color={colors.text} />
+            <FontAwesome5 name="facebook-f" size={24} color="#000000" />
           </TouchableOpacity>
         </View>
 

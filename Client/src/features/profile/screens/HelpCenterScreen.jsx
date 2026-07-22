@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F8F8' 
   },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.white, borderWidth: 1, borderColor: '#E0E0E0', alignItems: 'center', justifyStyle: 'center', justifyContent: 'center' },
-  back:    { fontSize: 18, color: colors.text, fontWeight: '700' },
+  back:    { fontSize: 18, color: '#000000', fontWeight: '700' },
   title:   { ...textStyles.h4, color: colors.text, fontWeight: '800' },
   
   tabsRow: { 
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   tabText: { ...textStyles.body1, color: colors.textMuted, fontWeight: '600' },
   tabTextActive: { color: '#704F38', fontWeight: '800' },
   
-  scrollContent: { paddingHorizontal: spacing[4], paddingBottom: spacing[10] },
+  scrollContent: { paddingHorizontal: spacing[4], paddingBottom: 120 },
   
   searchBox: {
     flexDirection: 'row', alignItems: 'center',
