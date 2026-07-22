@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
-import { useGetAdminOrdersQuery, useUpdateOrderStatusMutation } from '../services/adminOrderApi';
-import { Check, Truck, CheckCircle2, XCircle, Clock, X, MapPin } from 'lucide-react';
+import { 
+  useGetAdminOrdersQuery, 
+  useUpdateOrderStatusMutation,
+  useShipOrderMutation,
+  useProcessReturnMutation,
+  useLazyGetOrderInvoiceQuery
+} from '../services/adminOrderApi';
+import { Check, Truck, CheckCircle2, XCircle, Clock, X, MapPin, Printer } from 'lucide-react';
 import { Loader } from '../shared/components/Loader';
 
 const STATUS_TABS = [
@@ -17,12 +23,21 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
 
+  // Shipment Modal State
+  const [shipModalVisible, setShipModalVisible] = useState(false);
+  const [shippingCourier, setShippingCourier] = useState('');
+  const [shippingTrackingId, setShippingTrackingId] = useState('');
+  const [shippingOrderId, setShippingOrderId] = useState(null);
+
   const { data, isLoading, refetch } = useGetAdminOrdersQuery({
     status: activeStatus || undefined,
     limit: 50,
   });
 
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
+  const [shipOrder, { isLoading: isShipping }] = useShipOrderMutation();
+  const [processReturn] = useProcessReturnMutation();
+  const [triggerGetInvoice, { isFetching: isInvoiceFetching }] = useLazyGetOrderInvoiceQuery();
 
   const handleStateTransition = async (orderId, targetStatus, reason) => {
     try {
@@ -33,6 +48,139 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
       }
     } catch (err) {
       alert(err.data?.message || `Failed to transition status to ${targetStatus}`);
+    }
+  };
+
+  const handleOpenShipModal = (orderId) => {
+    setShippingOrderId(orderId);
+    setShippingCourier('');
+    setShippingTrackingId('');
+    setShipModalVisible(true);
+  };
+
+  const handleSaveShipment = async (e) => {
+    if (e) e.preventDefault();
+    if (!shippingCourier || !shippingTrackingId) return alert('Please enter courier and tracking ID');
+    try {
+      await shipOrder({ id: shippingOrderId, courier: shippingCourier, trackingId: shippingTrackingId }).unwrap();
+      setShipModalVisible(false);
+      refetch();
+      alert('Shipment registered and order status updated to Shipped');
+    } catch (err) {
+      alert(err.data?.message || 'Failed to update shipment status');
+    }
+  };
+
+  const handleProcessReturn = async (orderId, status) => {
+    const reason = window.prompt(`Enter reason for ${status} return request:`);
+    if (reason === null) return;
+    try {
+      await processReturn({ id: orderId, status, reason }).unwrap();
+      setDrawerVisible(false);
+      refetch();
+      alert(`Return request was ${status}`);
+    } catch (err) {
+      alert(err.data?.message || 'Failed to process return request');
+    }
+  };
+
+  const handleDownloadInvoice = async (orderId) => {
+    try {
+      const res = await triggerGetInvoice(orderId).unwrap();
+      if (!res.success || !res.invoice) return alert('Failed to get invoice');
+      
+      const { invoice } = res;
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Invoice - ${invoice.invoiceNumber}</title>
+            <style>
+              body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #111; padding: 40px; line-height: 1.5; }
+              .header { display: flex; justify-content: space-between; border-bottom: 2px solid #EEE; padding-bottom: 20px; margin-bottom: 30px; }
+              .title { font-size: 24px; font-weight: bold; }
+              .details { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+              table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+              th, td { padding: 12px; border-bottom: 1px solid #EEE; text-align: left; }
+              th { background: #FDFBF9; font-weight: bold; }
+              .totals { display: flex; flex-direction: column; align-items: flex-end; font-size: 16px; }
+              .total-row { display: flex; justify-content: space-between; width: 250px; padding: 6px 0; }
+              .grand-total { font-weight: bold; border-top: 2px solid #111; padding-top: 10px; font-size: 18px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div>
+                <div class="title">FashionStore Invoice</div>
+                <div>Invoice No: ${invoice.invoiceNumber}</div>
+                <div>Date: ${invoice.issueDate}</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-weight: bold;">FashionStore Admin Portal</div>
+                <div>Order ID: #${invoice.orderId.toUpperCase()}</div>
+              </div>
+            </div>
+            <div class="details">
+              <div>
+                <strong>Billed To:</strong>
+                <div>${invoice.customer.name}</div>
+                <div>${invoice.customer.phone}</div>
+                <div>${invoice.customer.email}</div>
+              </div>
+              <div>
+                <strong>Shipping Address:</strong>
+                <div>${invoice.customer.address}</div>
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Product Title</th>
+                  <th>SKU</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                  <th style="text-align: right;">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${invoice.items.map(item => `
+                  <tr>
+                    <td>${item.title}</td>
+                    <td>${item.sku}</td>
+                    <td>₹${item.price.toLocaleString('en-IN')}</td>
+                    <td>${item.qty}</td>
+                    <td style="text-align: right;">₹${item.total.toLocaleString('en-IN')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <div class="totals">
+              <div class="total-row">
+                <span>Subtotal:</span>
+                <span>₹${invoice.totals.subtotal.toLocaleString('en-IN')}</span>
+              </div>
+              <div class="total-row">
+                <span>Shipping:</span>
+                <span>₹${invoice.totals.shipping.toLocaleString('en-IN')}</span>
+              </div>
+              <div class="total-row">
+                <span>Discount:</span>
+                <span>-₹${invoice.totals.discount.toLocaleString('en-IN')}</span>
+              </div>
+              <div class="total-row grand-total">
+                <span>Grand Total:</span>
+                <span>₹${invoice.totals.grandTotal.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+            <script>
+              window.onload = function() { window.print(); }
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    } catch (err) {
+      alert('Failed to trigger print window: ' + err.message);
     }
   };
 
@@ -123,7 +271,7 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
                           </button>
                         )}
                         {currentStatus === 'confirmed' && (
-                          <button onClick={() => handleStateTransition(order._id, 'shipped', 'Order dispatched')} className="inline-flex items-center gap-1.5 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-colors">
+                          <button onClick={() => handleOpenShipModal(order._id)} className="inline-flex items-center gap-1.5 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-colors">
                             <Truck className="w-3.5 h-3.5" /> Ship
                           </button>
                         )}
@@ -155,9 +303,19 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
       {drawerVisible && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
           <div className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl border border-[#EDEDED] space-y-5">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-3">
               <h3 className="text-lg font-black text-[#1F2029]">Order Details #{selectedOrder?._id?.slice(-8)?.toUpperCase()}</h3>
-              <button onClick={() => setDrawerVisible(false)} className="text-[#797979] hover:text-[#1F2029]"><X className="w-5 h-5" /></button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleDownloadInvoice(selectedOrder._id)}
+                  disabled={isInvoiceFetching}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#704F38] text-white rounded-lg text-xs font-bold shadow-sm transition-colors hover:bg-[#8C6244]"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>{isInvoiceFetching ? 'Loading...' : 'Invoice'}</span>
+                </button>
+                <button onClick={() => setDrawerVisible(false)} className="text-[#797979] hover:text-[#1F2029]"><X className="w-5 h-5" /></button>
+              </div>
             </div>
 
             <div className="bg-[#FDFBF9] rounded-xl p-4 border border-[#EDEDED]">
@@ -178,6 +336,14 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
               </div>
             </div>
 
+            {selectedOrder?.shipmentDetails && (
+              <div className="bg-[#EFF6FF] rounded-xl p-4 border border-[#BFDBFE]">
+                <div className="font-bold text-xs text-[#1D4ED8] uppercase tracking-wider mb-2">Courier Shipping Info</div>
+                <div className="text-xs font-bold text-[#1F2029]">Courier: {selectedOrder.shipmentDetails.courier}</div>
+                <div className="text-xs text-[#797979] mt-0.5">Tracking Number: {selectedOrder.shipmentDetails.trackingId}</div>
+              </div>
+            )}
+
             <div className="bg-[#FDFBF9] rounded-xl p-4 border border-[#EDEDED]">
               <div className="font-bold text-xs text-[#1F2029] uppercase tracking-wider mb-3">Order Items</div>
               <div className="divide-y divide-[#EDEDED]">
@@ -190,6 +356,20 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
                 ))}
               </div>
             </div>
+
+            {selectedOrder?.returnRequest && (
+              <div className="bg-[#FEF2F2] rounded-xl p-4 border border-[#FCA5A5] space-y-2">
+                <div className="font-extrabold text-xs text-[#E57373] uppercase tracking-wider">Return Request Details</div>
+                <div className="text-xs font-bold text-[#1F2029]">Reason: {selectedOrder.returnRequest.reason}</div>
+                <div className="text-xs text-[#797979]">Status: <span className="font-black">{selectedOrder.returnRequest.status?.toUpperCase() || 'PENDING'}</span></div>
+                {selectedOrder.returnRequest.status === 'pending' && (
+                  <div className="flex gap-2 pt-1">
+                    <button onClick={() => handleProcessReturn(selectedOrder._id, 'approved')} className="px-3.5 py-1.5 bg-[#4CAF50] text-white text-xs font-extrabold rounded-lg shadow-sm hover:scale-[1.02] transition-transform">Approve Return</button>
+                    <button onClick={() => handleProcessReturn(selectedOrder._id, 'rejected')} className="px-3.5 py-1.5 bg-[#E57373] text-white text-xs font-extrabold rounded-lg shadow-sm hover:scale-[1.02] transition-transform">Reject Return</button>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="bg-[#FDFBF9] rounded-xl p-4 border border-[#EDEDED]">
               <div className="font-bold text-xs text-[#1F2029] uppercase tracking-wider mb-3">Lifecycle Timeline</div>
@@ -219,6 +399,37 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
                 })}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Shipment Modal */}
+      {shipModalVisible && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-[#EDEDED]">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-black text-[#1F2029]">Register Order Shipment</h3>
+              <button onClick={() => setShipModalVisible(false)} className="text-[#797979] hover:text-[#1F2029]"><X className="w-5 h-5" /></button>
+            </div>
+
+            <form onSubmit={handleSaveShipment} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#1F2029] uppercase tracking-wider mb-2">Courier Partner *</label>
+                <input type="text" required placeholder="e.g. BlueDart, DHL, FedEx" value={shippingCourier} onChange={(e) => setShippingCourier(e.target.value)} className="w-full p-3 rounded-xl border border-[#EDEDED] bg-[#FDFBF9] text-sm font-medium outline-none focus:border-[#704F38]" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#1F2029] uppercase tracking-wider mb-2">Tracking ID / AWB *</label>
+                <input type="text" required placeholder="e.g. 1234567890" value={shippingTrackingId} onChange={(e) => setShippingTrackingId(e.target.value)} className="w-full p-3 rounded-xl border border-[#EDEDED] bg-[#FDFBF9] text-sm font-medium outline-none focus:border-[#704F38]" />
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button type="button" onClick={() => setShipModalVisible(false)} className="px-4 py-2.5 rounded-xl bg-[#FDFBF9] border border-[#EDEDED] text-xs font-bold text-[#797979]">Cancel</button>
+                <button type="submit" disabled={isShipping} className="px-5 py-2.5 rounded-xl bg-[#704F38] hover:bg-[#8C6244] text-white text-xs font-extrabold shadow-md">
+                  {isShipping ? 'Registering...' : 'Register Shipment'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

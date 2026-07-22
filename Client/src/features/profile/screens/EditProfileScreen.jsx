@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing[4], paddingTop: spacing[12], backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.border },
   back:   { fontSize: 22, color: colors.text },
   title:  { ...textStyles.h5, color: colors.text, fontWeight: '700' },
-  content:{ padding: spacing[4] },
+  content:{ padding: spacing[4], paddingBottom: 100 },
   avatarWrap: { alignItems: 'center', marginBottom: spacing[6], marginTop: spacing[2] },
   avatarTouch: { position: 'relative' },
   avatar: { width: 100, height: 100, borderRadius: 50 },

@@ -301,7 +301,10 @@ const styles = StyleSheet.create({
     borderColor: '#ECECEC',
   },
   searchInput: { flex: 1, marginLeft: spacing[2], ...textStyles.body1, color: colors.text },
-  
+  scrollContent: {
+    padding: spacing[4],
+    paddingBottom: 100,
+  },
   categoryScrollView: {
     paddingHorizontal: spacing[4],
     alignItems: 'center',

@@ -19,6 +19,7 @@ import { selectUser } from '../../auth/store/authSlice';
 import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
+import { useGetMyTicketQuery, useReplyMyTicketMutation } from '../store/userApi';
 
 const CHAT_PARTNER = {
   name: 'Angie Brekke',
@@ -26,105 +27,58 @@ const CHAT_PARTNER = {
   status: 'Online',
 };
 
-const INITIAL_MESSAGES = [
-  {
-    id: '1',
-    sender: 'angie',
-    senderName: CHAT_PARTNER.name,
-    senderAvatar: CHAT_PARTNER.avatar,
-    type: 'text',
-    text: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-    time: '08:04 pm',
-  },
-  {
-    id: '2',
-    sender: 'user',
-    senderName: 'Esther Howard',
-    senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop',
-    type: 'text',
-    text: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-    time: '08:04 pm',
-  },
-  {
-    id: '3',
-    sender: 'angie',
-    senderName: CHAT_PARTNER.name,
-    senderAvatar: CHAT_PARTNER.avatar,
-    type: 'image',
-    imageUrl: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=400&auto=format&fit=crop',
-    time: '08:04 pm',
-  },
-  {
-    id: '4',
-    sender: 'user',
-    senderName: 'Esther Howard',
-    senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop',
-    type: 'audio',
-    duration: '0:13',
-    time: '08:04 pm',
-  },
-];
-
 const ChatSupportScreen = () => {
   const navigation = useNavigation();
   const currentUser = useAppSelector(selectUser);
   const flatListRef = useRef(null);
 
-  const [messages, setMessages] = useState(INITIAL_MESSAGES);
   const [inputText, setInputText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
 
-  // Sync user info from Redux store if available
-  const userDisplayName = currentUser?.name || 'Esther Howard';
+  // Fetch support ticket thread from DB
+  const { data: ticketData, refetch, isLoading } = useGetMyTicketQuery(undefined, {
+    pollingInterval: 4000, // Poll every 4 seconds for new messages
+  });
+  const [replyMyTicket, { isLoading: isReplying }] = useReplyMyTicketMutation();
+
+  const userDisplayName = currentUser?.name || 'Customer';
   const userAvatarUrl = currentUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop';
 
-  useEffect(() => {
-    // Scroll to bottom on load
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: false });
-    }, 100);
-  }, []);
-
-  const handleSend = () => {
-    if (!inputText.trim()) return;
-
-    const userMessage = {
-      id: Date.now().toString(),
-      sender: 'user',
-      senderName: userDisplayName,
-      senderAvatar: userAvatarUrl,
+  const ticket = ticketData?.ticket;
+  
+  // Transform messages to local presentation format
+  const messages = (ticket?.messages || []).map((msg, index) => {
+    const isMe = msg.sender === 'customer';
+    return {
+      id: index.toString(),
+      sender: isMe ? 'user' : 'angie',
+      senderName: isMe ? userDisplayName : CHAT_PARTNER.name,
+      senderAvatar: isMe ? userAvatarUrl : CHAT_PARTNER.avatar,
       type: 'text',
-      text: inputText.trim(),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase(),
+      text: msg.text,
+      time: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase(),
     };
+  });
 
-    setMessages((prev) => [...prev, userMessage]);
-    setInputText('');
-
-    // Auto scroll to bottom
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-
-    // Simulate agent typing and replying
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      const agentReply = {
-        id: (Date.now() + 1).toString(),
-        sender: 'angie',
-        senderName: CHAT_PARTNER.name,
-        senderAvatar: CHAT_PARTNER.avatar,
-        type: 'text',
-        text: 'Thank you for reaching out! Let me check this for you right away.',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase(),
-      };
-      setMessages((prev) => [...prev, agentReply]);
-
+  useEffect(() => {
+    // Scroll to bottom on initial message load
+    if (messages.length > 0) {
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }, 2000);
+      }, 200);
+    }
+  }, [messages.length]);
+
+  const handleSend = async () => {
+    if (!inputText.trim()) return;
+    const textToSend = inputText.trim();
+    setInputText('');
+
+    try {
+      await replyMyTicket(textToSend).unwrap();
+      refetch();
+    } catch (err) {
+      alert(err.data?.message || 'Failed to send message');
+    }
   };
 
   const renderMessageItem = ({ item }) => {
@@ -237,10 +191,9 @@ const ChatSupportScreen = () => {
             </View>
           )}
           ListFooterComponent={() =>
-            isTyping ? (
+            isReplying ? (
               <View style={styles.typingIndicatorContainer}>
-                <Image source={{ uri: CHAT_PARTNER.avatar }} style={styles.miniAvatar} />
-                <Text style={styles.typingText}>Angie is typing</Text>
+                <Text style={styles.typingText}>Sending message...</Text>
                 <ActivityIndicator size="small" color={colors.textMuted} style={{ marginLeft: 6 }} />
               </View>
             ) : null

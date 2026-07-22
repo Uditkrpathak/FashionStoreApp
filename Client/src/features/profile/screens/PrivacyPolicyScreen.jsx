@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
   back:    { fontSize: 18, color: colors.text, fontWeight: '700' },
   title:   { ...textStyles.h4, color: colors.text, fontWeight: '800' },
   
-  content: { padding: spacing[6], paddingBottom: spacing[10] },
+  content: { padding: spacing[6], paddingBottom: 100 },
   sectionTitle: { ...textStyles.h5, color: colors.text, fontWeight: '700', marginTop: spacing[4], marginBottom: spacing[3] },
   paragraph: { ...textStyles.body2, color: colors.textMuted, lineHeight: 22, marginBottom: spacing[4] },
 });

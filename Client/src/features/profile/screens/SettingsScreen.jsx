@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   back: { fontSize: 18, color: colors.text, fontWeight: '700' },
   title: { ...textStyles.h4, color: colors.text, fontWeight: '800' },
 
-  content: { paddingVertical: spacing[6] },
+  content: { paddingVertical: spacing[6], paddingBottom: 100 },
   menu: { paddingHorizontal: spacing[6] },
   menuItem: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

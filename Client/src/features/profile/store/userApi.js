@@ -64,6 +64,22 @@ export const userApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Notification'],
     }),
+    getMyTicket: builder.query({
+      query: () => '/auth/tickets/me',
+      providesTags: ['Ticket'],
+    }),
+    replyMyTicket: builder.mutation({
+      query: (text) => ({
+        url: '/auth/tickets/me/reply',
+        method: 'POST',
+        body: { text },
+      }),
+      invalidatesTags: ['Ticket'],
+    }),
+    getPublicSettings: builder.query({
+      query: () => '/auth/settings/public',
+      providesTags: ['Setting'],
+    }),
   }),
 });
 
@@ -77,4 +93,7 @@ export const {
   useRemoveFromWishlistMutation,
   useGetNotificationsQuery,
   useMarkNotificationAsReadMutation,
+  useGetMyTicketQuery,
+  useReplyMyTicketMutation,
+  useGetPublicSettingsQuery,
 } = userApi;

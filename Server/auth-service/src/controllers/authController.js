@@ -1,5 +1,7 @@
 import User from '../models/User.js';
 import AuditLog from '../models/AuditLog.js';
+import Ticket from '../models/Ticket.js';
+import Setting from '../models/Setting.js';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import { sendOtpEmail } from '../utils/emailService.js';
@@ -409,6 +411,163 @@ export const getAuditLogs = async (req, res) => {
       logs,
       pagination: { total, page: Number(page), pages: Math.ceil(total / limit) }
     });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getAllTicketsAdmin = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, status, priority } = req.query;
+    const query = {};
+    if (status) query.status = status;
+    if (priority) query.priority = priority;
+
+    const tickets = await Ticket.find(query)
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .sort({ updatedAt: -1 });
+
+    const total = await Ticket.countDocuments(query);
+    res.json({
+      success: true,
+      tickets,
+      pagination: { total, page: Number(page), pages: Math.ceil(total / limit) }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const replyToTicketAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { text, status, priority } = req.body;
+    const adminId = req.headers['x-user-id'];
+
+    const ticket = await Ticket.findById(id);
+    if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });
+
+    if (text) {
+      ticket.messages.push({
+        sender: 'admin',
+        text,
+        timestamp: new Date()
+      });
+    }
+
+    if (status) ticket.status = status;
+    if (priority) ticket.priority = priority;
+
+    await ticket.save();
+
+    // Audit Event
+    await AuditLog.create({
+      adminId,
+      action: 'REPLY_TICKET',
+      targetEntity: 'Ticket',
+      targetId: id,
+      details: { text: text ? text.slice(0, 100) : '', status, priority }
+    });
+
+    res.json({ success: true, message: 'Reply sent and ticket updated', ticket });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getStoreSettingsAdmin = async (req, res) => {
+  try {
+    const settings = await Setting.find({});
+    res.json({ success: true, settings });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const updateStoreSettingAdmin = async (req, res) => {
+  try {
+    const adminId = req.headers['x-user-id'];
+    const { key, value } = req.body;
+
+    if (!key) return res.status(400).json({ success: false, message: 'Key is required' });
+
+    const setting = await Setting.findOneAndUpdate(
+      { key },
+      { value },
+      { new: true, upsert: true }
+    );
+
+    // Audit Event
+    await AuditLog.create({
+      adminId,
+      action: 'UPDATE_SETTING',
+      targetEntity: 'Setting',
+      targetId: setting._id,
+      details: { key, value }
+    });
+
+    res.json({ success: true, message: `Setting '${key}' updated successfully`, setting });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getOrCreateMyTicket = async (req, res) => {
+  try {
+    const userId = req.headers['x-user-id'];
+    if (!userId) return res.status(401).json({ success: false, message: 'User identity missing' });
+
+    let ticket = await Ticket.findOne({ userId });
+    if (!ticket) {
+      ticket = new Ticket({
+        userId,
+        title: 'Customer Helpdesk Chat',
+        status: 'open',
+        priority: 'medium',
+        messages: [{
+          sender: 'admin',
+          text: 'Hello! How can we assist you today?',
+          timestamp: new Date()
+        }]
+      });
+      await ticket.save();
+    }
+    res.json({ success: true, ticket });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const replyToMyTicket = async (req, res) => {
+  try {
+    const userId = req.headers['x-user-id'];
+    const { text } = req.body;
+    if (!userId) return res.status(401).json({ success: false, message: 'User identity missing' });
+    if (!text) return res.status(400).json({ success: false, message: 'Message text is required' });
+
+    let ticket = await Ticket.findOne({ userId });
+    if (!ticket) return res.status(404).json({ success: false, message: 'Support ticket thread not found' });
+
+    ticket.messages.push({
+      sender: 'customer',
+      text,
+      timestamp: new Date()
+    });
+    ticket.status = 'open'; // Auto reopen/mark open when customer sends message
+
+    await ticket.save();
+    res.json({ success: true, ticket });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getPublicSettings = async (req, res) => {
+  try {
+    const keys = ['cod_enabled', 'free_shipping_limit', 'store_name', 'support_email', 'support_phone'];
+    const settings = await Setting.find({ key: { $in: keys } });
+    res.json({ success: true, settings });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

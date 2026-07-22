@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.white, borderWidth: 1, borderColor: '#E0E0E0', alignItems: 'center', justifyContent: 'center' },
   back: { fontSize: 18, color: colors.text, fontWeight: '700' },
   title: { ...textStyles.h4, color: colors.text, fontWeight: '800' },
-  content: { padding: spacing[6] },
+  content: { padding: spacing[6], paddingBottom: 100 },
   emptyCardsBox: {
     padding: spacing[8],
     alignItems: 'center',

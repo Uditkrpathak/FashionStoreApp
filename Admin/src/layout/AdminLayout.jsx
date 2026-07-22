@@ -13,7 +13,9 @@ import {
   LogOut,
   ChevronRight,
   ShieldCheck,
-  Menu
+  Menu,
+  MessageSquare,
+  Settings
 } from 'lucide-react';
 
 export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
@@ -37,8 +39,10 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
     { id: 'catalog', label: 'Products & Categories', icon: ShoppingBag, perm: 'products.view' },
     { id: 'orders', label: 'Orders & Fulfillment', icon: Package, perm: 'orders.view' },
     { id: 'users', label: 'Users & Roles', icon: Users, perm: 'users.view' },
+    { id: 'tickets', label: 'Support Tickets', icon: MessageSquare, perm: 'users.view' },
     { id: 'coupons', label: 'Promo Coupons', icon: Ticket, perm: 'settings.edit' },
     { id: 'audit', label: 'Audit Logs', icon: FileText, perm: 'audit.view' },
+    { id: 'settings', label: 'Store Settings', icon: Settings, perm: 'settings.edit' },
   ];
 
   const navItems = allNavItems.filter((item) => hasPermission(user, item.perm));

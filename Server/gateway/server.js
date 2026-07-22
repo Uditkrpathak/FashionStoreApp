@@ -69,7 +69,7 @@ const routes = [
   { 
     path: '/api/v1/auth', 
     target: AUTH_TARGET,
-    protectedPaths: ['/me', '/profile', '/wishlist', '/addresses', '/notifications', '/admin']
+    protectedPaths: ['/me', '/profile', '/wishlist', '/addresses', '/notifications', '/admin', '/tickets']
   },
   // Catalog Service (Public GET, Protected POST/PUT/DELETE & /admin)
   { 

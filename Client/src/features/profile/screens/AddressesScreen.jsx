@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing[4], paddingTop: spacing[12], backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.border },
   back:   { fontSize: 22, color: colors.text },
   title:  { ...textStyles.h5, color: colors.text },
-  list:   { padding: spacing[4] },
+  list:   { padding: spacing[4], paddingBottom: 100 },
   card: { flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 16, padding: spacing[4], marginBottom: spacing[3], ...shadows.sm },
   label:  { ...textStyles.label, color: colors.text, marginBottom: 2 },
   addr:   { ...textStyles.body2, color: colors.textMuted },

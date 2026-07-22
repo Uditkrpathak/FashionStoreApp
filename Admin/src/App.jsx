@@ -11,6 +11,8 @@ import { ProductFormPage } from './pages/ProductFormPage';
 import { CouponManagementPage } from './pages/CouponManagementPage';
 import { OrderFulfillmentPage } from './pages/OrderFulfillmentPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
+import { TicketManagementPage } from './pages/TicketManagementPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 export function App() {
   const isAuthenticated = useSelector(selectIsAdminAuthenticated);
@@ -87,6 +89,20 @@ export function App() {
           </PermissionGuard>
         );
 
+      case 'tickets':
+        return (
+          <PermissionGuard requiredPermission="users.view">
+            <TicketManagementPage />
+          </PermissionGuard>
+        );
+
+      case 'settings':
+        return (
+          <PermissionGuard requiredPermission="settings.edit">
+            <SettingsPage />
+          </PermissionGuard>
+        );
+
       case 'audit':
         return (
           <PermissionGuard requiredPermission="audit.view">
@@ -111,6 +127,8 @@ export function App() {
       case 'product_form': return editingProduct ? 'Edit Product Listing' : 'Create Product Listing';
       case 'coupons': return 'Promo Coupon Management';
       case 'orders': return 'Order Lifecycle & Fulfillment';
+      case 'tickets': return 'Customer Grievances & Support Tickets';
+      case 'settings': return 'Enterprise Store Configurations';
       case 'audit': return 'Audit Logs & Change Records';
       default: return 'Admin Portal';
     }
