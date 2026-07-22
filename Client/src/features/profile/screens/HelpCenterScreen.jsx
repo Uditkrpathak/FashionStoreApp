@@ -101,7 +101,7 @@ const HelpCenterScreen = () => {
   const navigation = useNavigation();
   const [tab, setTab] = useState('FAQ');
   const [expandedFAQ, setExpandedFAQ] = useState(0); // first open by default
-  const [expandedContact, setExpandedContact] = useState(1); // second open by default (WhatsApp)
+  const [expandedContact, setExpandedContact] = useState(0); // first open by default (Customer Service Chat)
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 

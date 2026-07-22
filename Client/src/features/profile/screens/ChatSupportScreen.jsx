@@ -303,6 +303,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 36,
     borderTopRightRadius: 36,
     overflow: 'hidden',
+    paddingBottom: 80,
   },
   listContent: {
     paddingHorizontal: spacing[6],

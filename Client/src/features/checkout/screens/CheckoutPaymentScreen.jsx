@@ -17,7 +17,7 @@ const CheckoutPaymentScreen = () => {
   const selected   = useAppSelector(selectPaymentMethod);
 
   // Fetch settings dynamically
-  const { data: settingsData } = useGetPublicSettingsQuery();
+  const { data: settingsData } = useGetPublicSettingsQuery(undefined, { refetchOnMountOrArgChange: true });
   const settings = settingsData?.settings || [];
   const codSetting = settings.find(s => s.key === 'cod_enabled');
   const isCodEnabled = codSetting ? (codSetting.value === 'true' || codSetting.value === true) : true;

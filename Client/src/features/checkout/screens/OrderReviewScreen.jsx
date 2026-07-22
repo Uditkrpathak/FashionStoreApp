@@ -29,7 +29,7 @@ const OrderReviewScreen = () => {
   const [verifyPayment] = useVerifyPaymentMutation();
 
   // Load public store settings
-  const { data: settingsData } = useGetPublicSettingsQuery();
+  const { data: settingsData } = useGetPublicSettingsQuery(undefined, { refetchOnMountOrArgChange: true });
   const settings = settingsData?.settings || [];
   const shippingSet = settings.find(s => s.key === 'free_shipping_limit');
   const freeShippingLimit = shippingSet ? Number(shippingSet.value) : 999999;
