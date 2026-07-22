@@ -30,7 +30,11 @@ const SignUpScreen = () => {
       const res = await register({ name: data.name, email: data.email, password: data.password }).unwrap();
       navigation.navigate('VerifyOTP', { email: data.email });
     } catch (err) {
-      showToast(err?.data?.message ?? 'Registration failed.', 'error');
+      let errorMsg = err?.data?.message ?? 'Registration failed. Please try again.';
+      if (errorMsg === 'Email already exists') {
+        errorMsg = 'An account with this email already exists.';
+      }
+      showToast(errorMsg, 'error');
     }
   };
 
@@ -45,7 +49,14 @@ const SignUpScreen = () => {
             <Input label="Name" placeholder="John Doe" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.name?.message} />
           )} />
 
-        <Controller control={control} name="email" rules={{ validate: isEmail }}
+        <Controller control={control} name="email" rules={{
+          validate: (v) => {
+            const check = isEmail(v);
+            if (check !== true) return check;
+            if (v && v.length > 40) return 'Email cannot exceed 40 characters';
+            return true;
+          }
+        }}
           render={({ field: { onChange, onBlur, value } }) => (
             <Input label="Email" placeholder="example@gmail.com" value={value} onChangeText={onChange} onBlur={onBlur} keyboardType="email-address" autoCapitalize="none" error={errors.email?.message} />
           )} />

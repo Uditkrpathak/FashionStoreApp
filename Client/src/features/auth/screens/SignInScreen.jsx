@@ -37,7 +37,13 @@ const SignInScreen = () => {
         refreshToken: res.token,
       }));
     } catch (err) {
-      showToast(err?.data?.message ?? 'Login failed. Please try again.', 'error');
+      let errorMsg = err?.data?.message ?? 'Login failed. Please try again.';
+      if (errorMsg === 'Invalid credentials') {
+        errorMsg = 'Incorrect password. Please try again.';
+      } else if (errorMsg === 'User not found') {
+        errorMsg = 'No account found with this email.';
+      }
+      showToast(errorMsg, 'error');
     }
   };
 
@@ -57,7 +63,16 @@ const SignInScreen = () => {
         <Controller
           control={control}
           name="identifier"
-          rules={{ validate: (v) => isEmail(v) === true || isPhone(v) === true || 'Enter a valid email or phone' }}
+          rules={{
+            validate: (v) => {
+              if (isEmail(v) === true) {
+                if (v && v.length > 40) return 'Email cannot exceed 40 characters';
+                return true;
+              }
+              if (isPhone(v) === true) return true;
+              return 'Enter a valid email or phone';
+            }
+          }}
           render={({ field: { onChange, onBlur, value } }) => (
             <Input
               label="Email or Phone"
