@@ -509,6 +509,12 @@ export const updateOrderStatus = async (req, res, next) => {
     }
 
     order.orderStatus = status;
+    
+    // Auto mark COD orders as paid/completed upon delivery
+    if (status === 'delivered' && order.paymentMethod?.type === 'cod') {
+      order.paymentStatus = 'completed';
+    }
+
     order.statusHistory.push({ status, timestamp: new Date(), reason: reason || 'Updated by Admin' });
     await order.save();
 

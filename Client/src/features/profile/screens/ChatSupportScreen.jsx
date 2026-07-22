@@ -55,7 +55,16 @@ const ChatSupportScreen = () => {
       senderAvatar: isMe ? userAvatarUrl : CHAT_PARTNER.avatar,
       type: 'text',
       text: msg.text,
-      time: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase(),
+      time: (() => {
+        const d = new Date(msg.timestamp);
+        if (isNaN(d.getTime())) return '';
+        let hours = d.getHours();
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'pm' : 'am';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        return `${hours}:${minutes} ${ampm}`;
+      })(),
     };
   });
 
