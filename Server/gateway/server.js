@@ -56,10 +56,10 @@ const getServiceUrl = (envVar, liveUrl, localPort) => {
   return `http://localhost:${localPort}`;
 };
 
-const AUTH_TARGET = getServiceUrl(process.env.AUTH_SERVICE_URL, 'https://fashion-auth-service.onrender.com', 5001);
-const CATALOG_TARGET = getServiceUrl(process.env.CATALOG_SERVICE_URL, 'https://fashion-catalog-service.onrender.com', 5002);
-const CART_TARGET = getServiceUrl(process.env.CART_SERVICE_URL, 'https://fashion-cart-service.onrender.com', 5003);
-const ORDER_TARGET = getServiceUrl(process.env.ORDER_SERVICE_URL, 'https://fashion-order-service.onrender.com', 5004);
+const AUTH_TARGET = getServiceUrl(process.env.AUTH_SERVICE_URL, 'https://fashion-auth-service-m4vh.onrender.com', 5001);
+const CATALOG_TARGET = getServiceUrl(process.env.CATALOG_SERVICE_URL, 'https://fashion-catalog-service-zdsg.onrender.com', 5002);
+const CART_TARGET = getServiceUrl(process.env.CART_SERVICE_URL, 'https://fashion-cart-service-dmu7.onrender.com', 5003);
+const ORDER_TARGET = getServiceUrl(process.env.ORDER_SERVICE_URL, 'https://fashion-order-service-a4xr.onrender.com', 5004);
 
 console.log(`[GATEWAY TARGETS] Auth: ${AUTH_TARGET} | Catalog: ${CATALOG_TARGET} | Cart: ${CART_TARGET} | Order: ${ORDER_TARGET}`);
 
