@@ -1,8 +1,5 @@
 // src/theme/spacing.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Spacing scale — based on 4pt grid.
-// Use these for margin, padding, gap, borderRadius.
-// ─────────────────────────────────────────────────────────────────────────────
+
 
 export const spacing = {
   0:    0,
