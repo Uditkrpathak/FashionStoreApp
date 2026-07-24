@@ -44,14 +44,17 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-const isRender = process.env.RENDER === 'true' || process.env.NODE_ENV === 'production';
-
 const getServiceUrl = (envVar, liveUrl, localPort) => {
-  if (isRender) {
-    return liveUrl;
-  }
-  if (envVar && !envVar.includes('gateway') && !envVar.includes('localhost') && !envVar.includes('127.0.0.1')) {
-    return envVar.trim().startsWith('http') ? envVar.trim() : `https://${envVar.trim()}`;
+  if (envVar) {
+    let url = envVar.trim();
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      if (!url.includes(':')) {
+        url = `http://${url}:10000`;
+      } else {
+        url = `http://${url}`;
+      }
+    }
+    return url;
   }
   return `http://localhost:${localPort}`;
 };

@@ -103,7 +103,15 @@ export const createOrder = async (req, res, next) => {
 
     // Create a notification
     try {
-      const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:5001';
+      let authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:5001';
+      authServiceUrl = authServiceUrl.trim();
+      if (!authServiceUrl.startsWith('http://') && !authServiceUrl.startsWith('https://')) {
+        if (!authServiceUrl.includes(':')) {
+          authServiceUrl = `http://${authServiceUrl}:10000`;
+        } else {
+          authServiceUrl = `http://${authServiceUrl}`;
+        }
+      }
       await fetch(`${authServiceUrl}/notifications`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
