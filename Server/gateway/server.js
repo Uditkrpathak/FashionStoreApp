@@ -48,7 +48,7 @@ const getServiceUrl = (envVar, liveUrl, localPort) => {
   if (envVar) {
     let url = envVar.trim();
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = `http://${url}`;
+      url = `https://${url}.onrender.com`;
     }
     return url;
   }

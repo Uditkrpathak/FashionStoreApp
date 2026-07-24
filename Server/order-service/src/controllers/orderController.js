@@ -106,7 +106,7 @@ export const createOrder = async (req, res, next) => {
       let authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:5001';
       authServiceUrl = authServiceUrl.trim();
       if (!authServiceUrl.startsWith('http://') && !authServiceUrl.startsWith('https://')) {
-        authServiceUrl = `http://${authServiceUrl}`;
+        authServiceUrl = `https://${authServiceUrl}.onrender.com`;
       }
       await fetch(`${authServiceUrl}/notifications`, {
         method: 'POST',
