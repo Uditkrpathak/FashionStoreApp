@@ -48,11 +48,7 @@ const getServiceUrl = (envVar, liveUrl, localPort) => {
   if (envVar) {
     let url = envVar.trim();
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      if (!url.includes(':')) {
-        url = `http://${url}:10000`;
-      } else {
-        url = `http://${url}`;
-      }
+      url = `http://${url}`;
     }
     return url;
   }
