@@ -137,6 +137,17 @@ routes.forEach((route) => {
   });
 });
 
+app.get('/debug-env', (req, res) => {
+  res.json({
+    AUTH_SERVICE_URL: process.env.AUTH_SERVICE_URL,
+    CATALOG_SERVICE_URL: process.env.CATALOG_SERVICE_URL,
+    CART_SERVICE_URL: process.env.CART_SERVICE_URL,
+    ORDER_SERVICE_URL: process.env.ORDER_SERVICE_URL,
+    PORT: process.env.PORT,
+    RENDER: process.env.RENDER
+  });
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'Gateway is running' });
 });
