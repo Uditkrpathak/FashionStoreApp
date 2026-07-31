@@ -11,8 +11,9 @@ import { spacing, shadows } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
 
 const METHODS = [
-  { id: 'razorpay', label: 'Razorpay',            icon: '⚡', sub: 'Pay via UPI, Cards, NetBanking' },
-  { id: 'card',     label: 'Credit / Debit Card', icon: '💳', sub: 'Visa, Mastercard, RuPay' },
+  { id: 'cod',      label: 'Cash on Delivery (COD)', icon: '💵', sub: 'Pay with Cash or UPI upon package delivery' },
+  { id: 'razorpay', label: 'Razorpay Online',        icon: '⚡', sub: 'Pay via Instant UPI, Cards, NetBanking' },
+  { id: 'card',     label: 'Credit / Debit Card',    icon: '💳', sub: 'Visa, Mastercard, RuPay' },
 ];
 
 const CheckoutPaymentScreen = () => {

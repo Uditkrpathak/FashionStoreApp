@@ -275,7 +275,12 @@ export const UserManagementPage = () => {
                   ) : (
                     usersData?.users?.map((user) => (
                       <tr key={user._id} className="hover:bg-[#FDFBF9]/50 transition-colors">
-                        <td className="px-5 py-4 font-extrabold text-[#1F2029]">{user.name}</td>
+                        <td className="px-5 py-4">
+                          <div className="font-extrabold text-[#1F2029]">{user.name}</div>
+                          <div className="text-[10px] font-mono font-bold text-[#704F38] mt-0.5 select-all">
+                            #USR-{user._id.slice(-6).toUpperCase()}
+                          </div>
+                        </td>
                         <td className="px-5 py-4 text-[#797979] font-medium">{user.email}</td>
                         <td className="px-5 py-4">
                           <span className={`px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider uppercase ${

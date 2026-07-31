@@ -24,6 +24,12 @@ export const MarketingNotificationPage = () => {
   const handleCreateCouponSubmit = async (e) => {
     e.preventDefault();
     if (!code.trim()) return;
+    if (discountType === 'percentage' && Number(discountValue) > 100) {
+      return alert('Percentage discount cannot exceed 100%.');
+    }
+    if (Number(discountValue) <= 0) {
+      return alert('Discount value must be greater than 0.');
+    }
     try {
       await createCoupon({
         code: code.trim().toUpperCase(),

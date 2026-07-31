@@ -2,6 +2,12 @@ import mongoose from 'mongoose';
 
 const OrderSchema = new mongoose.Schema({
   userId: { type: String, required: true },
+  customerDetails: {
+    name: String,
+    email: String,
+    phone: String,
+    userId: String
+  },
   items: [{
     productId: String,
     variantSku: String,
@@ -63,7 +69,6 @@ OrderSchema.pre('save', function() {
       this.statusHistory.push({ status: 'placed', reason: 'Order placed by customer' });
     }
     if (!this.slaDeadline) {
-      // Set SLA Deadline to 24 hours after creation by default
       this.slaDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
     }
   }

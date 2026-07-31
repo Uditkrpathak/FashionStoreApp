@@ -79,13 +79,29 @@ export const createOrder = async (req, res, next) => {
     }
 
     const userNameHeader = req.headers['x-user-name'];
+    const userEmailHeader = req.headers['x-user-email'];
+
+    const custName = shippingAddress?.name || shippingAddress?.fullName || userNameHeader || 'Customer';
+    const custEmail = shippingAddress?.email || userEmailHeader || 'customer@fashionstore.com';
+    const custPhone = shippingAddress?.phone || '+91 9999988888';
+
+    const customerDetails = {
+      name: custName,
+      email: custEmail,
+      phone: custPhone,
+      userId: req.headers['x-user-id']
+    };
+
     const finalShippingAddress = {
       ...(shippingAddress || {}),
-      name: shippingAddress?.name || shippingAddress?.fullName || userNameHeader || 'Customer'
+      name: custName,
+      email: custEmail,
+      phone: custPhone
     };
 
     const order = new Order({
       userId: req.headers['x-user-id'],
+      customerDetails,
       items,
       shippingAddress: finalShippingAddress,
       deliveryOption,
@@ -475,11 +491,24 @@ export const paymentWebhook = async (req, res) => {
 export const getAllOrdersAdmin = async (req, res, next) => {
   try {
     const { page = 1, limit = 20, status, search } = req.query;
-    const query = {};
+    
+    // Only show orders where payment is completed OR payment method is COD
+    const validPaymentCondition = {
+      $or: [
+        { paymentStatus: 'completed' },
+        { paymentStatus: 'paid' },
+        { paymentMethod: 'COD' },
+        { 'paymentMethod.id': 'COD' },
+        { 'paymentMethod.name': 'COD' },
+        { 'paymentMethod.type': 'COD' }
+      ]
+    };
 
-    if (status) query.orderStatus = status;
+    const query = { $and: [validPaymentCondition] };
 
-
+    if (status) {
+      query.$and.push({ orderStatus: status });
+    }
 
     const orders = await Order.find(query)
       .skip((page - 1) * limit)
@@ -525,15 +554,28 @@ export const updateOrderStatus = async (req, res, next) => {
 
 export const getDashboardStats = async (req, res, next) => {
   try {
-    const totalOrders = await Order.countDocuments();
-    const placedCount = await Order.countDocuments({ orderStatus: 'placed' });
-    const confirmedCount = await Order.countDocuments({ orderStatus: 'confirmed' });
-    const shippedCount = await Order.countDocuments({ orderStatus: 'shipped' });
-    const deliveredCount = await Order.countDocuments({ orderStatus: 'delivered' });
-    const cancelledCount = await Order.countDocuments({ orderStatus: 'cancelled' });
+    const validOrderFilter = {
+      $or: [
+        { paymentStatus: 'completed' },
+        { paymentStatus: 'paid' },
+        { paymentMethod: 'COD' },
+        { 'paymentMethod.id': 'COD' },
+        { 'paymentMethod.name': 'COD' },
+        { 'paymentMethod.type': 'COD' }
+      ]
+    };
+
+    const totalOrders = await Order.countDocuments(validOrderFilter);
+    const placedCount = await Order.countDocuments({ ...validOrderFilter, orderStatus: 'placed' });
+    const confirmedCount = await Order.countDocuments({ ...validOrderFilter, orderStatus: 'confirmed' });
+    const shippedCount = await Order.countDocuments({ ...validOrderFilter, orderStatus: 'shipped' });
+    const deliveredCount = await Order.countDocuments({ ...validOrderFilter, orderStatus: 'delivered' });
+    const cancelledCount = await Order.countDocuments({ ...validOrderFilter, orderStatus: 'cancelled' });
 
     // Calculate total revenue from delivered/completed orders
-    const completedOrders = await Order.find({ paymentStatus: 'completed' });
+    const completedOrders = await Order.find({
+      $or: [{ paymentStatus: 'completed' }, { paymentStatus: 'paid' }]
+    });
     const totalRevenue = completedOrders.reduce((sum, o) => sum + (o.totals?.grandTotal || 0), 0);
 
     res.json({

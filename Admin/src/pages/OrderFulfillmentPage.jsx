@@ -193,7 +193,9 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
                   return (
                     <tr key={order._id} className="hover:bg-[#FDFBF9]/50 transition-colors">
                       <td className="px-5 py-4 cursor-pointer" onClick={() => handleOpenDrawer(order)}>
-                        <div className="font-black text-[#1F2029]">#{order._id.slice(-8).toUpperCase()}</div>
+                        <div className="font-mono font-bold text-[#704F38] select-all">
+                          #ORD-{order._id.slice(-6).toUpperCase()}
+                        </div>
                         <div className="text-[11px] text-[#797979] font-medium">{new Date(order.createdAt).toLocaleDateString()}</div>
                       </td>
                       <td className="px-5 py-4 text-[#1F2029] font-medium">
@@ -414,7 +416,7 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl border border-[#EDEDED] space-y-5">
             <div className="flex justify-between items-center border-b border-[#EDEDED] pb-4">
-              <h3 className="text-lg font-black text-[#1F2029]">Order Details #{selectedOrder?._id?.slice(-8)?.toUpperCase()}</h3>
+              <h3 className="text-lg font-black text-[#1F2029]">Order Details #ORD-{selectedOrder?._id?.slice(-6)?.toUpperCase()}</h3>
               <button onClick={() => setDrawerVisible(false)} className="text-[#797979] hover:text-[#1F2029]"><X className="w-5 h-5" /></button>
             </div>
 
@@ -441,36 +443,70 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
               </div>
             )}
 
-            <div className="bg-[#FDFBF9] rounded-xl p-4 border border-[#EDEDED]">
-              <div className="flex items-center gap-2 font-bold text-xs text-[#704F38] uppercase tracking-wider mb-2">
-                <MapPin className="w-4 h-4 text-[#704F38]" /> Shipping Address
+            <div className="bg-[#FDFBF9] rounded-xl p-4 border border-[#EDEDED] space-y-3">
+              <div className="flex items-center gap-2 font-bold text-xs text-[#704F38] uppercase tracking-wider">
+                <MapPin className="w-4 h-4 text-[#704F38]" /> Customer & Shipping Information
               </div>
-              <div className="font-extrabold text-sm text-[#1F2029]">
-                {selectedOrder?.shippingAddress?.name || selectedOrder?.shippingAddress?.fullName || 'Customer'}
-                {selectedOrder?.shippingAddress?.phone ? ` • ${selectedOrder.shippingAddress.phone}` : ''}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="text-[#797979] font-medium block mb-0.5">Customer Name & ID:</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-extrabold text-[#1F2029]">
+                      {selectedOrder?.customerDetails?.name || selectedOrder?.shippingAddress?.name || selectedOrder?.shippingAddress?.fullName || 'Customer'}
+                    </span>
+                    {selectedOrder?.userId && (
+                      <span className="text-[10px] font-mono font-bold text-[#704F38] bg-white px-1.5 py-0.5 rounded border border-[#EDEDED] select-all">
+                        #USR-{selectedOrder.userId.slice(-6).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[#797979] font-medium block mb-0.5">Contact Details:</span>
+                  <div className="font-extrabold text-[#1F2029]">
+                    {selectedOrder?.customerDetails?.phone || selectedOrder?.shippingAddress?.phone || 'No Phone'}
+                    {(selectedOrder?.customerDetails?.email || selectedOrder?.shippingAddress?.email)
+                      ? ` • ${selectedOrder?.customerDetails?.email || selectedOrder?.shippingAddress?.email}`
+                      : ''}
+                  </div>
+                </div>
               </div>
-              <div className="text-xs text-[#797979] font-medium mt-1">
-                {[
-                  selectedOrder?.shippingAddress?.line1 || selectedOrder?.shippingAddress?.address,
-                  selectedOrder?.shippingAddress?.city,
-                  selectedOrder?.shippingAddress?.state,
-                  selectedOrder?.shippingAddress?.pincode || selectedOrder?.shippingAddress?.zip
-                ].filter(Boolean).join(', ') || 'No address specified'}
+              <div className="pt-2 border-t border-[#EDEDED]">
+                <span className="text-[#797979] font-medium text-xs block mb-0.5">Delivery Address:</span>
+                <div className="text-xs text-[#1F2029] font-bold">
+                  {[
+                    selectedOrder?.shippingAddress?.line1 || selectedOrder?.shippingAddress?.address,
+                    selectedOrder?.shippingAddress?.line2,
+                    selectedOrder?.shippingAddress?.city,
+                    selectedOrder?.shippingAddress?.state,
+                    selectedOrder?.shippingAddress?.pincode || selectedOrder?.shippingAddress?.zip
+                  ].filter(Boolean).join(', ') || 'No shipping address provided'}
+                </div>
               </div>
             </div>
 
             <div className="bg-[#FDFBF9] rounded-xl p-4 border border-[#EDEDED]">
               <div className="font-bold text-xs text-[#1F2029] uppercase tracking-wider mb-3">Order Items</div>
               <div className="divide-y divide-[#EDEDED]">
-                {selectedOrder?.items?.map((item, idx) => (
-                  <div key={idx} className="flex py-2.5 text-xs items-center">
-                    <div className="flex-1">
-                      <div className="font-bold text-[#1F2029]">{item.title}</div>
+                {selectedOrder?.items?.map((item, idx) => {
+                  const prodId = item.productId || item.product || item._id;
+                  const formattedProdId = prodId ? prodId.toString().slice(-8).toUpperCase() : 'N/A';
+                  return (
+                    <div key={idx} className="flex py-2.5 text-xs items-center">
+                      <div className="flex-1">
+                        <div className="font-bold text-[#1F2029]">{item.title}</div>
+                        <div className="text-[10px] font-mono text-[#797979] mt-0.5 flex items-center gap-1">
+                          <span>Product ID:</span>
+                          <span className="font-bold text-[#704F38] select-all bg-[#FDFBF9] px-1.5 py-0.5 rounded border border-[#EDEDED]">
+                            #{formattedProdId}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-[#797979] font-medium mr-4">Size: {item.size} | Color: {item.color}</div>
+                      <div className="font-black text-[#704F38]">{item.qty} x ₹{item.priceAtAdd || item.price}</div>
                     </div>
-                    <div className="text-[#797979] font-medium mr-4">Size: {item.size} | Color: {item.color}</div>
-                    <div className="font-black text-[#704F38]">{item.qty} x ₹{item.priceAtAdd || item.price}</div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

@@ -123,10 +123,12 @@ export const TicketManagementPage = () => {
               ) : (
                 data?.tickets?.map((ticket) => (
                   <tr key={ticket._id} className="hover:bg-[#FDFBF9]/50 transition-colors">
-                    <td className="px-5 py-4 font-black text-[#1F2029]">{ticket.ticketNumber}</td>
+                    <td className="px-5 py-4 font-mono font-bold text-[#704F38] select-all">
+                      #{ticket.ticketNumber || ('TKT-' + ticket._id.slice(-6).toUpperCase())}
+                    </td>
                     <td className="px-5 py-4 font-bold text-[#1F2029]">
                       {ticket.subject}
-                      {ticket.orderId && <div className="text-[10px] text-[#797979] font-mono">Order: #{ticket.orderId.slice(-8).toUpperCase()}</div>}
+                      {ticket.orderId && <div className="text-[10px] text-[#797979] font-mono">Order: #ORD-{ticket.orderId.slice(-6).toUpperCase()}</div>}
                     </td>
                     <td className="px-5 py-4 text-xs font-medium text-[#797979]">{ticket.userName} ({ticket.userEmail})</td>
                     <td className="px-5 py-4">

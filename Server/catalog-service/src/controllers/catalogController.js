@@ -1,95 +1,14 @@
-// import Product from '../models/Product.js';
-// import Category from '../models/Category.js';
-// import Review from '../models/Review.js';
+import Product from '../models/Product.js';
+import Category from '../models/Category.js';
+import Review from '../models/Review.js';
 
-// export const seedData = async (req, res) => {
-//   try {
-//     await Category.deleteMany();
-//     await Product.deleteMany();
+export const seedData = async (req, res, next) => {
+  try {
+    await Category.deleteMany();
+    await Product.deleteMany();
 
-//     // Categories matching the UI mockups
-//     const catJacket = await new Category({ name: 'Jacket', image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea', productCount: 15 }).save();
-//     const catShirt = await new Category({ name: 'Shirt', image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c', productCount: 20 }).save();
-//     const catPant = await new Category({ name: 'Pant', image: 'https://images.unsplash.com/photo-1584865288642-42078afe6942', productCount: 10 }).save();
-//     const catTShirt = await new Category({ name: 'T-Shirt', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab', productCount: 25 }).save();
-//     const catDress = await new Category({ name: 'Dress', image: 'https://images.unsplash.com/photo-1515347619362-67343e808207', productCount: 12 }).save();
-
-//     const prods = [
-//       // === JACKETS (10 products) ===
-//       { 
-//         title: 'Brown Leather Jacket', brand: "Zara", price: 83.97, originalPrice: 120.00, category: catJacket._id, 
-//         images: ['https://images.unsplash.com/photo-1551028719-00167b16eac5', 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea'], 
-//         sizes: ['S','M','L','XL'], colors: ['Brown'], isFeatured: true, rating: 4.9, reviewsCount: 124,
-//         description: 'Premium brown leather jacket tailored for a sleek, modern look.', gender: 'Men'
-//       },
-//       { 
-//         title: 'Earthy Brown Suit', brand: "Zara", price: 120.00, originalPrice: 180.00, category: catJacket._id, 
-//         images: ['https://images.unsplash.com/photo-1594938298596-eb5f1fd546fb', 'https://images.unsplash.com/photo-1507679799987-c73779587ccf'], 
-//         sizes: ['S','M','L','XL'], colors: ['Brown', 'Black'], isFeatured: true, rating: 4.7, reviewsCount: 45,
-//         description: 'Elegant brown suite tailored for professional and formal events.', gender: 'Men'
-//       },
-//       { 
-//         title: 'Black Denim Jacket', brand: "Puma", price: 65.00, originalPrice: 85.00, category: catJacket._id, 
-//         images: ['https://images.unsplash.com/photo-1576995853123-5a10305d93c0'], 
-//         sizes: ['M','L','XL','XXL'], colors: ['Black'], isFeatured: false, rating: 4.4, reviewsCount: 64,
-//         description: 'Classic fit black denim jacket with high durability and standard design.', gender: 'Men'
-//       },
-//       { 
-//         title: 'Cozy Knit Cardigan', brand: "Fila", price: 78.00, originalPrice: 110.00, category: catJacket._id, 
-//         images: ['https://images.unsplash.com/photo-1544441893-675973e31985'], 
-//         sizes: ['M','L','XL'], colors: ['Gray'], isFeatured: false, rating: 4.6, reviewsCount: 56,
-//         description: 'Thick, premium knit cardigan with horn buttons to stay warm and fashionable.', gender: 'Women'
-//       },
-//       { 
-//         title: 'Nike Windbreaker', brand: "Nike", price: 95.00, originalPrice: 130.00, category: catJacket._id, 
-//         images: ['https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3'], 
-//         sizes: ['S','M','L','XL'], colors: ['White','Blue'], isFeatured: true, rating: 4.8, reviewsCount: 142,
-//         description: 'Lightweight Nike windbreaker with hood and zip pockets.', gender: 'Men'
-//       },
-//       { 
-//         title: 'Adidas Track Jacket', brand: "Adidas", price: 80.00, originalPrice: 110.00, category: catJacket._id, 
-//         images: ['https://images.unsplash.com/photo-1483985988355-763728e1935b'], 
-//         sizes: ['S','M','L'], colors: ['Black','White'], isFeatured: true, rating: 4.5, reviewsCount: 96,
-//         description: 'Classic Adidas three-stripe track jacket.', gender: 'Women'
-//       },
-//       { 
-//         title: 'Puma Fleece Hoodie', brand: "Puma", price: 55.00, originalPrice: 75.00, category: catJacket._id, 
-//         images: ['https://images.unsplash.com/photo-1556821840-3a63f95609a7'], 
-//         sizes: ['M','L','XL'], colors: ['Grey','Black'], isFeatured: false, rating: 4.1, reviewsCount: 78,
-//         description: 'Warm fleece hoodie from Puma with dynamic sporty look.', gender: 'Men'
-//       },
-//       { 
-//         title: 'Reebok Winter Parka', brand: "Reebok", price: 145.00, originalPrice: 200.00, category: catJacket._id, 
-//         images: ['https://images.unsplash.com/photo-1548883354-7622d03aca27'], 
-//         sizes: ['M','L','XL'], colors: ['Navy'], isFeatured: true, rating: 4.3, reviewsCount: 35,
-//         description: 'Heavy duty insulated winter parka for freezing weather.', gender: 'Men'
-//       },
-//       { 
-//         title: 'Fila Puffer Coat', brand: "Fila", price: 110.00, originalPrice: 150.00, category: catJacket._id, 
-//         images: ['https://images.unsplash.com/photo-1539571696357-5a69c17a67c6'], 
-//         sizes: ['S','M','L'], colors: ['Red','Black'], isFeatured: false, rating: 4.0, reviewsCount: 52,
-//         description: 'Bright red puffer coat from Fila with high collar.', gender: 'Women'
-//       },
-//       { 
-//         title: 'Zara Trench Coat', brand: "Zara", price: 135.00, originalPrice: 190.00, category: catJacket._id, 
-//         images: ['https://images.unsplash.com/photo-1591047139829-d91aecb6caea'], 
-//         sizes: ['S','M','L','XL'], colors: ['Beige'], isFeatured: true, rating: 4.6, reviewsCount: 68,
-//         description: 'Double breasted waterproof trench coat.', gender: 'Women'
-//       },
-//       // === SHIRTS (10 products) ===
-//       { 
-//         title: 'Yellow Casual Shirt', brand: "H&M", price: 35.00, originalPrice: 45.00, category: catShirt._id, 
-//         images: ['https://images.unsplash.com/photo-1596755094514-f87e34085b2c', 'https://images.unsplash.com/photo-1603252109303-2751441dd157'], 
-//         sizes: ['M','L','XL'], colors: ['Yellow', 'White'], isFeatured: true, rating: 4.8, reviewsCount: 89,
-//         description: 'Bright and stylish yellow shirt perfect for casual outings.', gender: 'Men'
-//       },
-//       { 
-//         title: 'Striped Dress Shirt', brand: "Fila", price: 42.00, originalPrice: 60.00, category: catShirt._id, 
-//         images: ['https://images.unsplash.com/photo-1620012253295-c05518e993be'], 
-//         sizes: ['S','M','L'], colors: ['Blue', 'White'], isFeatured: true, rating: 4.3, reviewsCount: 31,
-//         description: 'Fine cotton striped dress shirt for corporate and formal wear.', gender: 'Men'
-//       },
-//       { 
+    // Categories matching the UI mockups
+    const catJacket = await new Category({ name: 'Jacket', image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea', productCount: 15 }).save();
 //         title: 'Nike Dri-FIT Polo', brand: "Nike", price: 45.00, originalPrice: 60.00, category: catShirt._id, 
 //         images: ['https://images.unsplash.com/photo-1479064555552-3ef4979f8908'], 
 //         sizes: ['S','M','L','XL'], colors: ['White','Blue'], isFeatured: true, rating: 4.6, reviewsCount: 110,
@@ -877,18 +796,21 @@ export const getProducts = async (req, res, next) => {
       const priceFilter = {};
       if (!isNaN(pMin)) priceFilter.$gte = pMin;
       if (!isNaN(pMax)) priceFilter.$lte = pMax;
-
       if (Object.keys(priceFilter).length > 0) {
         filter.price = priceFilter;
       }
     }
+
+    // Ensure products must have a defined category
+    filter.category = { $exists: true, $ne: null };
 
     let query = Product.find(filter).populate('category', 'name');
     if (sort === 'price_asc') query = query.sort({ price: 1 });
     if (sort === 'price_desc') query = query.sort({ price: -1 });
     if (sort === 'newest') query = query.sort({ createdAt: -1 });
 
-    const products = await query.limit(parseInt(limit));
+    const rawProducts = await query.limit(parseInt(limit));
+    const products = rawProducts.filter(p => p.category && p.category.name);
     res.json({ success: true, products });
   } catch (err) {
     next(err);
@@ -939,6 +861,15 @@ export const getProductReviews = async (req, res, next) => {
 
 export const createProduct = async (req, res, next) => {
   try {
+    const { title, brand, price, category, description, images, sizes, colors } = req.body;
+
+    if (!title || !brand || !price || !category || !description || !images || !Array.isArray(images) || images.length === 0 || !sizes || !Array.isArray(sizes) || sizes.length === 0 || !colors || !Array.isArray(colors) || colors.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'All product details (Title, Brand, Price, Category, Description, Images, Sizes, and Colors) are mandatory.'
+      });
+    }
+
     const product = new Product(req.body);
     await product.save();
 

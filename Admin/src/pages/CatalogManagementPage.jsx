@@ -268,7 +268,12 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
                           <img src={item.images?.[0] || 'https://via.placeholder.com/60'} alt={item.title} className="w-11 h-11 rounded-xl object-cover border border-[#EDEDED]" />
                           <div>
                             <div className="font-extrabold text-[#1F2029]">{item.title}</div>
-                            <div className="text-[11px] text-[#797979] font-medium">{item.brand} ({item.gender || 'Unisex'})</div>
+                            <div className="text-[11px] text-[#797979] font-medium flex items-center gap-1.5 mt-0.5">
+                              <span className="font-mono font-bold text-[#704F38] bg-[#FDFBF9] px-1.5 py-0.5 rounded border border-[#EDEDED]">
+                                #{item.sku || ('PRD-' + item._id.slice(-6).toUpperCase())}
+                              </span>
+                              <span>• {item.brand} ({item.gender || 'Unisex'})</span>
+                            </div>
                           </div>
                         </div>
                       </td>
