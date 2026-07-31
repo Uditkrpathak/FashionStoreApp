@@ -145,6 +145,7 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
                       <div>
                         <div className="font-extrabold text-[#1F2029]">{item.title}</div>
                         <div className="text-[11px] text-[#797979] font-medium">{item.gender || 'Unisex'}</div>
+                        <div className="text-[10px] text-[#9A9AB0] font-mono select-all">ID: {item._id}</div>
                       </div>
                     </div>
                   </td>
