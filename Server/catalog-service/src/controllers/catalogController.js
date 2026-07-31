@@ -368,15 +368,6 @@ export const seedData = async (req, res, next) => {
 //   }
 // };
 
-// export const getProductReviews = async (req, res) => {
-//   try {
-//     const { productId } = req.params;
-//     const reviews = await Review.find({ productId }).sort({ createdAt: -1 });
-//     res.json({ success: true, reviews });
-//   } catch (err) {
-//     res.status(500).json({ success: false, message: err.message });
-//   }
-// };
 import Product from '../models/Product.js';
 import Category from '../models/Category.js';
 import Review from '../models/Review.js';

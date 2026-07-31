@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.join(__dirname, '../order-service/.env') });
 
-const ATLAS_URI = process.env.MONGO_URI || 'mongodb+srv://uditpathak65_db_user:PEOL66F8H2aAlUk7@cluster0.6xhipcg.mongodb.net';
+const ATLAS_URI = process.env.ORDER_MONGO_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017';
 
 async function resetAllData() {
   console.log('🚀 Starting Clean Slate Reset & Fresh Data Seeding on Cloud Database...');
