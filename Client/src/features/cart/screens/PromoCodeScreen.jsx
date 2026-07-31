@@ -12,10 +12,11 @@ import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
 
+// minSpend MUST match the minOrderAmount values in the cart-service DB (cartController.js seedCoupons)
 const COUPONS = [
-  { code: 'WELCOME200', title: 'Get 50% OFF', minSpend: 200, icon: Percent },
-  { code: 'CASHBACK12', title: 'Up to ₹100 cashback', minSpend: 150, icon: Ticket },
-  { code: 'FEST2COST', title: 'Get 50% OFF for Combo', minSpend: 400, icon: Ticket },
+  { code: 'WELCOME200', title: 'Get 50% OFF',          minSpend: 200, icon: Percent },
+  { code: 'CASHBACK12', title: 'Up to ₹100 cashback',  minSpend: 150, icon: Ticket  },
+  { code: 'FEST2COST',  title: 'Get 50% OFF for Combo', minSpend: 400, icon: Ticket  },
 ];
 
 const PromoCodeScreen = () => {
@@ -27,21 +28,31 @@ const PromoCodeScreen = () => {
   const totalPrice = useAppSelector(selectCartTotalPrice);
 
   const handleApplyCode = async (couponCode) => {
-    const activeCode = couponCode || code;
-    if (!activeCode.trim()) { 
+    const activeCode = (couponCode || code).trim().toUpperCase();
+    if (!activeCode) { 
       showToast('Enter a coupon code', 'warning'); 
       return; 
     }
+
+    // Always enforce minimum spend client-side BEFORE hitting the server
+    const matchedCoupon = COUPONS.find(c => c.code === activeCode);
+    if (matchedCoupon && totalPrice < matchedCoupon.minSpend) {
+      const diff = Math.ceil(matchedCoupon.minSpend - totalPrice);
+      showToast(`Add items worth ₹${diff} more to use ${activeCode}`, 'warning');
+      return;
+    }
+
     try {
-      // Enforce minimum spend criteria for manual inputs matching the predefined coupons list
-      const matchedCoupon = COUPONS.find(c => c.code.toUpperCase() === activeCode.trim().toUpperCase());
-      if (matchedCoupon && totalPrice < matchedCoupon.minSpend) {
-        const diff = (matchedCoupon.minSpend - totalPrice).toFixed(2);
-        showToast(`Add items worth ₹${diff} more to unlock this coupon`, 'warning');
+      const res = await applyCouponRemote({ code: activeCode }).unwrap();
+
+      // Server may also enforce minOrderAmount — double-check the returned coupon
+      const serverMin = res.coupon?.minOrderAmount || 0;
+      if (serverMin > 0 && totalPrice < serverMin) {
+        const diff = Math.ceil(serverMin - totalPrice);
+        showToast(`Add items worth ₹${diff} more to use ${activeCode}`, 'warning');
         return;
       }
 
-      const res = await applyCouponRemote({ code: activeCode.trim() }).unwrap();
       dispatch(applyCoupon(res.coupon));
       showToast(`${res.coupon.code} applied! 🎉`, 'success');
       navigation.goBack();
