@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
-import { useGetAdminOrdersQuery, useUpdateOrderStatusMutation } from '../services/adminOrderApi';
-import { Check, Truck, CheckCircle2, XCircle, Clock, X, MapPin } from 'lucide-react';
+import { 
+  useGetAdminOrdersQuery, 
+  useUpdateOrderStatusMutation,
+  useCreateShipmentMutation,
+  useProcessReturnActionMutation,
+  useProcessRefundMutation,
+  useCreateReplacementOrderMutation
+} from '../services/adminOrderApi';
+import { Check, Truck, CheckCircle2, XCircle, Clock, X, MapPin, AlertTriangle, RotateCcw, DollarSign, FileText } from 'lucide-react';
 import { Loader } from '../shared/components/Loader';
 
 const STATUS_TABS = [
@@ -9,6 +16,7 @@ const STATUS_TABS = [
   { id: 'confirmed', label: 'Confirmed' },
   { id: 'shipped', label: 'Shipped' },
   { id: 'delivered', label: 'Delivered' },
+  { id: 'returned', label: 'Returned' },
   { id: 'cancelled', label: 'Cancelled' },
 ];
 
@@ -17,12 +25,28 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
 
+  // Shipment Modal State
+  const [shipmentModalOrder, setShipmentModalOrder] = useState(null);
+  const [courierName, setCourierName] = useState('FedEx Express');
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [trackingUrl, setTrackingUrl] = useState('');
+
+  // Return & Refund Modal State
+  const [returnModalOrder, setReturnModalOrder] = useState(null);
+  const [returnActionType, setReturnActionType] = useState('approve'); // 'approve' | 'reject'
+  const [returnResolution, setReturnResolution] = useState('refund'); // 'refund' | 'replacement'
+  const [adminNotes, setAdminNotes] = useState('');
+
   const { data, isLoading, refetch } = useGetAdminOrdersQuery({
     status: activeStatus || undefined,
     limit: 50,
   });
 
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
+  const [createShipment, { isLoading: isDispatching }] = useCreateShipmentMutation();
+  const [processReturnAction, { isLoading: isProcessingReturn }] = useProcessReturnActionMutation();
+  const [processRefund, { isLoading: isRefunding }] = useProcessRefundMutation();
+  const [createReplacementOrder, { isLoading: isCreatingReplacement }] = useCreateReplacementOrderMutation();
 
   const handleStateTransition = async (orderId, targetStatus, reason) => {
     try {
@@ -33,6 +57,62 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
       }
     } catch (err) {
       alert(err.data?.message || `Failed to transition status to ${targetStatus}`);
+    }
+  };
+
+  const handleOpenShipmentModal = (order) => {
+    setShipmentModalOrder(order);
+    setTrackingNumber(`TRK-${Math.floor(100000 + Math.random() * 900000)}`);
+    setTrackingUrl('');
+  };
+
+  const handleDispatchShipment = async (e) => {
+    e.preventDefault();
+    if (!shipmentModalOrder) return;
+    try {
+      await createShipment({
+        id: shipmentModalOrder._id,
+        courierName,
+        trackingNumber: trackingNumber.trim(),
+        trackingUrl: trackingUrl.trim() || undefined
+      }).unwrap();
+      setShipmentModalOrder(null);
+      refetch();
+    } catch (err) {
+      alert(err.data?.message || 'Failed to create shipment');
+    }
+  };
+
+  const handleOpenReturnModal = (order) => {
+    setReturnModalOrder(order);
+    setReturnActionType('approve');
+    setReturnResolution('refund');
+    setAdminNotes('');
+  };
+
+  const handleProcessReturnSubmit = async (e) => {
+    e.preventDefault();
+    if (!returnModalOrder) return;
+    try {
+      await processReturnAction({
+        id: returnModalOrder._id,
+        action: returnActionType,
+        returnType: returnResolution,
+        adminNotes: adminNotes.trim()
+      }).unwrap();
+
+      if (returnActionType === 'approve') {
+        if (returnResolution === 'refund') {
+          await processRefund({ id: returnModalOrder._id, refundMode: 'Original Payment Method' }).unwrap();
+        } else if (returnResolution === 'replacement') {
+          await createReplacementOrder(returnModalOrder._id).unwrap();
+        }
+      }
+
+      setReturnModalOrder(null);
+      refetch();
+    } catch (err) {
+      alert(err.data?.message || 'Failed to process return request');
     }
   };
 
@@ -63,102 +143,303 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
         })}
       </div>
 
-      {/* Table-First Orders Listing */}
+      {/* Orders Table */}
       <div className="bg-white rounded-xl border border-[#EDEDED] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm min-w-[850px]">
-          <thead>
-            <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[11px] font-extrabold uppercase tracking-wider">
-              <th className="px-5 py-4">Order ID</th>
-              <th className="px-5 py-4">Customer</th>
-              <th className="px-5 py-4">Items Count</th>
-              <th className="px-5 py-4">Grand Total</th>
-              <th className="px-5 py-4">Status</th>
-              <th className="px-5 py-4 text-right">State Transition Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#EDEDED]">
-            {isLoading ? (
-              <tr>
-                <td colSpan="6">
-                  <Loader message="Loading Orders..." />
-                </td>
+          <table className="w-full text-left text-sm min-w-[900px]">
+            <thead>
+              <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[11px] font-extrabold uppercase tracking-wider">
+                <th className="px-5 py-4">Order ID</th>
+                <th className="px-5 py-4">Customer</th>
+                <th className="px-5 py-4">Items</th>
+                <th className="px-5 py-4">Fulfillment SLA</th>
+                <th className="px-5 py-4">Grand Total</th>
+                <th className="px-5 py-4">Status</th>
+                <th className="px-5 py-4 text-right">Actions & Fulfillment</th>
               </tr>
-            ) : data?.orders?.length === 0 ? (
-              <tr><td colSpan="6" className="p-8 text-center text-[#797979]">No orders found matching criteria.</td></tr>
-            ) : (
-              data?.orders?.map((order) => {
-                const currentStatus = order.orderStatus || 'placed';
-                return (
-                  <tr key={order._id} className="hover:bg-[#FDFBF9]/50 transition-colors">
-                    <td className="px-5 py-4 cursor-pointer" onClick={() => handleOpenDrawer(order)}>
-                      <div className="font-black text-[#1F2029]">#{order._id.slice(-8).toUpperCase()}</div>
-                      <div className="text-[11px] text-[#797979] font-medium">{new Date(order.createdAt).toLocaleDateString()}</div>
-                    </td>
-                    <td className="px-5 py-4 text-[#1F2029] font-medium">
-                      {order.shippingAddress?.name || 'Customer'}
-                    </td>
-                    <td className="px-5 py-4 text-[#797979] font-medium">
-                      {order.items?.length || 0} items
-                    </td>
-                    <td className="px-5 py-4 font-black text-[#704F38]">
-                      ₹{order.totals?.grandTotal?.toLocaleString('en-IN') || '0'}
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className={`px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider uppercase border ${
-                        currentStatus === 'placed' ? 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]' :
-                        currentStatus === 'confirmed' ? 'bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]' :
-                        currentStatus === 'shipped' ? 'bg-[#F3E8FF] text-[#6B21A8] border-[#E9D5FF]' :
-                        currentStatus === 'delivered' ? 'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]' :
-                        'bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA]'
-                      }`}>
-                        {currentStatus.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <div className="inline-flex gap-1.5">
-                        {currentStatus === 'placed' && (
-                          <button onClick={() => handleStateTransition(order._id, 'confirmed', 'Admin confirmed order')} className="inline-flex items-center gap-1.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-colors">
-                            <Check className="w-3.5 h-3.5" /> Confirm
+            </thead>
+            <tbody className="divide-y divide-[#EDEDED]">
+              {isLoading ? (
+                <tr>
+                  <td colSpan="7">
+                    <Loader message="Loading Order Lifecycle Data..." />
+                  </td>
+                </tr>
+              ) : data?.orders?.length === 0 ? (
+                <tr><td colSpan="7" className="p-8 text-center text-[#797979]">No orders found matching criteria.</td></tr>
+              ) : (
+                data?.orders?.map((order) => {
+                  const currentStatus = order.orderStatus || 'placed';
+                  const now = new Date();
+                  const deadline = order.slaDeadline ? new Date(order.slaDeadline) : new Date(new Date(order.createdAt).getTime() + 24 * 3600000);
+                  const diffHours = (deadline - now) / (1000 * 60 * 60);
+
+                  let slaBadge = 'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]';
+                  let slaLabel = 'On Track';
+
+                  if (currentStatus !== 'delivered' && currentStatus !== 'cancelled' && currentStatus !== 'returned') {
+                    if (diffHours < 0) {
+                      slaBadge = 'bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA] animate-pulse';
+                      slaLabel = 'SLA Breached';
+                    } else if (diffHours <= 4) {
+                      slaBadge = 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]';
+                      slaLabel = 'At Risk (<4h)';
+                    }
+                  } else {
+                    slaLabel = 'Completed';
+                    slaBadge = 'bg-gray-100 text-gray-600 border-gray-200';
+                  }
+
+                  return (
+                    <tr key={order._id} className="hover:bg-[#FDFBF9]/50 transition-colors">
+                      <td className="px-5 py-4 cursor-pointer" onClick={() => handleOpenDrawer(order)}>
+                        <div className="font-black text-[#1F2029]">#{order._id.slice(-8).toUpperCase()}</div>
+                        <div className="text-[11px] text-[#797979] font-medium">{new Date(order.createdAt).toLocaleDateString()}</div>
+                      </td>
+                      <td className="px-5 py-4 text-[#1F2029] font-medium">
+                        {order.shippingAddress?.name || 'Customer'}
+                      </td>
+                      <td className="px-5 py-4 text-[#797979] font-medium">
+                        {order.items?.length || 0} items
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider uppercase border inline-flex items-center gap-1 ${slaBadge}`}>
+                          {slaLabel === 'SLA Breached' && <AlertTriangle className="w-3 h-3" />}
+                          {slaLabel}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 font-black text-[#704F38]">
+                        ₹{order.totals?.grandTotal?.toLocaleString('en-IN') || '0'}
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider uppercase border ${
+                          currentStatus === 'placed' ? 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]' :
+                          currentStatus === 'confirmed' ? 'bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]' :
+                          currentStatus === 'shipped' ? 'bg-[#F3E8FF] text-[#6B21A8] border-[#E9D5FF]' :
+                          currentStatus === 'delivered' ? 'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]' :
+                          currentStatus === 'returned' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                          'bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA]'
+                        }`}>
+                          {currentStatus.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <div className="inline-flex gap-1.5 flex-wrap justify-end">
+                          {currentStatus === 'placed' && (
+                            <button onClick={() => handleStateTransition(order._id, 'confirmed', 'Admin confirmed order')} className="inline-flex items-center gap-1 bg-[#3B82F6] hover:bg-[#2563EB] text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-colors">
+                              <Check className="w-3.5 h-3.5" /> Confirm
+                            </button>
+                          )}
+                          {(currentStatus === 'confirmed' || currentStatus === 'placed') && (
+                            <button onClick={() => handleOpenShipmentModal(order)} className="inline-flex items-center gap-1 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-colors">
+                              <Truck className="w-3.5 h-3.5" /> Create Shipment
+                            </button>
+                          )}
+                          {currentStatus === 'shipped' && (
+                            <button onClick={() => handleStateTransition(order._id, 'delivered', 'Package delivered')} className="inline-flex items-center gap-1 bg-[#4CAF50] hover:bg-[#43A047] text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-colors">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Deliver
+                            </button>
+                          )}
+                          {currentStatus === 'delivered' && (
+                            <button onClick={() => handleOpenReturnModal(order)} className="inline-flex items-center gap-1 bg-orange-600 hover:bg-orange-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-colors">
+                              <RotateCcw className="w-3.5 h-3.5" /> Return / Refund
+                            </button>
+                          )}
+                          <button onClick={() => handleOpenDrawer(order)} className="bg-[#FDFBF9] border border-[#EDEDED] hover:border-[#704F38] px-2.5 py-1.5 rounded-lg text-xs font-bold text-[#1F2029] transition-colors">
+                            Details
                           </button>
-                        )}
-                        {currentStatus === 'confirmed' && (
-                          <button onClick={() => handleStateTransition(order._id, 'shipped', 'Order dispatched')} className="inline-flex items-center gap-1.5 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-colors">
-                            <Truck className="w-3.5 h-3.5" /> Ship
-                          </button>
-                        )}
-                        {currentStatus === 'shipped' && (
-                          <button onClick={() => handleStateTransition(order._id, 'delivered', 'Package delivered')} className="inline-flex items-center gap-1.5 bg-[#4CAF50] hover:bg-[#43A047] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-colors">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Deliver
-                          </button>
-                        )}
-                        {(currentStatus === 'placed' || currentStatus === 'confirmed') && (
-                          <button onClick={() => handleStateTransition(order._id, 'cancelled', 'Cancelled by Admin')} className="inline-flex items-center gap-1.5 bg-[#FEF2F2] hover:bg-[#FEE2E2] text-[#E57373] border border-[#FCA5A5] px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors">
-                            <XCircle className="w-3.5 h-3.5" /> Cancel
-                          </button>
-                        )}
-                        <button onClick={() => handleOpenDrawer(order)} className="bg-[#FDFBF9] border border-[#EDEDED] hover:border-[#704F38] px-3 py-1.5 rounded-lg text-xs font-bold text-[#1F2029] transition-colors">
-                          Details
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
           </table>
         </div>
       </div>
 
+      {/* Dispatch Shipment Modal */}
+      {shipmentModalOrder && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-[#EDEDED]">
+            <div className="flex justify-between items-center mb-6 border-b border-[#EDEDED] pb-4">
+              <div className="flex items-center gap-2">
+                <Truck className="w-5 h-5 text-[#8B5CF6]" />
+                <h3 className="text-base font-black text-[#1F2029]">Create & Dispatch Shipment</h3>
+              </div>
+              <button onClick={() => setShipmentModalOrder(null)} className="text-[#797979] hover:text-[#1F2029]">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleDispatchShipment} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#1F2029] uppercase mb-1">Courier Partner *</label>
+                <select
+                  value={courierName}
+                  onChange={(e) => setCourierName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-[#FDFBF9] border border-[#EDEDED] rounded-xl outline-none text-sm font-bold text-[#1F2029]"
+                >
+                  <option value="FedEx Express">FedEx Express</option>
+                  <option value="Blue Dart">Blue Dart</option>
+                  <option value="Delhivery">Delhivery</option>
+                  <option value="DHL Express">DHL Express</option>
+                  <option value="DTDC Express">DTDC Express</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#1F2029] uppercase mb-1">Tracking Number *</label>
+                <input
+                  type="text"
+                  required
+                  value={trackingNumber}
+                  onChange={(e) => setTrackingNumber(e.target.value)}
+                  placeholder="TRK-987654"
+                  className="w-full px-3.5 py-2.5 bg-[#FDFBF9] border border-[#EDEDED] rounded-xl outline-none text-sm font-mono font-bold text-[#1F2029]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#1F2029] uppercase mb-1">Tracking URL (Optional)</label>
+                <input
+                  type="url"
+                  value={trackingUrl}
+                  onChange={(e) => setTrackingUrl(e.target.value)}
+                  placeholder="https://track.courier.com/TRK-987654"
+                  className="w-full px-3.5 py-2.5 bg-[#FDFBF9] border border-[#EDEDED] rounded-xl outline-none text-xs font-medium text-[#1F2029]"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button type="button" onClick={() => setShipmentModalOrder(null)} className="px-4 py-2.5 rounded-xl bg-[#FDFBF9] border border-[#EDEDED] text-xs font-bold text-[#797979]">Cancel</button>
+                <button type="submit" disabled={isDispatching} className="px-5 py-2.5 rounded-xl bg-[#8B5CF6] text-white text-xs font-extrabold shadow-md">
+                  {isDispatching ? 'Dispatching...' : 'Dispatch Shipment'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Return & Refund Action Modal */}
+      {returnModalOrder && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-[#EDEDED]">
+            <div className="flex justify-between items-center mb-6 border-b border-[#EDEDED] pb-4">
+              <div className="flex items-center gap-2">
+                <RotateCcw className="w-5 h-5 text-orange-600" />
+                <h3 className="text-base font-black text-[#1F2029]">Return & Refund Request</h3>
+              </div>
+              <button onClick={() => setReturnModalOrder(null)} className="text-[#797979] hover:text-[#1F2029]">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleProcessReturnSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#1F2029] uppercase mb-2">Return Decision</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setReturnActionType('approve')}
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      returnActionType === 'approve' ? 'bg-[#047857] text-white border-[#047857]' : 'bg-[#FDFBF9] border-[#EDEDED] text-[#797979]'
+                    }`}
+                  >
+                    Approve Return
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReturnActionType('reject')}
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      returnActionType === 'reject' ? 'bg-[#B91C1C] text-white border-[#B91C1C]' : 'bg-[#FDFBF9] border-[#EDEDED] text-[#797979]'
+                    }`}
+                  >
+                    Reject Request
+                  </button>
+                </div>
+              </div>
+
+              {returnActionType === 'approve' && (
+                <div>
+                  <label className="block text-xs font-bold text-[#1F2029] uppercase mb-2">Resolution Mode</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setReturnResolution('refund')}
+                      className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${
+                        returnResolution === 'refund' ? 'bg-[#704F38] text-white border-[#704F38]' : 'bg-[#FDFBF9] border-[#EDEDED] text-[#797979]'
+                      }`}
+                    >
+                      Refund & Credit Note
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReturnResolution('replacement')}
+                      className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${
+                        returnResolution === 'replacement' ? 'bg-[#704F38] text-white border-[#704F38]' : 'bg-[#FDFBF9] border-[#EDEDED] text-[#797979]'
+                      }`}
+                    >
+                      Replacement Order
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-[#1F2029] uppercase mb-1">Administrative Notes</label>
+                <textarea
+                  placeholder="Specify return verification details or rejection reasons..."
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  className="w-full h-20 px-3.5 py-2.5 bg-[#FDFBF9] border border-[#EDEDED] rounded-xl outline-none text-xs font-medium"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button type="button" onClick={() => setReturnModalOrder(null)} className="px-4 py-2.5 rounded-xl bg-[#FDFBF9] border border-[#EDEDED] text-xs font-bold text-[#797979]">Cancel</button>
+                <button type="submit" disabled={isProcessingReturn || isRefunding || isCreatingReplacement} className="px-5 py-2.5 rounded-xl bg-[#704F38] text-white text-xs font-extrabold shadow-md">
+                  {isProcessingReturn ? 'Processing...' : 'Apply Resolution'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Details Drawer Modal */}
       {drawerVisible && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl border border-[#EDEDED] space-y-5">
-            <div className="flex justify-between items-center">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl border border-[#EDEDED] space-y-5">
+            <div className="flex justify-between items-center border-b border-[#EDEDED] pb-4">
               <h3 className="text-lg font-black text-[#1F2029]">Order Details #{selectedOrder?._id?.slice(-8)?.toUpperCase()}</h3>
               <button onClick={() => setDrawerVisible(false)} className="text-[#797979] hover:text-[#1F2029]"><X className="w-5 h-5" /></button>
             </div>
+
+            {selectedOrder?.shipmentDetails?.trackingNumber && (
+              <div className="bg-[#F3E8FF] p-4 rounded-xl border border-[#E9D5FF] flex justify-between items-center">
+                <div>
+                  <div className="text-xs font-black text-[#6B21A8] uppercase">Shipment Dispatch Info</div>
+                  <div className="text-xs font-bold text-[#1F2029] mt-0.5">
+                    {selectedOrder.shipmentDetails.courierName} • Tracking: <span className="font-mono">{selectedOrder.shipmentDetails.trackingNumber}</span>
+                  </div>
+                </div>
+                {selectedOrder.shipmentDetails.trackingUrl && (
+                  <a href={selectedOrder.shipmentDetails.trackingUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#6B21A8] underline">
+                    Track Live
+                  </a>
+                )}
+              </div>
+            )}
+
+            {selectedOrder?.creditNoteId && (
+              <div className="bg-[#ECFDF5] p-3 rounded-xl border border-[#A7F3D0] flex items-center gap-2 text-xs font-extrabold text-[#047857]">
+                <FileText className="w-4 h-4" />
+                Credit Note Issued: {selectedOrder.creditNoteId} (Refund Processed)
+              </div>
+            )}
 
             <div className="bg-[#FDFBF9] rounded-xl p-4 border border-[#EDEDED]">
               <div className="flex items-center gap-2 font-bold text-xs text-[#704F38] uppercase tracking-wider mb-2">
@@ -183,7 +464,9 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
               <div className="divide-y divide-[#EDEDED]">
                 {selectedOrder?.items?.map((item, idx) => (
                   <div key={idx} className="flex py-2.5 text-xs items-center">
-                    <div className="flex-1 font-bold text-[#1F2029]">{item.title}</div>
+                    <div className="flex-1">
+                      <div className="font-bold text-[#1F2029]">{item.title}</div>
+                    </div>
                     <div className="text-[#797979] font-medium mr-4">Size: {item.size} | Color: {item.color}</div>
                     <div className="font-black text-[#704F38]">{item.qty} x ₹{item.priceAtAdd || item.price}</div>
                   </div>
@@ -195,13 +478,6 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
               <div className="font-bold text-xs text-[#1F2029] uppercase tracking-wider mb-3">Lifecycle Timeline</div>
               <div className="space-y-2.5">
                 {selectedOrder?.statusHistory?.map((hist, idx) => {
-                  const statusNote = hist.reason || (
-                    hist.status === 'placed' ? 'Order placed successfully' :
-                    hist.status === 'confirmed' ? 'Order confirmed' :
-                    hist.status === 'shipped' ? 'Dispatched for delivery' :
-                    hist.status === 'delivered' ? 'Package delivered' :
-                    hist.status === 'cancelled' ? 'Order cancelled' : 'Updated'
-                  );
                   return (
                     <div key={idx} className="flex items-center gap-3 text-xs">
                       <Clock className="w-3.5 h-3.5 text-[#704F38]" />
@@ -210,9 +486,7 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
                         <span className="text-[#797979] font-medium ml-2">
                           {hist.timestamp ? new Date(hist.timestamp).toLocaleString() : ''}
                         </span>
-                        <span className="text-[#704F38] font-semibold ml-2">
-                          • {statusNote}
-                        </span>
+                        {hist.reason && <span className="text-[#704F38] font-semibold ml-2">• {hist.reason}</span>}
                       </div>
                     </div>
                   );

@@ -25,8 +25,32 @@ const OrderSchema = new mongoose.Schema({
   statusHistory: [{
     status: String,
     timestamp: { type: Date, default: Date.now },
-    reason: String
+    reason: String,
+    actorId: String
   }],
+  slaDeadline: Date,
+  shipmentDetails: {
+    courierName: String,
+    trackingNumber: String,
+    trackingUrl: String,
+    shippedAt: Date,
+    trackingEvents: [{
+      status: String,
+      location: String,
+      timestamp: { type: Date, default: Date.now },
+      description: String
+    }]
+  },
+  returnRequest: {
+    status: { type: String, enum: ['none', 'pending', 'approved', 'rejected'], default: 'none' },
+    reason: String,
+    returnType: { type: String, enum: ['refund', 'replacement'], default: 'refund' },
+    replacementOrderId: String,
+    requestedAt: Date,
+    processedAt: Date,
+    adminNotes: String
+  },
+  creditNoteId: String,
   razorpayOrderId: String,
   razorpayPaymentId: String,
   paymentStatus: { type: String, default: 'pending', enum: ['pending', 'completed', 'failed', 'refunded'] },
@@ -34,8 +58,14 @@ const OrderSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 OrderSchema.pre('save', function() {
-  if (this.isNew && (!this.statusHistory || this.statusHistory.length === 0)) {
-    this.statusHistory.push({ status: 'placed', reason: 'Order placed by customer' });
+  if (this.isNew) {
+    if (!this.statusHistory || this.statusHistory.length === 0) {
+      this.statusHistory.push({ status: 'placed', reason: 'Order placed by customer' });
+    }
+    if (!this.slaDeadline) {
+      // Set SLA Deadline to 24 hours after creation by default
+      this.slaDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    }
   }
 });
 

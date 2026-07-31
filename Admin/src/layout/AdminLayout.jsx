@@ -13,7 +13,10 @@ import {
   LogOut,
   ChevronRight,
   ShieldCheck,
-  Menu
+  Menu,
+  MessageSquare,
+  CreditCard,
+  Settings
 } from 'lucide-react';
 
 export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
@@ -34,11 +37,13 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
 
   const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, perm: 'dashboard.view' },
-    { id: 'catalog', label: 'Products & Categories', icon: ShoppingBag, perm: 'products.view' },
+    { id: 'catalog', label: 'Products & Catalog', icon: ShoppingBag, perm: 'products.view' },
     { id: 'orders', label: 'Orders & Fulfillment', icon: Package, perm: 'orders.view' },
+    { id: 'tickets', label: 'Support Tickets', icon: MessageSquare, perm: 'orders.view' },
     { id: 'users', label: 'Users & Roles', icon: Users, perm: 'users.view' },
-    { id: 'coupons', label: 'Promo Coupons', icon: Ticket, perm: 'settings.edit' },
-    { id: 'audit', label: 'Audit Logs', icon: FileText, perm: 'audit.view' },
+    { id: 'finance', label: 'Finance & Payments', icon: CreditCard, perm: 'orders.view' },
+    { id: 'marketing', label: 'Notifications & Promo', icon: Ticket, perm: 'settings.edit' },
+    { id: 'settings', label: 'Reports & Settings', icon: Settings, perm: 'audit.view' },
   ];
 
   const navItems = allNavItems.filter((item) => hasPermission(user, item.perm));
@@ -49,7 +54,7 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
 
   return (
     <div className="flex min-h-screen bg-[#FDFBF9] text-[#1F2029]">
-      {/* Sidebar Backdrop (only visible on mobile when sidebar is open) */}
+      {/* Sidebar Backdrop (mobile) */}
       {!sidebarCollapsed && (
         <div
           className="fixed inset-0 bg-black/40 z-40 md:hidden transition-opacity duration-300"
@@ -57,7 +62,7 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
         />
       )}
 
-      {/* Sidebar - Client Primary Dark Theme with Solid Colors */}
+      {/* Sidebar */}
       <aside
         className={`bg-[#1F2029] text-white flex flex-col justify-between transition-all duration-300 z-50 border-r border-[#2E303F]/20
           fixed inset-y-0 left-0 md:sticky md:top-0 md:h-screen
@@ -66,8 +71,9 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
       >
         <div>
           {/* Brand Header */}
-          <div className={`flex items-center border-b border-[#2D2E3A]/50 gap-3 py-5 transition-all duration-300 ${sidebarCollapsed ? 'justify-center px-0' : 'px-5'
-            }`}>
+          <div className={`flex items-center border-b border-[#2D2E3A]/50 gap-3 py-5 transition-all duration-300 ${
+            sidebarCollapsed ? 'justify-center px-0' : 'px-5'
+          }`}>
             <div className="w-9 h-9 rounded-xl overflow-hidden bg-white flex items-center justify-center shadow-md p-1 border border-[#D4C4B7]/20 flex-shrink-0 transition-transform duration-300 hover:scale-105">
               <img src={brandIcon} alt="FashionStore Admin" className="w-full h-full object-contain" />
             </div>
@@ -80,7 +86,7 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
           </div>
 
           {/* Navigation Links */}
-          <nav className={`p-3 space-y-2 transition-all duration-300 ${sidebarCollapsed ? 'px-2' : 'px-3'}`}>
+          <nav className={`p-3 space-y-1.5 transition-all duration-300 ${sidebarCollapsed ? 'px-2' : 'px-3'}`}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -88,21 +94,24 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
                 <button
                   key={item.id}
                   onClick={() => onTabChange(item.id)}
-                  className={`group relative flex items-center rounded-xl transition-all duration-200 font-semibold text-sm ${sidebarCollapsed
-                    ? 'w-12 h-12 justify-center mx-auto'
-                    : 'px-3.5 py-3 hover:translate-x-1.5 w-full'
-                    } ${isActive
+                  className={`group relative flex items-center rounded-xl transition-all duration-200 font-semibold text-xs ${
+                    sidebarCollapsed
+                      ? 'w-12 h-12 justify-center mx-auto'
+                      : 'px-3 py-2.5 hover:translate-x-1 w-full'
+                  } ${
+                    isActive
                       ? 'bg-[#704F38] text-white shadow-lg shadow-[#704F38]/25 font-bold'
                       : 'text-[#9A9AB0] hover:bg-[#2A2B37]/60 hover:text-white'
-                    }`}
+                  }`}
                 >
                   {isActive && (
-                    <span className="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r bg-[#E8B84E]"></span>
+                    <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r bg-[#E8B84E]"></span>
                   )}
-                  <Icon className={`w-5 h-5 flex-shrink-0 transition-all duration-250 ${isActive ? 'text-[#E8B84E] scale-105' : 'text-[#9A9AB0] group-hover:text-white group-hover:scale-105'
-                    }`} />
-                  {!sidebarCollapsed && <span className="ml-3 flex-1 text-left">{item.label}</span>}
-                  {!sidebarCollapsed && isActive && <ChevronRight className="w-4 h-4 text-[#D4C4B7] animate-pulse" />}
+                  <Icon className={`w-4 h-4 flex-shrink-0 transition-all duration-250 ${
+                    isActive ? 'text-[#E8B84E] scale-105' : 'text-[#9A9AB0] group-hover:text-white group-hover:scale-105'
+                  }`} />
+                  {!sidebarCollapsed && <span className="ml-3 flex-1 text-left truncate">{item.label}</span>}
+                  {!sidebarCollapsed && isActive && <ChevronRight className="w-3.5 h-3.5 text-[#D4C4B7] animate-pulse" />}
                 </button>
               );
             })}
@@ -110,13 +119,13 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
         </div>
 
         {/* User Profile Footer */}
-        <div className={`border-t border-[#2D2E3A]/50 flex flex-col gap-4 transition-all duration-300 ${sidebarCollapsed ? 'p-3 items-center' : 'p-4'
-          }`}>
+        <div className={`border-t border-[#2D2E3A]/50 flex flex-col gap-3 transition-all duration-300 ${
+          sidebarCollapsed ? 'p-3 items-center' : 'p-4'
+        }`}>
           {sidebarCollapsed ? (
-            /* Collapsed User Avatar & Logout Button */
             <div className="flex flex-col items-center gap-3 w-full animate-fadeIn">
               <div
-                className="w-10 h-10 rounded-xl bg-black flex items-center justify-center font-black text-white text-sm shadow-md border border-white/10 uppercase cursor-default transition-all duration-300 hover:rotate-6"
+                className="w-10 h-10 rounded-xl bg-black flex items-center justify-center font-black text-white text-sm shadow-md border border-white/10 uppercase cursor-default"
                 title={user?.name || 'Admin'}
               >
                 {(user?.name || 'A').charAt(0)}
@@ -124,20 +133,19 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
               <button
                 onClick={handleLogout}
                 title="Logout"
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#E57373]/10 hover:bg-[#E57373]/20 text-[#E57373] transition-all duration-200 hover:scale-105"
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#E57373]/10 hover:bg-[#E57373]/20 text-[#E57373] transition-all duration-200"
               >
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
           ) : (
-            /* Expanded User Profile & Logout Button */
             <div className="flex flex-col w-full gap-3 animate-fadeIn">
               <div className="flex items-center gap-3 overflow-hidden">
                 <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center font-black text-white text-sm shadow-md border border-white/10 uppercase flex-shrink-0">
                   {(user?.name || 'A').charAt(0)}
                 </div>
                 <div className="overflow-hidden">
-                  <div className="text-sm font-extrabold text-white truncate">{user?.name || 'Admin User'}</div>
+                  <div className="text-xs font-extrabold text-white truncate">{user?.name || 'Admin User'}</div>
                   <div className="text-[10px] font-black text-[#E8B84E] uppercase tracking-wider mt-0.5">
                     {(user?.role || 'admin').replace('_', ' ')}
                   </div>
@@ -145,9 +153,9 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
               </div>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white hover:bg-white text-black font-bold text-xs transition-all duration-200 hover:scale-[1.02]"
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white hover:bg-gray-100 text-black font-bold text-xs transition-all duration-200"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5" /> Logout
               </button>
             </div>
           )}

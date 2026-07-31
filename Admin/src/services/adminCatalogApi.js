@@ -33,6 +33,30 @@ export const adminCatalogApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Product'],
     }),
+    toggleProductVisibility: builder.mutation({
+      query: ({ id, isHidden }) => ({
+        url: `/products/admin/products/${id}/visibility`,
+        method: 'PATCH',
+        data: { isHidden },
+      }),
+      invalidatesTags: ['Product'],
+    }),
+    bulkProductVisibility: builder.mutation({
+      query: ({ productIds, action }) => ({
+        url: '/products/admin/products/bulk-visibility',
+        method: 'POST',
+        data: { productIds, action },
+      }),
+      invalidatesTags: ['Product'],
+    }),
+    updateInventory: builder.mutation({
+      query: ({ id, stock, lowStockThreshold }) => ({
+        url: `/products/admin/products/${id}/inventory`,
+        method: 'PATCH',
+        data: { stock, lowStockThreshold },
+      }),
+      invalidatesTags: ['Product'],
+    }),
     deleteProduct: builder.mutation({
       query: (id) => ({
         url: `/products/admin/products/${id}`,
@@ -71,6 +95,9 @@ export const {
   useGetAdminCategoriesQuery,
   useCreateProductMutation,
   useUpdateProductMutation,
+  useToggleProductVisibilityMutation,
+  useBulkProductVisibilityMutation,
+  useUpdateInventoryMutation,
   useDeleteProductMutation,
   useCreateCategoryMutation,
   useGetAdminReviewsQuery,

@@ -5,6 +5,15 @@ const recalcTotals = (state) => {
   if (!state.items) state.items = [];
   state.totalQty   = state.items.reduce((sum, i) => sum + i.quantity, 0);
   state.totalPrice = state.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+  // Auto re-validate active coupon against minimum order amount criteria
+  if (state.coupon) {
+    const minSpend = state.coupon.minOrderAmount || state.coupon.minSpend || 0;
+    if (minSpend > 0 && state.totalPrice < minSpend) {
+      state.coupon = null;
+      state.couponError = `Coupon removed: Minimum cart total of ₹${minSpend} required.`;
+    }
+  }
 };
 
 const cartSlice = createSlice({
@@ -142,10 +151,20 @@ export const selectDiscountedTotal = (state) => {
   if (!coupon) return totalPrice;
   const type = coupon.type || coupon.discountType;
   const discount = coupon.discount !== undefined ? coupon.discount : coupon.discountValue;
+  const maxDiscount = coupon.maxDiscount || null;
+
+  let rawDiscount = 0;
   if (type === 'percent' || type === 'percentage') {
-    return totalPrice * (1 - (discount || 0) / 100);
+    rawDiscount = totalPrice * ((discount || 0) / 100);
+  } else {
+    rawDiscount = discount || 0;
   }
-  return Math.max(0, totalPrice - (discount || 0));
+
+  if (maxDiscount && rawDiscount > maxDiscount) {
+    rawDiscount = maxDiscount;
+  }
+
+  return Math.max(0, totalPrice - rawDiscount);
 };
 
 export default cartSlice.reducer;

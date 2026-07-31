@@ -8,9 +8,11 @@ import { DashboardPage } from './pages/DashboardPage';
 import { UserManagementPage } from './pages/UserManagementPage';
 import { CatalogManagementPage } from './pages/CatalogManagementPage';
 import { ProductFormPage } from './pages/ProductFormPage';
-import { CouponManagementPage } from './pages/CouponManagementPage';
 import { OrderFulfillmentPage } from './pages/OrderFulfillmentPage';
-import { AuditLogsPage } from './pages/AuditLogsPage';
+import { TicketManagementPage } from './pages/TicketManagementPage';
+import { FinanceManagementPage } from './pages/FinanceManagementPage';
+import { MarketingNotificationPage } from './pages/MarketingNotificationPage';
+import { SettingsReportsPage } from './pages/SettingsReportsPage';
 
 export function App() {
   const isAuthenticated = useSelector(selectIsAdminAuthenticated);
@@ -73,13 +75,6 @@ export function App() {
           </PermissionGuard>
         );
 
-      case 'coupons':
-        return (
-          <PermissionGuard requiredPermission="settings.edit">
-            <CouponManagementPage />
-          </PermissionGuard>
-        );
-
       case 'orders':
         return (
           <PermissionGuard requiredPermission="orders.view">
@@ -87,10 +82,31 @@ export function App() {
           </PermissionGuard>
         );
 
-      case 'audit':
+      case 'tickets':
+        return (
+          <PermissionGuard requiredPermission="orders.view">
+            <TicketManagementPage />
+          </PermissionGuard>
+        );
+
+      case 'finance':
+        return (
+          <PermissionGuard requiredPermission="orders.view">
+            <FinanceManagementPage />
+          </PermissionGuard>
+        );
+
+      case 'marketing':
+        return (
+          <PermissionGuard requiredPermission="settings.edit">
+            <MarketingNotificationPage />
+          </PermissionGuard>
+        );
+
+      case 'settings':
         return (
           <PermissionGuard requiredPermission="audit.view">
-            <AuditLogsPage />
+            <SettingsReportsPage />
           </PermissionGuard>
         );
 
@@ -106,12 +122,14 @@ export function App() {
   const getTitle = () => {
     switch (activeTab) {
       case 'dashboard': return 'Dashboard & Key Performance Indicators';
-      case 'users': return 'User & Role Management';
-      case 'catalog': return 'Products & Categories Inventory';
+      case 'users': return 'User Management, Roles & Active Sessions';
+      case 'catalog': return 'Products & Catalog Inventory';
       case 'product_form': return editingProduct ? 'Edit Product Listing' : 'Create Product Listing';
-      case 'coupons': return 'Promo Coupon Management';
-      case 'orders': return 'Order Lifecycle & Fulfillment';
-      case 'audit': return 'Audit Logs & Change Records';
+      case 'orders': return 'Order Lifecycle & Courier Fulfillment';
+      case 'tickets': return 'Grievance & Support Tickets';
+      case 'finance': return 'Payment Logs, Invoices & Credit Notes';
+      case 'marketing': return 'Notifications & Promo Campaigns';
+      case 'settings': return 'Reports, System Settings & Audit Logs';
       default: return 'Admin Portal';
     }
   };

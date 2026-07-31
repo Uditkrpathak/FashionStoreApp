@@ -18,6 +18,14 @@ const axiosBaseQuery =
       return { data: result.data };
     } catch (axiosError) {
       let err = axiosError;
+      console.error('🚨 [ADMIN API ERROR DEBUG]', {
+        endpoint: baseUrl + url,
+        method,
+        status: err.response?.status,
+        responseBody: err.response?.data,
+        errorMessage: err.message,
+        fullErrorObj: err
+      });
       return {
         error: {
           status: err.response?.status,

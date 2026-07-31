@@ -7,27 +7,14 @@ import authRoutes from './src/routes/authRoutes.js';
 import notificationRoutes from './src/routes/notificationRoutes.js';
 import { seedDefaultAdmin } from './src/utils/seedAdmin.js';
 
-// Environment variable validation
 const MONGO_URI = process.env.AUTH_MONGO_URI || process.env.MONGO_URI;
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 const PORT = process.env.PORT || 5001;
-
-if (!MONGO_URI) {
-  console.warn('WARNING: MONGO_URI environment variable is not set yet.');
-}
-if (!JWT_SECRET) {
-  console.error('FATAL ERROR: JWT_SECRET environment variable is required.');
-  process.exit(1);
-}
 
 const app = express();
 
-// Secure headers
 app.use(helmet());
-
-// Request logging
 app.use(morgan('dev'));
-
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
@@ -37,6 +24,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
     service: 'auth-service',
+    dbConnected: mongoose.connection.readyState === 1,
     timestamp: new Date()
   });
 });
@@ -46,7 +34,7 @@ app.use('/notifications', notificationRoutes);
 
 // Centralized error handler middleware
 app.use((err, req, res, next) => {
-  console.error('[Error Handler]', err);
+  console.error('[Auth Service Error Handler]', err);
   const status = err.status || 500;
   res.status(status).json({
     success: false,
@@ -54,18 +42,32 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start HTTP server immediately so Render health checks pass cleanly
 app.listen(PORT, () => console.log(`🔒 Auth Service running on port ${PORT}`));
 
-if (MONGO_URI) {
-  mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 5000 })
-    .then(async () => {
-      console.log('Auth DB Connected');
-      await seedDefaultAdmin();
-    })
-    .catch(err => {
-      console.error('Database Error: Failed to connect to MongoDB', err.message);
-    });
-} else {
-  console.error('CRITICAL: MONGO_URI environment variable is missing on Render!');
-}
+// Robust MongoDB Connection with Fallback and Seeding
+const defaultLocalUri = 'mongodb://127.0.0.1:27017/fashion_auth';
+const primaryUri = (MONGO_URI && (MONGO_URI.startsWith('mongodb://') || MONGO_URI.startsWith('mongodb+srv://')))
+  ? MONGO_URI
+  : defaultLocalUri;
+
+const connectDbWithFallback = async () => {
+  try {
+    await mongoose.connect(primaryUri, { serverSelectionTimeoutMS: 4000 });
+    console.log(`🔒 [Auth Service] Connected to MongoDB (${primaryUri.includes('mongodb+srv') ? 'Cloud Atlas' : 'Local'})`);
+    await seedDefaultAdmin();
+  } catch (err) {
+    console.warn(`⚠️ [Auth Service] Primary DB connection failed (${err.message})`);
+    if (primaryUri !== defaultLocalUri) {
+      console.log(`🔄 [Auth Service] Connecting to local MongoDB fallback: ${defaultLocalUri}`);
+      try {
+        await mongoose.connect(defaultLocalUri, { serverSelectionTimeoutMS: 4000 });
+        console.log('🔒 [Auth Service] Connected to local MongoDB fallback successfully');
+        await seedDefaultAdmin();
+      } catch (localErr) {
+        console.error('❌ [Auth Service] Local MongoDB fallback failed:', localErr.message);
+      }
+    }
+  }
+};
+
+connectDbWithFallback();

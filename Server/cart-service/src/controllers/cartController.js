@@ -30,9 +30,16 @@ const getCatalogProductModel = () => {
   return CatalogProduct;
 };
 
-const recalcCartTotals = (cart) => {
+const recalcCartTotals = async (cart) => {
   cart.totalQty = cart.items.reduce((sum, item) => sum + item.quantity, 0);
   cart.totalPrice = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  
+  if (cart.coupon && cart.coupon.code) {
+    const dbCoupon = await Coupon.findOne({ code: cart.coupon.code, isActive: true });
+    if (!dbCoupon || (dbCoupon.expiryDate && new Date() > new Date(dbCoupon.expiryDate)) || (dbCoupon.minOrderAmount && cart.totalPrice < dbCoupon.minOrderAmount)) {
+      cart.coupon = undefined;
+    }
+  }
 };
 
 export const getCart = async (req, res, next) => {
@@ -110,7 +117,7 @@ export const addToCart = async (req, res, next) => {
       });
     }
     
-    recalcCartTotals(cart);
+    await recalcCartTotals(cart);
     await cart.save();
     res.json({ success: true, cart });
   } catch (err) {
@@ -149,7 +156,7 @@ export const updateCartQty = async (req, res, next) => {
       }
 
       item.quantity = qty;
-      recalcCartTotals(cart);
+      await recalcCartTotals(cart);
       await cart.save();
     }
     res.json({ success: true, cart });
@@ -167,7 +174,7 @@ export const removeFromCart = async (req, res, next) => {
     if (!cart) return res.status(404).json({ success: false, message: 'Cart not found' });
 
     cart.items = cart.items.filter(i => !(i.productId === productId && i.variantSku === variantSku));
-    recalcCartTotals(cart);
+    await recalcCartTotals(cart);
     await cart.save();
     res.json({ success: true, cart });
   } catch (err) {
@@ -182,7 +189,7 @@ export const clearCart = async (req, res, next) => {
     if (cart) {
       cart.items = [];
       cart.coupon = undefined;
-      recalcCartTotals(cart);
+      await recalcCartTotals(cart);
       await cart.save();
     }
     res.json({ success: true, cart });
@@ -210,13 +217,28 @@ export const seedCoupons = async (req, res, next) => {
 
 export const applyCoupon = async (req, res, next) => {
   try {
+    const userId = req.headers['x-user-id'];
     const { code } = req.body;
     
     // Look up dynamic Coupon collection in DB
-    const dbCoupon = await Coupon.findOne({ code, isActive: true });
+    const dbCoupon = await Coupon.findOne({ code: code?.toUpperCase(), isActive: true });
     
     if (!dbCoupon) {
       return res.status(404).json({ success: false, message: 'Invalid or expired coupon code' });
+    }
+
+    if (dbCoupon.expiryDate && new Date() > new Date(dbCoupon.expiryDate)) {
+      return res.status(400).json({ success: false, message: 'Coupon code has expired' });
+    }
+
+    if (userId) {
+      const cart = await Cart.findOne({ userId });
+      if (cart && dbCoupon.minOrderAmount && cart.totalPrice < dbCoupon.minOrderAmount) {
+        return res.status(400).json({
+          success: false,
+          message: `Minimum cart value of ₹${dbCoupon.minOrderAmount} is required for coupon ${dbCoupon.code}. Add ₹${dbCoupon.minOrderAmount - cart.totalPrice} more.`
+        });
+      }
     }
 
     // Map into frontend expected object
@@ -224,6 +246,8 @@ export const applyCoupon = async (req, res, next) => {
       code: dbCoupon.code,
       discountType: dbCoupon.discountType || 'percentage',
       discountValue: dbCoupon.discountValue !== undefined ? dbCoupon.discountValue : dbCoupon.discountPercent,
+      minOrderAmount: dbCoupon.minOrderAmount || 0,
+      maxDiscount: dbCoupon.maxDiscount || null,
       isActive: dbCoupon.isActive
     };
 

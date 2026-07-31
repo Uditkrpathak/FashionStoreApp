@@ -103,8 +103,9 @@ export const createOrder = async (req, res, next) => {
 
     // Create a notification
     try {
-      let authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:5001';
-      authServiceUrl = authServiceUrl.trim();
+      let authServiceUrl = process.env.USE_REMOTE_SERVICES === 'true' && process.env.AUTH_SERVICE_URL
+        ? process.env.AUTH_SERVICE_URL.trim()
+        : 'http://localhost:5001';
       if (!authServiceUrl.startsWith('http://') && !authServiceUrl.startsWith('https://')) {
         authServiceUrl = `https://${authServiceUrl}.onrender.com`;
       }
@@ -552,4 +553,152 @@ export const getDashboardStats = async (req, res, next) => {
     next(err);
   }
 };
+
+export const createShipment = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { courierName, trackingNumber, trackingUrl } = req.body;
+
+    if (!courierName || !trackingNumber) {
+      return res.status(400).json({ success: false, message: 'Courier name and tracking number are required' });
+    }
+
+    const order = await Order.findById(id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    order.shipmentDetails = {
+      courierName,
+      trackingNumber,
+      trackingUrl: trackingUrl || `https://track.courier.com/${trackingNumber}`,
+      shippedAt: new Date(),
+      trackingEvents: [{
+        status: 'In Transit',
+        location: 'Fulfillment Center',
+        timestamp: new Date(),
+        description: `Shipment dispatched via ${courierName}. Tracking #${trackingNumber}`
+      }]
+    };
+
+    // Transition order state to shipped if valid
+    if (order.orderStatus === 'confirmed' || order.orderStatus === 'placed') {
+      order.orderStatus = 'shipped';
+      order.statusHistory.push({
+        status: 'shipped',
+        timestamp: new Date(),
+        reason: `Shipped via ${courierName} (${trackingNumber})`,
+        actorId: req.headers['x-user-id']
+      });
+    }
+
+    await order.save();
+    res.json({ success: true, message: 'Shipment created successfully', order });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const processReturnAction = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { action, returnType, adminNotes } = req.body; // action: 'approve' | 'reject'
+
+    const order = await Order.findById(id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    if (!order.returnRequest) {
+      order.returnRequest = {};
+    }
+
+    order.returnRequest.status = action === 'approve' ? 'approved' : 'rejected';
+    order.returnRequest.returnType = returnType || order.returnRequest.returnType || 'refund';
+    order.returnRequest.processedAt = new Date();
+    order.returnRequest.adminNotes = adminNotes || '';
+
+    if (action === 'approve') {
+      order.orderStatus = 'returned';
+      order.statusHistory.push({
+        status: 'returned',
+        timestamp: new Date(),
+        reason: `Return request approved. Type: ${order.returnRequest.returnType}`,
+        actorId: req.headers['x-user-id']
+      });
+    }
+
+    await order.save();
+    res.json({ success: true, message: `Return request ${action}d successfully`, order });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const processRefund = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { refundMode, notes } = req.body;
+
+    const order = await Order.findById(id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    order.paymentStatus = 'refunded';
+    const creditNoteId = `CN-${Math.floor(100000 + Math.random() * 900000)}`;
+    order.creditNoteId = creditNoteId;
+
+    order.statusHistory.push({
+      status: order.orderStatus,
+      timestamp: new Date(),
+      reason: `Refund issued via ${refundMode || 'Original Method'}. Credit Note: ${creditNoteId}`,
+      actorId: req.headers['x-user-id']
+    });
+
+    await order.save();
+    res.json({
+      success: true,
+      message: 'Refund issued successfully',
+      creditNoteId,
+      order
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createReplacementOrder = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const originalOrder = await Order.findById(id);
+    if (!originalOrder) return res.status(404).json({ success: false, message: 'Original order not found' });
+
+    const replacementOrder = new Order({
+      userId: originalOrder.userId,
+      items: originalOrder.items,
+      shippingAddress: originalOrder.shippingAddress,
+      deliveryOption: originalOrder.deliveryOption,
+      paymentMethod: { type: 'replacement', brand: 'Zero Charge Replacement' },
+      totals: { subtotal: 0, shipping: 0, discount: 0, grandTotal: 0 },
+      orderStatus: 'confirmed',
+      paymentStatus: 'completed',
+      statusHistory: [{
+        status: 'confirmed',
+        timestamp: new Date(),
+        reason: `Replacement order for original order #${originalOrder._id}`
+      }]
+    });
+
+    await replacementOrder.save();
+
+    originalOrder.returnRequest.replacementOrderId = replacementOrder._id.toString();
+    await originalOrder.save();
+
+    res.json({
+      success: true,
+      message: 'Replacement order created successfully',
+      replacementOrderId: replacementOrder._id,
+      replacementOrder
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 

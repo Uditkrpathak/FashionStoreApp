@@ -1052,4 +1052,74 @@ export const deleteReviewAdmin = async (req, res, next) => {
   }
 };
 
+export const toggleProductVisibility = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { isHidden } = req.body;
+
+    const product = await Product.findById(id);
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+
+    product.isHidden = typeof isHidden === 'boolean' ? isHidden : !product.isHidden;
+    await product.save();
+
+    res.json({
+      success: true,
+      message: `Product ${product.isHidden ? 'hidden' : 'made visible'} successfully`,
+      product
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const bulkProductVisibility = async (req, res, next) => {
+  try {
+    const { productIds, action } = req.body; // action: 'hide' | 'show'
+
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'productIds array is required' });
+    }
+
+    const isHidden = action === 'hide';
+    const result = await Product.updateMany(
+      { _id: { $in: productIds } },
+      { $set: { isHidden } }
+    );
+
+    res.json({
+      success: true,
+      message: `Bulk ${action} processed successfully`,
+      affectedCount: result.modifiedCount || result.nModified || 0,
+      totalRequested: productIds.length
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateInventory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { stock, lowStockThreshold } = req.body;
+
+    const product = await Product.findById(id);
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+
+    if (stock !== undefined) product.stock = Math.max(0, parseInt(stock, 10));
+    if (lowStockThreshold !== undefined) product.lowStockThreshold = Math.max(0, parseInt(lowStockThreshold, 10));
+
+    await product.save();
+
+    res.json({
+      success: true,
+      message: 'Inventory updated successfully',
+      product
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
 

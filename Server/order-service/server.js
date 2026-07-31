@@ -8,34 +8,25 @@ import orderRoutes from './src/routes/orderRoutes.js';
 const MONGO_URI = process.env.ORDER_MONGO_URI || process.env.MONGO_URI;
 const PORT = process.env.PORT || 5004;
 
-if (!MONGO_URI) {
-  console.warn('WARNING: MONGO_URI environment variable is not set yet.');
-}
-
 const app = express();
 
-// Secure headers
 app.use(helmet());
-
-// Request logging
 app.use(morgan('dev'));
-
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
     service: 'order-service',
+    dbConnected: mongoose.connection.readyState === 1,
     timestamp: new Date()
   });
 });
 
 app.use('/', orderRoutes);
 
-// Centralized error handler middleware
 app.use((err, req, res, next) => {
   console.error('[Order Service Error Handler]', err);
   const status = err.status || 500;
@@ -45,16 +36,29 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start HTTP server immediately so Render health checks pass cleanly
 app.listen(PORT, () => console.log(`📦 Order Service running on port ${PORT}`));
 
-const rawUri = process.env.ORDER_MONGO_URI || process.env.MONGO_URI;
-const isValidScheme = typeof rawUri === 'string' && (rawUri.startsWith('mongodb://') || rawUri.startsWith('mongodb+srv://'));
+const defaultLocalUri = 'mongodb://127.0.0.1:27017/fashion_orders';
+const primaryUri = (MONGO_URI && (MONGO_URI.startsWith('mongodb://') || MONGO_URI.startsWith('mongodb+srv://')))
+  ? MONGO_URI
+  : defaultLocalUri;
 
-if (isValidScheme) {
-  mongoose.connect(rawUri)
-    .then(() => console.log('Orders DB Connected'))
-    .catch(err => console.error('Database Error: Failed to connect to MongoDB', err.message));
-} else {
-  console.warn('WARNING: Valid MONGO_URI (starting with mongodb:// or mongodb+srv://) is not provided yet.');
-}
+const connectDbWithFallback = async () => {
+  try {
+    await mongoose.connect(primaryUri, { serverSelectionTimeoutMS: 4000 });
+    console.log(`📦 [Order Service] Connected to MongoDB (${primaryUri.includes('mongodb+srv') ? 'Cloud Atlas' : 'Local'})`);
+  } catch (err) {
+    console.warn(`⚠️ [Order Service] Primary DB connection failed (${err.message})`);
+    if (primaryUri !== defaultLocalUri) {
+      console.log(`🔄 [Order Service] Connecting to local MongoDB fallback: ${defaultLocalUri}`);
+      try {
+        await mongoose.connect(defaultLocalUri, { serverSelectionTimeoutMS: 4000 });
+        console.log('📦 [Order Service] Connected to local MongoDB fallback successfully');
+      } catch (localErr) {
+        console.error('❌ [Order Service] Local MongoDB fallback failed:', localErr.message);
+      }
+    }
+  }
+};
+
+connectDbWithFallback();

@@ -13,7 +13,11 @@ const ProductSchema = new mongoose.Schema({
   reviewsCount: { type: Number, default: 0 },
   brand: String,
   gender: String,
-  isFeatured: { type: Boolean, default: false }
+  isFeatured: { type: Boolean, default: false },
+  isHidden: { type: Boolean, default: false },
+  stock: { type: Number, default: 50 },
+  lowStockThreshold: { type: Number, default: 5 },
+  version: { type: Number, default: 1 }
 }, { timestamps: true });
 
 export default mongoose.model('Product', ProductSchema);

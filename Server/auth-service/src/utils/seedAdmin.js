@@ -1,7 +1,68 @@
 import User from '../models/User.js';
+import Role from '../models/Role.js';
 
 export const seedDefaultAdmin = async () => {
   try {
+    // 1. Seed System Roles
+    const systemRoles = [
+      {
+        name: 'super_admin',
+        description: 'Full operational control, RBAC policy management, and session revocation.',
+        permissions: ['*'],
+        isSystem: true,
+      },
+      {
+        name: 'admin',
+        description: 'General administrative access across products, categories, coupons, and orders.',
+        permissions: [
+          'users.view', 'users.manage', 'users.block',
+          'products.view', 'products.edit', 'categories.edit',
+          'orders.view', 'orders.status.update', 'dashboard.view',
+          'settings.edit', 'audit.view', 'roles.manage', 'sessions.manage'
+        ],
+        isSystem: true,
+      },
+      {
+        name: 'product_manager',
+        description: 'Managing product listings, categories, inventory, and reviews.',
+        permissions: ['products.view', 'products.edit', 'categories.edit'],
+        isSystem: true,
+      },
+      {
+        name: 'order_manager',
+        description: 'Processing orders, advancing order status through state machine, tracking.',
+        permissions: ['orders.view', 'orders.status.update'],
+        isSystem: true,
+      },
+      {
+        name: 'inventory_manager',
+        description: 'Stock level updates and low-stock monitoring.',
+        permissions: ['products.view', 'products.edit'],
+        isSystem: true,
+      },
+      {
+        name: 'marketing_admin',
+        description: 'Managing promotional coupon codes and campaign rules.',
+        permissions: ['settings.edit'],
+        isSystem: true,
+      },
+      {
+        name: 'support',
+        description: 'Customer support ticket handling and order status viewing.',
+        permissions: ['orders.view', 'users.view'],
+        isSystem: true,
+      },
+    ];
+
+    for (const r of systemRoles) {
+      const existing = await Role.findOne({ name: r.name });
+      if (!existing) {
+        await Role.create(r);
+        console.log(`✅ [Seed Role] Created system role: ${r.name}`);
+      }
+    }
+
+    // 2. Seed Default Super Admin Account
     const adminEmail = 'admin@fashionstore.com';
     let adminUser = await User.findOne({ email: adminEmail });
 
@@ -28,6 +89,6 @@ export const seedDefaultAdmin = async () => {
       console.log('✅ [Seed Admin] Updated admin@fashionstore.com credentials & super_admin role.');
     }
   } catch (err) {
-    console.error('⚠️ [Seed Admin] Failed to seed default admin:', err.message);
+    console.error('⚠️ [Seed Admin] Failed to seed default admin and roles:', err.message);
   }
 };
