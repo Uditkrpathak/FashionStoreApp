@@ -32,7 +32,7 @@ services:
           name: fashion-order-service
           property: hostport
 
-  # 🔒 Auth & Profile Microservice (Isolated Web Service)
+  # 🔒 Auth & Profile Microservice
   - type: web
     name: fashion-auth-service
     env: node
@@ -51,12 +51,11 @@ services:
       - key: SMTP_PASS
         sync: false
 
-  # 🛍️ Catalog Microservice (Isolated Web Service)
+  # 🛍️ Catalog Microservice
   - type: web
     name: fashion-catalog-service
     env: node
     plan: free
-    rootDir: Server
     buildCommand: npm install
     startCommand: node catalog-service/server.js
     envVars:
@@ -65,12 +64,11 @@ services:
       - key: MONGO_URI
         sync: false
 
-  # 🛒 Cart Microservice (Isolated Web Service)
+  # 🛒 Cart Microservice
   - type: web
     name: fashion-cart-service
     env: node
     plan: free
-    rootDir: Server
     buildCommand: npm install
     startCommand: node cart-service/server.js
     envVars:
@@ -79,12 +77,11 @@ services:
       - key: MONGO_URI
         sync: false
 
-  # 📦 Order & Payment Microservice (Isolated Web Service)
+  # 📦 Order & Payment Microservice
   - type: web
     name: fashion-order-service
     env: node
     plan: free
-    rootDir: Server
     buildCommand: npm install
     startCommand: node order-service/server.js
     envVars:

@@ -4,11 +4,9 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
 import authRoutes from './src/routes/authRoutes.js';
-import notificationRoutes from './src/routes/notificationRoutes.js';
 import { seedDefaultAdmin } from './src/utils/seedAdmin.js';
 
 const MONGO_URI = process.env.AUTH_MONGO_URI || process.env.MONGO_URI;
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 const PORT = process.env.PORT || 5001;
 
 const app = express();
@@ -16,10 +14,9 @@ const app = express();
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -30,9 +27,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/', authRoutes);
-app.use('/notifications', notificationRoutes);
 
-// Centralized error handler middleware
 app.use((err, req, res, next) => {
   console.error('[Auth Service Error Handler]', err);
   const status = err.status || 500;
@@ -42,9 +37,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => console.log(`🔒 Auth Service running on port ${PORT}`));
-
-// Robust MongoDB Connection with Fallback and Seeding
 const defaultLocalUri = 'mongodb://127.0.0.1:27017/fashion_auth';
 const primaryUri = (MONGO_URI && (MONGO_URI.startsWith('mongodb://') || MONGO_URI.startsWith('mongodb+srv://')))
   ? MONGO_URI
@@ -70,4 +62,8 @@ const connectDbWithFallback = async () => {
   }
 };
 
-connectDbWithFallback();
+connectDbWithFallback().then(() => {
+  app.listen(PORT, '0.0.0.0', () => console.log(`🔒 Auth Service running on port ${PORT}`));
+}).catch(() => {
+  app.listen(PORT, '0.0.0.0', () => console.log(`🔒 Auth Service running on port ${PORT} (Offline DB mode)`));
+});

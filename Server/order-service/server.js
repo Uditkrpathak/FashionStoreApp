@@ -36,8 +36,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => console.log(`📦 Order Service running on port ${PORT}`));
-
 const defaultLocalUri = 'mongodb://127.0.0.1:27017/fashion_orders';
 const primaryUri = (MONGO_URI && (MONGO_URI.startsWith('mongodb://') || MONGO_URI.startsWith('mongodb+srv://')))
   ? MONGO_URI
@@ -61,4 +59,8 @@ const connectDbWithFallback = async () => {
   }
 };
 
-connectDbWithFallback();
+connectDbWithFallback().then(() => {
+  app.listen(PORT, '0.0.0.0', () => console.log(`📦 Order Service running on port ${PORT}`));
+}).catch(() => {
+  app.listen(PORT, '0.0.0.0', () => console.log(`📦 Order Service running on port ${PORT} (Offline DB mode)`));
+});
