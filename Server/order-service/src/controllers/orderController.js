@@ -259,11 +259,33 @@ export const cancelOrder = async (req, res, next) => {
       { new: true }
     );
     if (!order) return res.status(400).json({ success: false, message: 'Cannot cancel this order' });
+
+    // Notify user of cancellation
+    try {
+      let authServiceUrl = (process.env.USE_REMOTE_SERVICES === 'true' || process.env.RENDER === 'true') && process.env.AUTH_SERVICE_URL
+        ? process.env.AUTH_SERVICE_URL.trim()
+        : 'http://localhost:5001';
+      if (!authServiceUrl.startsWith('http://') && !authServiceUrl.startsWith('https://')) {
+        authServiceUrl = `https://${authServiceUrl}.onrender.com`;
+      }
+      await fetch(`${authServiceUrl}/notifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: order.userId,
+          title: 'Order Cancelled ❌',
+          message: `Your order #${order._id.toString().slice(-8).toUpperCase()} has been cancelled successfully.`,
+          type: 'order'
+        })
+      });
+    } catch (_) { /* notification dispatch failure is non-fatal */ }
+
     res.json({ success: true, order });
   } catch (err) {
     next(err);
   }
 };
+
 
 export const returnOrder = async (req, res, next) => {
   try {
@@ -288,11 +310,33 @@ export const returnOrder = async (req, res, next) => {
       { new: true }
     );
     if (!order) return res.status(400).json({ success: false, message: 'Cannot return this order' });
+
+    // Notify user of return request
+    try {
+      let authServiceUrl = (process.env.USE_REMOTE_SERVICES === 'true' || process.env.RENDER === 'true') && process.env.AUTH_SERVICE_URL
+        ? process.env.AUTH_SERVICE_URL.trim()
+        : 'http://localhost:5001';
+      if (!authServiceUrl.startsWith('http://') && !authServiceUrl.startsWith('https://')) {
+        authServiceUrl = `https://${authServiceUrl}.onrender.com`;
+      }
+      await fetch(`${authServiceUrl}/notifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: order.userId,
+          title: 'Return Request Submitted 📦',
+          message: `Your return request for order #${order._id.toString().slice(-8).toUpperCase()} has been received. We\'ll process it shortly.`,
+          type: 'order'
+        })
+      });
+    } catch (_) { /* notification dispatch failure is non-fatal */ }
+
     res.json({ success: true, order });
   } catch (err) {
     next(err);
   }
 };
+
 
 export const verifyPayment = async (req, res, next) => {
   try {
@@ -424,10 +468,16 @@ export const updateOrderStatus = async (req, res, next) => {
 
     // Trigger Notification for Order Status Update
     try {
-      const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:5001';
+      let authServiceUrl = (process.env.USE_REMOTE_SERVICES === 'true' || process.env.RENDER === 'true') && process.env.AUTH_SERVICE_URL
+        ? process.env.AUTH_SERVICE_URL.trim()
+        : 'http://localhost:5001';
+      if (!authServiceUrl.startsWith('http://') && !authServiceUrl.startsWith('https://')) {
+        authServiceUrl = `https://${authServiceUrl}.onrender.com`;
+      }
       const statusTitles = {
         confirmed: 'Order Confirmed! 📦',
         shipped: 'Order Shipped! 🚚',
+        out_for_delivery: 'Out for Delivery! 🚨',
         delivered: 'Order Delivered! 🎉',
         cancelled: 'Order Cancelled ❌'
       };
