@@ -525,6 +525,28 @@ export const getDashboardStats = async (req, res, next) => {
     });
     const totalRevenue = completedOrders.reduce((sum, o) => sum + (o.totals?.grandTotal || 0), 0);
 
+    // Calculate monthly sales trend from DB
+    const monthlyStatsRaw = await Order.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          revenue: { $sum: '$totals.grandTotal' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthlyStats = monthlyStatsRaw.map(m => ({
+      month: `${monthNames[(m._id.month || 1) - 1]} ${m._id.year}`,
+      revenue: m.revenue || 0,
+      orders: m.count || 0
+    }));
+
     res.json({
       success: true,
       stats: {
@@ -535,7 +557,8 @@ export const getDashboardStats = async (req, res, next) => {
         shippedCount,
         deliveredCount,
         cancelledCount,
-        pendingFulfillment: placedCount + confirmedCount
+        pendingFulfillment: placedCount + confirmedCount,
+        monthlyStats
       }
     });
   } catch (err) {

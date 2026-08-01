@@ -44,7 +44,9 @@ export function App() {
       case 'dashboard':
         return (
           <PermissionGuard requiredPermission="dashboard.view">
-            <DashboardPage onNavigateToOrders={handleNavigateToOrders} />
+            <DashboardPage
+              onNavigateToTab={(tab) => tab === 'orders' ? handleNavigateToOrders() : setActiveTab(tab)}
+            />
           </PermissionGuard>
         );
 
@@ -113,7 +115,9 @@ export function App() {
       default:
         return (
           <PermissionGuard requiredPermission="dashboard.view">
-            <DashboardPage onNavigateToOrders={handleNavigateToOrders} />
+            <DashboardPage
+              onNavigateToTab={(tab) => tab === 'orders' ? handleNavigateToOrders() : setActiveTab(tab)}
+            />
           </PermissionGuard>
         );
     }

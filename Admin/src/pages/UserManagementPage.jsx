@@ -12,7 +12,8 @@ import {
 } from '../services/adminAuthApi';
 import { 
   Search, Shield, UserX, UserCheck, RefreshCw, X, Check, KeyRound, 
-  Laptop, Smartphone, Power, Plus, ShieldAlert, Eye, EyeOff, Activity, Sliders
+  Laptop, Smartphone, Power, Plus, ShieldAlert, Eye, EyeOff, Activity, Sliders,
+  Star, MoreHorizontal, Mail, Phone, MessageSquare, LayoutGrid, List
 } from 'lucide-react';
 import { Loader } from '../shared/components/Loader';
 
@@ -36,6 +37,8 @@ export const UserManagementPage = () => {
   const [activeTab, setActiveTab] = useState('users'); // 'users' | 'activity' | 'roles' | 'sessions'
 
   // Users Tab state
+  const [userViewMode, setUserViewMode] = useState('grid'); // 'grid' (Figma layout) | 'table'
+  const [starredUsers, setStarredUsers] = useState([]);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -172,6 +175,14 @@ export const UserManagementPage = () => {
     }
   };
 
+  const toggleStarUser = (userId) => {
+    if (starredUsers.includes(userId)) {
+      setStarredUsers(starredUsers.filter((id) => id !== userId));
+    } else {
+      setStarredUsers([...starredUsers, userId]);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Section Header & Sub-Tabs Navigation */}
@@ -219,26 +230,31 @@ export const UserManagementPage = () => {
 
       {/* TAB 1: USER ACCOUNTS */}
       {activeTab === 'users' && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-xl border border-[#EDEDED] shadow-sm items-center">
-            <div className="flex-1 flex items-center bg-[#FDFBF9] border border-[#EDEDED] rounded-xl px-3.5 w-full">
-              <Search className="w-4 h-4 text-[#797979] mr-2" />
+        <div className="space-y-6">
+          {/* Top Bar: Search, Filters & View Mode Switcher */}
+          <div className="flex flex-col md:flex-row gap-3 bg-white dark:bg-[#181926] p-4 rounded-2xl border border-[#EDEDED] dark:border-[#262838] shadow-sm items-center transition-colors">
+            {/* Search Input */}
+            <div className="flex-1 flex items-center bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] rounded-xl px-3.5 w-full">
+              <Search className="w-4 h-4 text-[#797979] dark:text-[#A0AEC0] mr-2" />
               <input
                 type="text"
-                placeholder="Search by Name, Email, or Phone..."
+                placeholder="Search here..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full py-2.5 bg-transparent border-none outline-none text-sm text-[#1F2029]"
+                className="w-full py-2.5 bg-transparent border-none outline-none text-sm text-[#1F2029] dark:text-white placeholder-[#797979] dark:placeholder-[#A0AEC0]"
               />
             </div>
 
-            <div className="flex gap-1.5 overflow-x-auto w-full sm:w-auto">
+            {/* Role Filter Pills */}
+            <div className="flex gap-1.5 overflow-x-auto w-full md:w-auto">
               {['', 'super_admin', 'admin', 'user'].map((r) => (
                 <button
                   key={r || 'all'}
                   onClick={() => setRoleFilter(r)}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                    roleFilter === r ? 'bg-[#704F38] text-white shadow-md' : 'bg-[#FDFBF9] text-[#797979] border border-[#EDEDED] hover:text-[#1F2029]'
+                  className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap ${
+                    roleFilter === r
+                      ? 'bg-[#704F38] text-white shadow-md'
+                      : 'bg-[#FDFBF9] dark:bg-[#11121E] text-[#797979] dark:text-[#A0AEC0] border border-[#EDEDED] dark:border-[#2A2C3F] hover:text-[#1F2029] dark:hover:text-white'
                   }`}
                 >
                   {r ? r.toUpperCase().replace('_', ' ') : 'ALL ROLES'}
@@ -246,78 +262,236 @@ export const UserManagementPage = () => {
               ))}
             </div>
 
-            <button onClick={() => refetchUsers()} className="p-2.5 bg-[#FDFBF9] border border-[#EDEDED] hover:border-[#704F38] rounded-xl transition-colors">
-              <RefreshCw className="w-4 h-4 text-[#1F2029]" />
+            {/* View Mode Toggle (Figma Grid vs Table) */}
+            <div className="flex items-center gap-1 bg-[#FDFBF9] dark:bg-[#11121E] p-1 rounded-xl border border-[#EDEDED] dark:border-[#2A2C3F]">
+              <button
+                onClick={() => setUserViewMode('grid')}
+                className={`p-2 rounded-lg transition-all ${
+                  userViewMode === 'grid'
+                    ? 'bg-[#704F38] text-white shadow-md'
+                    : 'text-[#797979] dark:text-[#A0AEC0] hover:text-[#1F2029] dark:hover:text-white'
+                }`}
+                title="Grid View (Figma Design)"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setUserViewMode('table')}
+                className={`p-2 rounded-lg transition-all ${
+                  userViewMode === 'table'
+                    ? 'bg-[#704F38] text-white shadow-md'
+                    : 'text-[#797979] dark:text-[#A0AEC0] hover:text-[#1F2029] dark:hover:text-white'
+                }`}
+                title="Table View"
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Refresh Button */}
+            <button
+              onClick={() => refetchUsers()}
+              className="p-2.5 bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] hover:border-[#704F38] dark:hover:border-[#E8B84E] rounded-xl transition-colors"
+              title="Refresh User List"
+            >
+              <RefreshCw className="w-4 h-4 text-[#1F2029] dark:text-white" />
             </button>
           </div>
 
-          <div className="bg-white rounded-xl border border-[#EDEDED] shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm min-w-[750px]">
-                <thead>
-                  <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[11px] font-extrabold uppercase tracking-wider">
-                    <th className="px-5 py-4">User Name</th>
-                    <th className="px-5 py-4">Email</th>
-                    <th className="px-5 py-4">Role</th>
-                    <th className="px-5 py-4">Status</th>
-                    <th className="px-5 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#EDEDED]">
-                  {isLoadingUsers ? (
-                    <tr>
-                      <td colSpan="5">
-                        <Loader message="Loading User Accounts..." />
-                      </td>
-                    </tr>
-                  ) : usersData?.users?.length === 0 ? (
-                    <tr><td colSpan="5" className="p-8 text-center text-[#797979]">No users match criteria.</td></tr>
-                  ) : (
-                    usersData?.users?.map((user) => (
-                      <tr key={user._id} className="hover:bg-[#FDFBF9]/50 transition-colors">
-                        <td className="px-5 py-4">
-                          <div className="font-extrabold text-[#1F2029]">{user.name}</div>
-                          <div className="text-[10px] font-mono font-bold text-[#704F38] mt-0.5 select-all">
-                            #USR-{user._id.slice(-6).toUpperCase()}
+          {/* FIGMA GRID VIEW */}
+          {userViewMode === 'grid' && (
+            <div>
+              {isLoadingUsers ? (
+                <div className="py-12 bg-white dark:bg-[#181926] rounded-3xl border border-[#EDEDED] dark:border-[#262838]">
+                  <Loader message="Loading Customer Cards..." />
+                </div>
+              ) : usersData?.users?.length === 0 ? (
+                <div className="p-12 text-center text-[#797979] dark:text-[#A0AEC0] font-bold bg-white dark:bg-[#181926] rounded-3xl border border-[#EDEDED] dark:border-[#262838]">
+                  No users found matching your criteria.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {usersData?.users?.map((user) => {
+                    const isStarred = starredUsers.includes(user._id);
+                    const isBlocked = user.status === 'blocked';
+
+                    return (
+                      <div
+                        key={user._id}
+                        className="bg-white dark:bg-[#181926] p-6 rounded-3xl border border-[#EDEDED] dark:border-[#262838] shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-center relative flex flex-col items-center justify-between group"
+                      >
+                        {/* Top Card Bar: Star & Options */}
+                        <div className="w-full flex items-center justify-between mb-2">
+                          <button
+                            onClick={() => toggleStarUser(user._id)}
+                            className={`p-1.5 rounded-xl transition-colors ${
+                              isStarred
+                                ? 'text-[#E8B84E]'
+                                : 'text-[#CBD5E1] dark:text-[#475569] hover:text-[#E8B84E]'
+                            }`}
+                            title={isStarred ? 'Unstar User' : 'Star User'}
+                          >
+                            <Star className="w-4 h-4 fill-current" />
+                          </button>
+
+                          <div className="relative group/menu">
+                            <button className="p-1.5 rounded-xl text-[#94A3B8] hover:text-[#1F2029] dark:hover:text-white transition-colors">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </button>
+                            <div className="absolute right-0 top-7 w-44 bg-white dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] rounded-2xl shadow-xl py-2 hidden group-hover/menu:block z-30">
+                              <button
+                                onClick={() => setUserDetailModal(user)}
+                                className="w-full px-4 py-2 text-left text-xs font-extrabold text-[#1F2029] dark:text-white hover:bg-[#FDFBF9] dark:hover:bg-[#1C1D2C] flex items-center gap-2"
+                              >
+                                <Activity className="w-3.5 h-3.5" /> View Profile
+                              </button>
+                              <button
+                                onClick={() => handleOpenRoleModal(user)}
+                                className="w-full px-4 py-2 text-left text-xs font-extrabold text-[#3B82F6] hover:bg-[#FDFBF9] dark:hover:bg-[#1C1D2C] flex items-center gap-2"
+                              >
+                                <Shield className="w-3.5 h-3.5" /> Edit Role
+                              </button>
+                              <button
+                                onClick={() => handleOpenStatusModal(user)}
+                                className={`w-full px-4 py-2 text-left text-xs font-extrabold flex items-center gap-2 ${
+                                  isBlocked ? 'text-[#4CAF50]' : 'text-[#E57373]'
+                                } hover:bg-[#FDFBF9] dark:hover:bg-[#1C1D2C]`}
+                              >
+                                {isBlocked ? (
+                                  <><UserCheck className="w-3.5 h-3.5" /> Unblock</>
+                                ) : (
+                                  <><UserX className="w-3.5 h-3.5" /> Block Account</>
+                                )}
+                              </button>
+                            </div>
                           </div>
-                        </td>
-                        <td className="px-5 py-4 text-[#797979] font-medium">{user.email}</td>
-                        <td className="px-5 py-4">
-                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider uppercase ${
-                            user.role === 'admin' || user.role === 'super_admin'
-                              ? 'bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]'
-                              : 'bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE]'
-                          }`}>
-                            {(user.role || 'user').replace('_', ' ').toUpperCase()}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider uppercase ${
-                            user.status === 'blocked'
-                              ? 'bg-[#FEF2F2] text-[#B91C1C] border border-[#FECACA]'
-                              : 'bg-[#ECFDF5] text-[#047857] border border-[#A7F3D0]'
-                          }`}>
-                            {(user.status || 'active').toUpperCase()}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-right space-x-1.5">
-                          <button onClick={() => setUserDetailModal(user)} title="View User Detail & Activity" className="p-2 bg-[#FDFBF9] border border-[#EDEDED] hover:border-[#704F38] rounded-lg text-[#1F2029] transition-colors">
-                            <Activity className="w-4 h-4" />
+                        </div>
+
+                        {/* Large Avatar with Status Dot */}
+                        <div className="relative my-2">
+                          <div className="w-20 h-20 rounded-2xl bg-[#F8FAFC] dark:bg-[#11121E] border border-[#E2E8F0] dark:border-[#2A2C3F] shadow-inner flex items-center justify-center text-2xl font-black text-[#704F38] dark:text-[#E8B84E]">
+                            {(user.name || user.email || 'U').charAt(0).toUpperCase()}
+                          </div>
+                          <span
+                            className={`w-4 h-4 rounded-full border-2 border-white dark:border-[#181926] absolute -bottom-1 -right-1 shadow-sm ${
+                              isBlocked ? 'bg-[#EF4444]' : 'bg-[#10B981]'
+                            }`}
+                            title={isBlocked ? 'Blocked Account' : 'Active Account'}
+                          />
+                        </div>
+
+                        {/* User Details */}
+                        <div className="w-full mb-4 px-2">
+                          <h4 className="text-base font-black text-[#1F2029] dark:text-white truncate">
+                            {user.name || 'Anonymous User'}
+                          </h4>
+                          <p className="text-xs font-extrabold text-[#797979] dark:text-[#A0AEC0] mt-0.5 uppercase tracking-wider truncate">
+                            {(user.role || 'user').replace('_', ' ')}
+                          </p>
+                        </div>
+
+                        {/* 3 Circular Action Buttons (Figma Style) */}
+                        <div className="flex items-center justify-center gap-3 w-full pt-4 border-t border-[#EDEDED] dark:border-[#262838]">
+                          <a
+                            href={`mailto:${user.email}`}
+                            title={`Send Email to ${user.email}`}
+                            className="w-10 h-10 rounded-2xl bg-[#F1F5F9] dark:bg-[#11121E] hover:bg-[#704F38] dark:hover:bg-[#E8B84E] text-[#475569] dark:text-[#94A3B8] hover:text-white dark:hover:text-[#1F2029] flex items-center justify-center transition-all duration-200 shadow-sm"
+                          >
+                            <Mail className="w-4 h-4" />
+                          </a>
+                          <button
+                            onClick={() => alert(`Phone: ${user.phone || 'No phone number linked'}`)}
+                            title="View Contact Phone"
+                            className="w-10 h-10 rounded-2xl bg-[#F1F5F9] dark:bg-[#11121E] hover:bg-[#704F38] dark:hover:bg-[#E8B84E] text-[#475569] dark:text-[#94A3B8] hover:text-white dark:hover:text-[#1F2029] flex items-center justify-center transition-all duration-200 shadow-sm"
+                          >
+                            <Phone className="w-4 h-4" />
                           </button>
-                          <button onClick={() => handleOpenRoleModal(user)} title="Edit Role & Permissions" className="p-2 bg-[#FDFBF9] border border-[#EDEDED] hover:border-[#704F38] rounded-lg text-[#3B82F6] transition-colors">
-                            <Shield className="w-4 h-4" />
+                          <button
+                            onClick={() => setUserDetailModal(user)}
+                            title="View User Details"
+                            className="w-10 h-10 rounded-2xl bg-[#F1F5F9] dark:bg-[#11121E] hover:bg-[#704F38] dark:hover:bg-[#E8B84E] text-[#475569] dark:text-[#94A3B8] hover:text-white dark:hover:text-[#1F2029] flex items-center justify-center transition-all duration-200 shadow-sm"
+                          >
+                            <MessageSquare className="w-4 h-4" />
                           </button>
-                          <button onClick={() => handleOpenStatusModal(user)} title="Account Status Action" className="p-2 bg-[#FDFBF9] border border-[#EDEDED] hover:border-[#704F38] rounded-lg transition-colors">
-                            {user.status === 'blocked' ? <UserCheck className="w-4 h-4 text-[#4CAF50]" /> : <UserX className="w-4 h-4 text-[#E57373]" />}
-                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TABLE VIEW */}
+          {userViewMode === 'table' && (
+            <div className="bg-white dark:bg-[#181926] rounded-2xl border border-[#EDEDED] dark:border-[#262838] shadow-sm overflow-hidden transition-colors">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm min-w-[750px]">
+                  <thead>
+                    <tr className="bg-[#FDFBF9] dark:bg-[#11121E] border-b border-[#EDEDED] dark:border-[#262838] text-[#797979] dark:text-[#A0AEC0] text-[11px] font-extrabold uppercase tracking-wider">
+                      <th className="px-5 py-4">User Name</th>
+                      <th className="px-5 py-4">Email</th>
+                      <th className="px-5 py-4">Role</th>
+                      <th className="px-5 py-4">Status</th>
+                      <th className="px-5 py-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#EDEDED] dark:divide-[#262838]">
+                    {isLoadingUsers ? (
+                      <tr>
+                        <td colSpan="5">
+                          <Loader message="Loading User Accounts..." />
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : usersData?.users?.length === 0 ? (
+                      <tr><td colSpan="5" className="p-8 text-center text-[#797979] dark:text-[#A0AEC0]">No users match criteria.</td></tr>
+                    ) : (
+                      usersData?.users?.map((user) => (
+                        <tr key={user._id} className="hover:bg-[#FDFBF9]/50 dark:hover:bg-[#1C1D2C] transition-colors">
+                          <td className="px-5 py-4">
+                            <div className="font-extrabold text-[#1F2029] dark:text-white">{user.name}</div>
+                            <div className="text-[10px] font-mono font-bold text-[#704F38] dark:text-[#E8B84E] mt-0.5 select-all">
+                              #USR-{user._id.slice(-6).toUpperCase()}
+                            </div>
+                          </td>
+                          <td className="px-5 py-4 text-[#797979] dark:text-[#A0AEC0] font-medium">{user.email}</td>
+                          <td className="px-5 py-4">
+                            <span className={`px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider uppercase ${
+                              user.role === 'admin' || user.role === 'super_admin'
+                                ? 'bg-[#FFFBEB] dark:bg-[#78350F]/30 text-[#B45309] dark:text-[#FBBF24] border border-[#FDE68A] dark:border-[#B45309]/50'
+                                : 'bg-[#EFF6FF] dark:bg-[#1E3A8A]/30 text-[#1D4ED8] dark:text-[#60A5FA] border border-[#BFDBFE] dark:border-[#1E3A8A]/50'
+                            }`}>
+                              {(user.role || 'user').replace('_', ' ').toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className={`px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider uppercase ${
+                              user.status === 'blocked'
+                                ? 'bg-[#FEF2F2] dark:bg-[#7F1D1D]/30 text-[#B91C1C] dark:text-[#F87171] border border-[#FECACA] dark:border-[#7F1D1D]/50'
+                                : 'bg-[#ECFDF5] dark:bg-[#064E3B]/30 text-[#047857] dark:text-[#34D399] border border-[#A7F3D0] dark:border-[#064E3B]/50'
+                            }`}>
+                              {(user.status || 'active').toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4 text-right space-x-1.5">
+                            <button onClick={() => setUserDetailModal(user)} title="View User Detail & Activity" className="p-2 bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] hover:border-[#704F38] dark:hover:border-[#E8B84E] rounded-lg text-[#1F2029] dark:text-white transition-colors">
+                              <Activity className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => handleOpenRoleModal(user)} title="Edit Role & Permissions" className="p-2 bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] hover:border-[#704F38] dark:hover:border-[#E8B84E] rounded-lg text-[#3B82F6] transition-colors">
+                              <Shield className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => handleOpenStatusModal(user)} title="Account Status Action" className="p-2 bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] hover:border-[#704F38] dark:hover:border-[#E8B84E] rounded-lg transition-colors">
+                              {user.status === 'blocked' ? <UserCheck className="w-4 h-4 text-[#4CAF50]" /> : <UserX className="w-4 h-4 text-[#E57373]" />}
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 

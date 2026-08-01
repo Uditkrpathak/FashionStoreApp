@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectAdminUser, logout } from '../app/authSlice';
 import { hasPermission } from './PermissionGuard';
+import { useTheme } from '../context/ThemeContext';
 import brandIcon from '../assets/icon.png';
 import {
   LayoutDashboard,
@@ -16,12 +17,15 @@ import {
   Menu,
   MessageSquare,
   CreditCard,
-  Settings
+  Settings,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
   const user = useSelector(selectAdminUser);
   const dispatch = useDispatch();
+  const { theme, toggleTheme } = useTheme();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
@@ -53,7 +57,7 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#FDFBF9] text-[#1F2029]">
+    <div className="flex min-h-screen bg-[#FDFBF9] dark:bg-[#0F1017] text-[#1F2029] dark:text-[#E2E8F0] transition-colors duration-300">
       {/* Sidebar Backdrop (mobile) */}
       {!sidebarCollapsed && (
         <div
@@ -64,7 +68,7 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
 
       {/* Sidebar */}
       <aside
-        className={`bg-[#1F2029] text-white flex flex-col justify-between transition-all duration-300 z-50 border-r border-[#2E303F]/20
+        className={`bg-[#1F2029] dark:bg-[#12131C] text-white flex flex-col justify-between transition-all duration-300 z-50 border-r border-[#2E303F]/20 dark:border-[#262838]
           fixed inset-y-0 left-0 md:sticky md:top-0 md:h-screen
           ${sidebarCollapsed ? '-translate-x-full md:translate-x-0 md:w-[72px]' : 'translate-x-0 w-64'}
         `}
@@ -165,17 +169,38 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
       {/* Main Workspace */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-[#EDEDED] flex items-center justify-between px-4 md:px-7 sticky top-0 z-40 shadow-sm">
+        <header className="h-16 bg-white dark:bg-[#181926] border-b border-[#EDEDED] dark:border-[#262838] flex items-center justify-between px-4 md:px-7 sticky top-0 z-40 shadow-sm transition-colors duration-300">
           <div className="flex items-center gap-4 min-w-0">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-1.5 rounded-lg hover:bg-[#FDFBF9] text-[#797979] hover:text-[#1F2029] transition-colors flex-shrink-0"
+              className="p-1.5 rounded-lg hover:bg-[#FDFBF9] dark:hover:bg-[#202232] text-[#797979] dark:text-[#A0AEC0] hover:text-[#1F2029] dark:hover:text-white transition-colors flex-shrink-0"
             >
               <Menu className="w-5 h-5" />
             </button>
             <div className="min-w-0">
-              <h1 className="text-base md:text-lg font-black text-[#1F2029] tracking-tight truncate max-w-[200px] sm:max-w-none">{title || 'Overview'}</h1>
+              <h1 className="text-base md:text-lg font-black text-[#1F2029] dark:text-white tracking-tight truncate max-w-[200px] sm:max-w-none">{title || 'Overview'}</h1>
             </div>
+          </div>
+
+          {/* Theme Switcher Toggle */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className="relative flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#EDEDED] dark:border-[#2D2F45] bg-[#FDFBF9] dark:bg-[#11121E] text-xs font-bold text-[#1F2029] dark:text-white hover:border-[#704F38] dark:hover:border-[#E8B84E] transition-all duration-200 shadow-sm"
+              title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+            >
+              {theme === 'light' ? (
+                <>
+                  <Moon className="w-4 h-4 text-[#704F38]" />
+                  <span className="hidden sm:inline">Dark Mode</span>
+                </>
+              ) : (
+                <>
+                  <Sun className="w-4 h-4 text-[#E8B84E]" />
+                  <span className="hidden sm:inline">Light Mode</span>
+                </>
+              )}
+            </button>
           </div>
         </header>
 
