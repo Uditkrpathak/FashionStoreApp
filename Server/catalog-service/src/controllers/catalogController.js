@@ -390,7 +390,40 @@ export const getProducts = async (req, res, next) => {
     const { q, categoryId, sort, limit = 20, isFeatured, brand, gender, rating, priceMin, priceMax } = req.query;
     let filter = {};
 
-    if (q) filter.title = new RegExp(q, 'i');
+    if (q) {
+      const cleanQ = q.trim().replace(/^[#\s]*(PRD-)?/i, '').trim();
+      const escapedCleanQ = cleanQ.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const orConditions = [
+        { title: new RegExp(escapedCleanQ, 'i') },
+        { brand: new RegExp(escapedCleanQ, 'i') },
+        { sku: new RegExp(escapedCleanQ, 'i') }
+      ];
+
+      const mongoose = (await import('mongoose')).default;
+      if (mongoose.Types.ObjectId.isValid(cleanQ)) {
+        orConditions.push({ _id: cleanQ });
+      }
+
+      if (/^[a-f0-9]{3,24}$/i.test(cleanQ)) {
+        try {
+          const matchingDocs = await Product.collection.find({
+            $expr: {
+              $regexMatch: {
+                input: { $toString: '$_id' },
+                regex: cleanQ,
+                options: 'i'
+              }
+            }
+          }, { projection: { _id: 1 } }).toArray();
+
+          if (matchingDocs.length > 0) {
+            orConditions.push({ _id: { $in: matchingDocs.map(d => d._id) } });
+          }
+        } catch (_) { /* fallback to title/brand regex */ }
+      }
+
+      filter.$or = orConditions;
+    }
     if (categoryId) filter.category = categoryId;
     if (isFeatured) filter.isFeatured = isFeatured === 'true';
 
