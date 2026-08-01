@@ -75,7 +75,7 @@ const WishlistScreen = () => {
         <EmptyState
           type="wishlist"
           actionLabel="Shop Now"
-          onAction={() => navigation.navigate('HomeTab')}
+          onAction={() => navigation.navigate('Tabs', { screen: 'HomeTab' })}
         />
       ) : (
         <FlatList

@@ -64,7 +64,7 @@ const CartScreen = () => {
           <Text style={styles.title}>My Cart</Text>
           <View style={{ width: 44 }} />
         </View>
-        <EmptyState type="cart" actionLabel="Shop Now" onAction={() => navigation.navigate('HomeTab')} />
+        <EmptyState type="cart" actionLabel="Shop Now" onAction={() => navigation.navigate('Tabs', { screen: 'HomeTab' })} />
       </View>
     );
   }

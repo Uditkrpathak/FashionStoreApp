@@ -160,7 +160,9 @@ const AppNavigator = () => {
           await registerPushToken(tokenData.data).unwrap();
         }
       } catch (err) {
-        console.warn('Expo Push registration skipped/failed:', err.message);
+        if (__DEV__) {
+          console.log('[Push Notification] Push registration info:', err.message);
+        }
       }
     };
 

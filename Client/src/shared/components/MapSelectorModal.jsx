@@ -1,6 +1,7 @@
 // src/shared/components/MapSelectorModal.jsx
 import React, { useState } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, SafeAreaView } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { X } from 'lucide-react-native';
 import { colors } from '../../theme/colors';

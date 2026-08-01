@@ -1,6 +1,5 @@
 // src/features/cart/api/cartApi.js
 import { baseApi } from '../../../shared/services/baseApi';
-import { syncCart } from '../store/cartSlice';
 import { setSelectedAddress } from '../../checkout/store/checkoutSlice';
 
 export const cartApi = baseApi.injectEndpoints({
@@ -14,10 +13,10 @@ export const cartApi = baseApi.injectEndpoints({
         try {
           const { data } = await queryFulfilled;
           if (data?.cart) {
-            dispatch(syncCart(data.cart));
+            dispatch({ type: 'cart/syncCart', payload: data.cart });
           }
         } catch (err) {
-          console.error('getCart sync error', err);
+          // Silent catch when cart fails or user is unauthenticated
         }
       },
     }),

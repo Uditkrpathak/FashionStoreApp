@@ -24,24 +24,11 @@ const OrderSuccessScreen = () => {
   }, [scale, opacity]);
 
   const goToOrder = () => {
-    // Reset to tabs then navigate to track order
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [
-          {
-            name: 'App',
-            state: {
-              routes: [
-                { name: 'Tabs' },
-                { name: 'MyOrders' },
-                { name: 'TrackOrder', params: { orderId: activeOrder?._id } }
-              ]
-            }
-          }
-        ],
-      }),
-    );
+    if (activeOrder?._id) {
+      navigation.navigate('OrderDetail', { orderId: activeOrder._id });
+    } else {
+      navigation.navigate('MyOrders');
+    }
   };
 
   return (

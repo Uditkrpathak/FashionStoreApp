@@ -29,6 +29,9 @@ const getAuthStoreConfigModel = () => {
   return AuthStoreConfig;
 };
 
+let catalogConn = null;
+let CatalogProduct = null;
+
 const getCatalogProductModel = () => {
   if (!CatalogProduct) {
     const rawUri = process.env.CATALOG_MONGO_URI || process.env.MONGO_URI || '';

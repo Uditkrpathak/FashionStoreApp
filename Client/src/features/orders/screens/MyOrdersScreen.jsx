@@ -50,7 +50,7 @@ const MyOrdersScreen = () => {
       {isLoading ? (
         <FlatList data={[1,2,3]} keyExtractor={(i) => String(i)} renderItem={() => <OrderCardSkeleton />} contentContainerStyle={styles.list} />
       ) : orders.length === 0 ? (
-        <EmptyState type="orders" actionLabel="Shop Now" onAction={() => navigation.navigate('HomeTab')} />
+        <EmptyState type="orders" actionLabel="Shop Now" onAction={() => navigation.navigate('Tabs', { screen: 'HomeTab' })} />
       ) : (
         <FlatList
           data={orders}
