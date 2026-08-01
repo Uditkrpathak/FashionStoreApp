@@ -175,7 +175,11 @@ const EReceiptScreen = () => {
           {/* Payment Details */}
           <View style={styles.row}>
             <Text style={styles.label}>Payment Method</Text>
-            <Text style={styles.value}>{order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}</Text>
+            <Text style={styles.value}>
+              {(!order.paymentMethod || order.paymentMethod === 'cod' || order.paymentMethod?.type === 'cod' || order.paymentMethod === 'COD') 
+                ? 'Cash on Delivery (COD)' 
+                : (typeof order.paymentMethod === 'string' ? order.paymentMethod : order.paymentMethod?.label || order.paymentMethod?.name || 'Online Payment')}
+            </Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Date</Text>

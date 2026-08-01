@@ -9,6 +9,28 @@ import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
 
+const getPaymentMethodText = (pm) => {
+  if (!pm) return 'Cash on Delivery (COD)';
+  if (typeof pm === 'string') {
+    const lower = pm.toLowerCase();
+    if (lower === 'cod') return 'Cash on Delivery (COD)';
+    if (lower === 'razorpay') return 'Online Payment (Razorpay)';
+    return pm;
+  }
+  if (pm.label) return pm.label;
+  if (pm.name) return pm.name;
+  if (pm.type === 'cod') return 'Cash on Delivery (COD)';
+  if (pm.type === 'razorpay') return 'Online Payment (Razorpay)';
+  return pm.type || 'Cash on Delivery (COD)';
+};
+
+const getPaymentStatusText = (status, pm) => {
+  if (status === 'completed' || status === 'paid') return 'Paid / Completed';
+  const isCod = !pm || (typeof pm === 'string' && pm.toLowerCase() === 'cod') || pm.type === 'cod' || pm.id === 'cod' || pm === 'COD';
+  if (isCod) return 'Pending (Collect on Delivery)';
+  return 'Pending';
+};
+
 const OrderDetailScreen = () => {
   const navigation = useNavigation();
   const route      = useRoute();
@@ -24,6 +46,7 @@ const OrderDetailScreen = () => {
 
   const canCancel = ['placed', 'confirmed'].includes(order.orderStatus);
   const canTrack = !['cancelled', 'returned'].includes(order.orderStatus);
+  const isPaid = order.paymentStatus === 'completed' || order.paymentStatus === 'paid';
 
   return (
     <View style={styles.container}>
@@ -46,6 +69,19 @@ const OrderDetailScreen = () => {
               <Text style={styles.itemPrice}>{item.qty} × {formatPrice(item.priceAtAdd)}</Text>
             </View>
           ))}
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Payment Information</Text>
+          <View style={styles.row}>
+            <Text style={styles.label}>Payment Method</Text>
+            <Text style={styles.value}>{getPaymentMethodText(order.paymentMethod)}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Payment Status</Text>
+            <Text style={[styles.value, { color: isPaid ? colors.success : '#D97706', fontWeight: '700' }]}>
+              {getPaymentStatusText(order.paymentStatus, order.paymentMethod)}
+            </Text>
+          </View>
         </View>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Price Breakdown</Text>

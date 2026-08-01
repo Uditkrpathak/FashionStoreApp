@@ -3,8 +3,31 @@ import Address from '../models/Address.js';
 import Coupon from '../models/Coupon.js';
 import Cart from '../models/Cart.js';
 
-let catalogConn = null;
-let CatalogProduct = null;
+let authConn = null;
+let AuthStoreConfig = null;
+
+const getAuthStoreConfigModel = () => {
+  if (!AuthStoreConfig) {
+    const rawUri = process.env.AUTH_MONGO_URI || process.env.MONGO_URI || '';
+    const isValidScheme = typeof rawUri === 'string' && (rawUri.startsWith('mongodb://') || rawUri.startsWith('mongodb+srv://'));
+    const uri = isValidScheme ? rawUri.replace(/fashion_[^/]+$/, 'fashion_auth') : 'mongodb://127.0.0.1:27017/fashion_auth';
+    try {
+      authConn = mongoose.createConnection(uri);
+      const StoreConfigSchema = new mongoose.Schema({
+        featureToggles: {
+          couponsEnabled: { type: Boolean, default: true },
+          returnsEnabled: { type: Boolean, default: true },
+          instantRefundsEnabled: { type: Boolean, default: true },
+          maintenanceMode: { type: Boolean, default: false }
+        }
+      });
+      AuthStoreConfig = authConn.model('StoreConfig', StoreConfigSchema);
+    } catch (_) {
+      return null;
+    }
+  }
+  return AuthStoreConfig;
+};
 
 const getCatalogProductModel = () => {
   if (!CatalogProduct) {
@@ -220,7 +243,18 @@ export const applyCoupon = async (req, res, next) => {
   try {
     const userId = req.headers['x-user-id'];
     const { code } = req.body;
-    
+
+    // Check StoreConfig Feature Toggle
+    try {
+      const StoreConfig = getAuthStoreConfigModel();
+      if (StoreConfig) {
+        const config = await StoreConfig.findOne();
+        if (config?.featureToggles?.couponsEnabled === false) {
+          return res.status(400).json({ success: false, message: 'Promo coupon module is currently disabled by store admin.' });
+        }
+      }
+    } catch (_) {}
+
     // Look up dynamic Coupon collection in DB
     const dbCoupon = await Coupon.findOne({ code: code?.toUpperCase(), isActive: true });
     

@@ -7,7 +7,7 @@ import {
   useProcessRefundMutation,
   useCreateReplacementOrderMutation
 } from '../services/adminOrderApi';
-import { Check, Truck, CheckCircle2, XCircle, Clock, X, MapPin, AlertTriangle, RotateCcw, DollarSign, FileText } from 'lucide-react';
+import { Check, Truck, CheckCircle2, XCircle, Clock, X, MapPin, AlertTriangle, RotateCcw, DollarSign, FileText, CreditCard } from 'lucide-react';
 import { Loader } from '../shared/components/Loader';
 
 const STATUS_TABS = [
@@ -211,7 +211,10 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
                         </span>
                       </td>
                       <td className="px-5 py-4 font-black text-[#704F38]">
-                        ₹{order.totals?.grandTotal?.toLocaleString('en-IN') || '0'}
+                        <div>₹{order.totals?.grandTotal?.toLocaleString('en-IN') || '0'}</div>
+                        <div className="text-[10px] font-extrabold text-[#797979] mt-0.5">
+                          {(!order.paymentMethod || order.paymentMethod === 'cod' || order.paymentMethod?.type === 'cod' || order.paymentMethod === 'COD') ? '📦 COD' : '💳 Paid Online'}
+                        </div>
                       </td>
                       <td className="px-5 py-4">
                         <span className={`px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider uppercase border ${
@@ -481,6 +484,36 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
                     selectedOrder?.shippingAddress?.state,
                     selectedOrder?.shippingAddress?.pincode || selectedOrder?.shippingAddress?.zip
                   ].filter(Boolean).join(', ') || 'No shipping address provided'}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#FDFBF9] rounded-xl p-4 border border-[#EDEDED] space-y-3">
+              <div className="flex items-center gap-2 font-bold text-xs text-[#704F38] uppercase tracking-wider">
+                <CreditCard className="w-4 h-4 text-[#704F38]" /> Payment & Billing Information
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="text-[#797979] font-medium block mb-0.5">Payment Method:</span>
+                  <div className="font-extrabold text-[#1F2029]">
+                    {(!selectedOrder?.paymentMethod || selectedOrder?.paymentMethod === 'cod' || selectedOrder?.paymentMethod?.type === 'cod' || selectedOrder?.paymentMethod === 'COD')
+                      ? 'Cash on Delivery (COD)'
+                      : (typeof selectedOrder?.paymentMethod === 'string' ? selectedOrder?.paymentMethod : selectedOrder?.paymentMethod?.label || selectedOrder?.paymentMethod?.name || 'Online Payment')}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[#797979] font-medium block mb-0.5">Payment Status:</span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase border ${
+                      (selectedOrder?.paymentStatus === 'completed' || selectedOrder?.paymentStatus === 'paid')
+                        ? 'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]'
+                        : 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]'
+                    }`}>
+                      {(selectedOrder?.paymentStatus === 'completed' || selectedOrder?.paymentStatus === 'paid')
+                        ? 'PAID / COMPLETED'
+                        : 'PENDING (COLLECT ON DELIVERY)'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

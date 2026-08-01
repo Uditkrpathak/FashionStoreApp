@@ -4,6 +4,32 @@ import crypto from 'crypto';
 import mongoose from 'mongoose';
 import { isValidTransition } from '../utils/orderStateMachine.js';
 
+let authConn = null;
+let AuthStoreConfig = null;
+
+const getAuthStoreConfigModel = () => {
+  if (!AuthStoreConfig) {
+    const rawUri = process.env.AUTH_MONGO_URI || process.env.MONGO_URI || '';
+    const isValidScheme = typeof rawUri === 'string' && (rawUri.startsWith('mongodb://') || rawUri.startsWith('mongodb+srv://'));
+    const uri = isValidScheme ? rawUri.replace(/fashion_[^/]+$/, 'fashion_auth') : 'mongodb://127.0.0.1:27017/fashion_auth';
+    try {
+      authConn = mongoose.createConnection(uri);
+      const StoreConfigSchema = new mongoose.Schema({
+        featureToggles: {
+          couponsEnabled: { type: Boolean, default: true },
+          returnsEnabled: { type: Boolean, default: true },
+          instantRefundsEnabled: { type: Boolean, default: true },
+          maintenanceMode: { type: Boolean, default: false }
+        }
+      });
+      AuthStoreConfig = authConn.model('StoreConfig', StoreConfigSchema);
+    } catch (_) {
+      return null;
+    }
+  }
+  return AuthStoreConfig;
+};
+
 let catalogConn = null;
 let CatalogProduct = null;
 let CatalogReview = null;
@@ -48,6 +74,20 @@ const razorpay = new Razorpay({
 
 export const createOrder = async (req, res, next) => {
   try {
+    // Check Store Maintenance Mode feature toggle
+    try {
+      const StoreConfig = getAuthStoreConfigModel();
+      if (StoreConfig) {
+        const config = await StoreConfig.findOne();
+        if (config?.featureToggles?.maintenanceMode === true) {
+          return res.status(503).json({
+            success: false,
+            message: 'The store is currently in maintenance mode. Placing new orders is temporarily disabled.'
+          });
+        }
+      }
+    } catch (_) {}
+
     const { items = [], shippingAddress, deliveryOption, paymentMethod, coupon } = req.body;
 
     const subtotal = (items || []).reduce((acc, item) => acc + ((item.priceAtAdd || 0) * (item.qty || 1)), 0);
@@ -145,142 +185,6 @@ export const createOrder = async (req, res, next) => {
   }
 };
 
-const seededUsers = new Set();
-
-const seedMockOrders = async (userId) => {
-  try {
-    // Ensure catalog connection is initialized
-    const { CatalogProduct: CatProd } = getCatalogModels();
-    if (!CatProd) {
-      console.log('Catalog connection not available, cannot seed orders.');
-      return;
-    }
-
-    // Only seed if user has no orders — don't wipe other users' orders
-    const existingCount = await Order.countDocuments({ userId });
-    if (existingCount > 0) {
-      console.log(`User ${userId} already has ${existingCount} orders, skipping seed.`);
-      return;
-    }
-    
-    // 2. Fetch products from CatalogProduct
-    const products = await CatProd.find({}).limit(6);
-    if (!products || products.length === 0) {
-      console.log('No products found in catalog to seed orders.');
-      return;
-    }
-    
-    const getProductItem = (index) => {
-      const prod = products[index % products.length];
-      return {
-        productId: prod._id.toString(),
-        title: prod.title,
-        color: prod.colors?.[0] || 'Default',
-        size: prod.sizes?.[0] || 'M',
-        qty: 1,
-        priceAtAdd: prod.price,
-        image: prod.images?.[0] || 'https://via.placeholder.com/100'
-      };
-    };
-
-    // 3. Create active orders
-    const activeOrder1 = new Order({
-      userId,
-      orderStatus: 'placed',
-      items: [getProductItem(0)],
-      shippingAddress: { name: 'Rahul Sharma', line1: '42 MG Road, Block C', city: 'Mumbai', state: 'Maharashtra', pincode: '400001', phone: '+91 9876543210' },
-      totals: { subtotal: products[0].price, shipping: 100, discount: 0, grandTotal: products[0].price + 100 },
-      paymentStatus: 'pending',
-      statusHistory: [{ status: 'placed', timestamp: new Date(Date.now() - 3600000) }]
-    });
-
-    const activeOrder2 = new Order({
-      userId,
-      orderStatus: 'shipped',
-      items: [getProductItem(1 % products.length)],
-      shippingAddress: { name: 'Priya Patel', line1: '15 CG Highway, Sector 4', city: 'Ahmedabad', state: 'Gujarat', pincode: '380009', phone: '+91 9812345678' },
-      totals: { subtotal: products[1 % products.length].price, shipping: 0, discount: 0, grandTotal: products[1 % products.length].price },
-      paymentStatus: 'completed',
-      statusHistory: [
-        { status: 'placed', timestamp: new Date(Date.now() - 3 * 3600000) },
-        { status: 'confirmed', timestamp: new Date(Date.now() - 2 * 3600000) },
-        { status: 'shipped', timestamp: new Date(Date.now() - 1 * 3600000) }
-      ]
-    });
-
-    // 4. Create completed orders
-    const completedOrder1 = new Order({
-      userId,
-      orderStatus: 'delivered',
-      items: [getProductItem(2 % products.length)],
-      shippingAddress: { name: 'Ananya Verma', line1: '78 Park Street, Apt 3B', city: 'Kolkata', state: 'West Bengal', pincode: '700016', phone: '+91 9765432109' },
-      totals: { subtotal: products[2 % products.length].price, shipping: 0, discount: 0, grandTotal: products[2 % products.length].price },
-      paymentStatus: 'completed',
-      statusHistory: [
-        { status: 'placed', timestamp: new Date(Date.now() - 4 * 24 * 3600000) },
-        { status: 'confirmed', timestamp: new Date(Date.now() - 3 * 24 * 3600000) },
-        { status: 'shipped', timestamp: new Date(Date.now() - 2 * 24 * 3600000) },
-        { status: 'delivered', timestamp: new Date(Date.now() - 1 * 24 * 3600000) }
-      ]
-    });
-
-    const completedOrder2 = new Order({
-      userId,
-      orderStatus: 'delivered',
-      items: [getProductItem(3 % products.length)],
-      shippingAddress: { name: 'Vikram Singh', line1: '102 Indiranagar 10th Main', city: 'Bengaluru', state: 'Karnataka', pincode: '560038', phone: '+91 9654321098' },
-      totals: { subtotal: products[3 % products.length].price, shipping: 150, discount: 50, grandTotal: products[3 % products.length].price + 100 },
-      paymentStatus: 'completed',
-      statusHistory: [
-        { status: 'placed', timestamp: new Date(Date.now() - 6 * 24 * 3600000) },
-        { status: 'confirmed', timestamp: new Date(Date.now() - 5 * 24 * 3600000) },
-        { status: 'shipped', timestamp: new Date(Date.now() - 4 * 24 * 3600000) },
-        { status: 'delivered', timestamp: new Date(Date.now() - 3 * 24 * 3600000) }
-      ]
-    });
-
-    // 5. Create cancelled orders
-    const cancelledOrder1 = new Order({
-      userId,
-      orderStatus: 'cancelled',
-      items: [getProductItem(4 % products.length)],
-      shippingAddress: { name: 'Sneha Kapoor', line1: '88 Connaught Place', city: 'New Delhi', state: 'Delhi', pincode: '110001', phone: '+91 9543210987' },
-      totals: { subtotal: products[4 % products.length].price, shipping: 0, discount: 0, grandTotal: products[4 % products.length].price },
-      paymentStatus: 'pending',
-      statusHistory: [
-        { status: 'placed', timestamp: new Date(Date.now() - 2 * 3600000) },
-        { status: 'cancelled', timestamp: new Date(Date.now() - 1 * 3600000), reason: 'User requested cancellation' }
-      ]
-    });
-
-    const cancelledOrder2 = new Order({
-      userId,
-      orderStatus: 'cancelled',
-      items: [getProductItem(5 % products.length)],
-      shippingAddress: { name: 'Amit Roy', line1: '55 Jubilee Hills, Road No 36', city: 'Hyderabad', state: 'Telangana', pincode: '500033', phone: '+91 9432109876' },
-      totals: { subtotal: products[5 % products.length].price, shipping: 100, discount: 0, grandTotal: products[5 % products.length].price + 100 },
-      paymentStatus: 'pending',
-      statusHistory: [
-        { status: 'placed', timestamp: new Date(Date.now() - 5 * 3600000) },
-        { status: 'cancelled', timestamp: new Date(Date.now() - 4 * 3600000), reason: 'Incorrect size selected' }
-      ]
-    });
-
-    await Promise.all([
-      activeOrder1.save(),
-      activeOrder2.save(),
-      completedOrder1.save(),
-      completedOrder2.save(),
-      cancelledOrder1.save(),
-      cancelledOrder2.save()
-    ]);
-    
-    console.log('Successfully cleared and seeded orders for user:', userId);
-  } catch (err) {
-    console.error('Error seeding mock orders:', err.message);
-  }
-};
-
 export const getOrders = async (req, res, next) => {
   try {
     // Ensure catalog connection is initialized for reviews lookup
@@ -295,47 +199,6 @@ export const getOrders = async (req, res, next) => {
       filter.orderStatus = { $in: statuses };
     }
     let orders = await Order.find(filter).sort({ createdAt: -1 });
-
-    // Fallback: If no completed orders exist, check the Completed tab and inject a completed order dynamically
-    const { CatalogProduct: CatProdFallback } = getCatalogModels();
-    if (orders.length === 0 && status && status.includes('delivered') && CatProdFallback) {
-      try {
-        const product = await CatProdFallback.findOne({});
-        if (product) {
-          const mockOrder = {
-            userId: req.headers['x-user-id'],
-            orderStatus: 'delivered',
-            items: [{
-              productId: product._id.toString(),
-              title: product.title,
-              color: product.colors?.[0] || 'Default',
-              size: product.sizes?.[0] || 'M',
-              qty: 1,
-              priceAtAdd: product.price,
-              image: product.images?.[0] || 'https://via.placeholder.com/100'
-            }],
-            totals: {
-              subtotal: product.price,
-              shipping: 0,
-              discount: 0,
-              grandTotal: product.price
-            },
-            paymentStatus: 'completed',
-            statusHistory: [
-              { status: 'placed', timestamp: new Date(Date.now() - 4 * 24 * 3600000) },
-              { status: 'confirmed', timestamp: new Date(Date.now() - 3 * 24 * 3600000) },
-              { status: 'shipped', timestamp: new Date(Date.now() - 2 * 24 * 3600000) },
-              { status: 'delivered', timestamp: new Date(Date.now() - 1 * 24 * 3600000) }
-            ]
-          };
-          const newOrder = new Order(mockOrder);
-          await newOrder.save();
-          orders = [newOrder];
-        }
-      } catch (err) {
-        console.error('Failed to auto-seed completed order:', err.message);
-      }
-    }
 
     // For each completed order, attach the user's rating for the items, if they exist
     const ordersWithRatings = await Promise.all(orders.map(async (order) => {
@@ -404,6 +267,20 @@ export const cancelOrder = async (req, res, next) => {
 
 export const returnOrder = async (req, res, next) => {
   try {
+    // Check Store Returns Feature Toggle
+    try {
+      const StoreConfig = getAuthStoreConfigModel();
+      if (StoreConfig) {
+        const config = await StoreConfig.findOne();
+        if (config?.featureToggles?.returnsEnabled === false) {
+          return res.status(400).json({
+            success: false,
+            message: 'Return and refund requests are currently disabled by store admin.'
+          });
+        }
+      }
+    } catch (_) {}
+
     const { reason } = req.body;
     const order = await Order.findOneAndUpdate(
       { _id: req.params.id, userId: req.headers['x-user-id'], orderStatus: 'delivered' },
@@ -543,6 +420,9 @@ export const updateOrderStatus = async (req, res, next) => {
     }
 
     order.orderStatus = status;
+    if (status === 'delivered') {
+      order.paymentStatus = 'completed'; // COD payment collected upon delivery
+    }
     order.statusHistory.push({ status, timestamp: new Date(), reason: reason || 'Updated by Admin' });
     await order.save();
 
