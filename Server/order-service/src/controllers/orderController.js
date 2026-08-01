@@ -546,6 +546,27 @@ export const updateOrderStatus = async (req, res, next) => {
     order.statusHistory.push({ status, timestamp: new Date(), reason: reason || 'Updated by Admin' });
     await order.save();
 
+    // Trigger Notification for Order Status Update
+    try {
+      const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:5001';
+      const statusTitles = {
+        confirmed: 'Order Confirmed! 📦',
+        shipped: 'Order Shipped! 🚚',
+        delivered: 'Order Delivered! 🎉',
+        cancelled: 'Order Cancelled ❌'
+      };
+      await fetch(`${authServiceUrl}/notifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: order.userId,
+          title: statusTitles[status] || `Order ${status.toUpperCase()}`,
+          message: `Your order #${order._id.toString().slice(-8).toUpperCase()} status is now: ${status}.`,
+          type: 'order'
+        })
+      });
+    } catch (_) { /* notification dispatch failure is non-fatal */ }
+
     res.json({ success: true, message: `Order status updated to ${status}`, order });
   } catch (err) {
     next(err);

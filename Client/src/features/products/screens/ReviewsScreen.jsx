@@ -22,12 +22,19 @@ const ReviewsScreen = () => {
           <Text style={styles.avatarText}>{item.userName?.[0]?.toUpperCase() ?? '?'}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.name}>{item.userName}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={styles.name}>{item.userName}</Text>
+            {item.verifiedPurchase && (
+              <View style={styles.verifiedBadge}>
+                <Text style={styles.verifiedText}>Verified</Text>
+              </View>
+            )}
+          </View>
           <Text style={styles.date}>{timeAgo(item.createdAt)}</Text>
         </View>
         <Text style={styles.stars}>{'★'.repeat(item.rating)}{'☆'.repeat(5 - item.rating)}</Text>
       </View>
-      <Text style={styles.comment}>{item.comment}</Text>
+      <Text style={styles.comment}>{item.comment || 'No comment left.'}</Text>
     </View>
   );
 
@@ -74,6 +81,17 @@ const styles = StyleSheet.create({
   },
   avatarText: { color: colors.white, fontWeight: '700', fontSize: 16 },
   name:    { ...textStyles.body2, fontWeight: '600', color: colors.text },
+  verifiedBadge: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: 6,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  verifiedText: {
+    color: '#2E7D32',
+    fontSize: 9,
+    fontWeight: '700',
+  },
   date:    { ...textStyles.caption, color: colors.textMuted },
   stars:   { color: colors.gold, fontSize: 14 },
   comment: { ...textStyles.body2, color: colors.textMuted, lineHeight: 22 },

@@ -129,10 +129,14 @@ const ProductDetailScreen = () => {
         <View style={styles.info}>
           <View style={styles.brandRow}>
             <Text style={styles.brand}>{product.brand || "Female's Style"}</Text>
-            <View style={styles.ratingRow}>
+            <TouchableOpacity 
+              style={styles.ratingRow} 
+              onPress={() => navigation.navigate('Reviews', { productId: product._id, title: product.title })}
+            >
               <Text style={styles.star}>★</Text>
               <Text style={styles.rating}>{product.rating?.toFixed(1) || '4.5'}</Text>
-            </View>
+              <Text style={styles.reviewsCountText}>({product.reviewsCount || 0})</Text>
+            </TouchableOpacity>
           </View>
 
           <Text style={styles.name}>{product.title}</Text>
@@ -273,6 +277,7 @@ const styles = StyleSheet.create({
   },
   star: { color: colors.gold, fontSize: 16 }, // Gold star
   rating: { ...textStyles.body2, fontWeight: '700', color: colors.textMuted },
+  reviewsCountText: { ...textStyles.caption, color: colors.textMuted, marginLeft: 2 },
   name: {
     ...textStyles.h3, color: colors.text, fontWeight: '700', marginBottom: spacing[5],
   },

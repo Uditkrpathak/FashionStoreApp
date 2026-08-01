@@ -7,14 +7,26 @@ import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
 
+import { useUpdatePreferencesMutation } from '../api/notificationApi';
+
 const NotifSettingsScreen = () => {
   const navigation = useNavigation();
   const { showToast } = useToast();
+  const [updatePrefs] = useUpdatePreferencesMutation();
   const [prefs, setPrefs] = useState({ orders: true, promos: true, restocks: false });
 
-  const handleToggle = (key, name) => (val) => {
+  const handleToggle = (key, name) => async (val) => {
     setPrefs(p => ({ ...p, [key]: val }));
-    showToast(`${name} ${val ? 'enabled' : 'disabled'}`, 'success');
+    try {
+      await updatePrefs({
+        orderUpdates: key === 'orders' ? val : prefs.orders,
+        promotional:  key === 'promos'  ? val : prefs.promos,
+        backInStock:  key === 'restocks' ? val : prefs.restocks,
+      }).unwrap();
+      showToast(`${name} ${val ? 'enabled' : 'disabled'}`, 'success');
+    } catch (_) {
+      showToast('Failed to save preferences', 'error');
+    }
   };
 
   return (

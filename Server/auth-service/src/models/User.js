@@ -41,7 +41,20 @@ const UserSchema = new mongoose.Schema({
   }],
 
   // Wishlist (Array of Product IDs)
-  wishlist: [String]
+  wishlist: [String],
+
+  // Reviews: track which products user has already reviewed (prevent duplicates)
+  reviewedProducts: [String],
+
+  // Push Notifications
+  pushToken: { type: String, default: null },
+  notificationPreferences: {
+    transactional: { type: Boolean, default: true },   // order updates — always on
+    promotional:   { type: Boolean, default: true },
+    orderUpdates:  { type: Boolean, default: true },
+    backInStock:   { type: Boolean, default: true },
+    priceDrop:     { type: Boolean, default: true },
+  }
 }, { timestamps: true });
 
 export default mongoose.model('User', UserSchema);

@@ -119,6 +119,20 @@ const BottomTabs = () => {
   );
 };
 
+import Constants from 'expo-constants';
+import * as Notifications from 'expo-notifications';
+import { useEffect } from 'react';
+import { useRegisterPushTokenMutation } from '../../features/notifications/api/notificationApi';
+
+// Configure how notifications are handled when the app is in the foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 // ── App root: Tabs + Modal stack ──────────────────────────────────────────────
 const AppNavigator = () => {
   // Hydrate user profile from the server on app mount
@@ -126,6 +140,42 @@ const AppNavigator = () => {
   // Hydrate cart and addresses from the server on app mount
   useGetCartQuery();
   useGetAddressesQuery();
+
+  const [registerPushToken] = useRegisterPushTokenMutation();
+
+  useEffect(() => {
+    const registerForPushNotifications = async () => {
+      try {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+        if (finalStatus !== 'granted') return;
+
+        const projectId = Constants.expoConfig?.extra?.eas?.projectId || '59ca3f93-abe1-4457-9bc1-38800f99d52a';
+        const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+        if (tokenData?.data) {
+          await registerPushToken(tokenData.data).unwrap();
+        }
+      } catch (err) {
+        console.warn('Expo Push registration skipped/failed:', err.message);
+      }
+    };
+
+    registerForPushNotifications();
+
+    // Listen to notification responses (tapping notifications)
+    const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data;
+      // Handle deep links here if any, e.g. orderId, productId
+    });
+
+    return () => {
+      responseSubscription.remove();
+    };
+  }, []);
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

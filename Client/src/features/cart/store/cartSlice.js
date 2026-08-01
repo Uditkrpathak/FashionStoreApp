@@ -1,6 +1,16 @@
 // src/features/cart/store/cartSlice.js
 import { createSlice } from '@reduxjs/toolkit';
 
+// Minimum spend requirements — MUST stay in sync with cart-service seedCoupons()
+const KNOWN_MIN_SPEND = {
+  SAVE10:     100,   // 10% off  — min ₹100
+  WELCOME20:  150,   // 20% off  — min ₹150
+  FLAT50:     300,   // 50% off  — min ₹300
+  WELCOME200: 200,   // 50% off  — min ₹200
+  CASHBACK12: 150,   // ₹100 cashback — min ₹150
+  FEST2COST:  400,   // 50% combo — min ₹400
+};
+
 const recalcTotals = (state) => {
   if (!state.items) state.items = [];
   state.totalQty   = state.items.reduce((sum, i) => sum + i.quantity, 0);
@@ -8,7 +18,10 @@ const recalcTotals = (state) => {
 
   // Auto re-validate active coupon against minimum order amount criteria
   if (state.coupon) {
-    const minSpend = state.coupon.minOrderAmount || state.coupon.minSpend || 0;
+    // Use minOrderAmount from the coupon object, OR fall back to the known hard-coded map
+    const minSpend = state.coupon.minOrderAmount
+      || KNOWN_MIN_SPEND[state.coupon.code]
+      || 0;
     if (minSpend > 0 && state.totalPrice < minSpend) {
       state.coupon = null;
       state.couponError = `Coupon removed: Minimum cart total of ₹${minSpend} required.`;

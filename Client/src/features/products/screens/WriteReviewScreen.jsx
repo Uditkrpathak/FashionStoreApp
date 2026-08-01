@@ -34,16 +34,16 @@ const WriteReviewScreen = () => {
       showToast('Please select a star rating', 'warning');
       return;
     }
-    if (!comment.trim()) {
-      showToast('Please add a detailed review', 'warning');
+    if (comment.length > 500) {
+      showToast('Review comment must be 500 characters or less', 'warning');
       return;
     }
     try {
       await addReview({ productId, rating, comment: comment.trim() }).unwrap();
-      showToast('Review submitted! Thank you 🙏', 'success');
+      showToast('Review submitted! Thank you', 'success');
       navigation.goBack();
-    } catch {
-      showToast('Failed to submit review.', 'error');
+    } catch (err) {
+      showToast(err.data?.message || 'Failed to submit review.', 'error');
     }
   };
 
@@ -99,13 +99,16 @@ const WriteReviewScreen = () => {
           <Text style={styles.sectionTitle}>Add detailed review</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter here"
+            placeholder="Enter your comment here (optional)"
             placeholderTextColor={colors.textMuted}
             value={comment}
-            onChangeText={setComment}
+            onChangeText={(text) => {
+              if (text.length <= 500) setComment(text);
+            }}
             multiline
             textAlignVertical="top"
           />
+          <Text style={styles.charCount}>{comment.length}/500</Text>
 
           <TouchableOpacity style={styles.addPhotoBtn}>
             <Camera size={20} color={colors.text} style={{ marginRight: 8 }} />
@@ -169,6 +172,12 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#E0E0E0',
     borderRadius: 12, padding: spacing[4],
     height: 120, ...textStyles.body1,
+    marginBottom: spacing[2],
+  },
+  charCount: {
+    ...textStyles.caption,
+    color: colors.textMuted,
+    textAlign: 'right',
     marginBottom: spacing[4],
   },
   addPhotoBtn: { flexDirection: 'row', alignItems: 'center' },

@@ -65,6 +65,13 @@ const OrderDetailScreen = () => {
           {canCancel && (
             <Button title="Cancel" variant="outline" onPress={() => navigation.navigate('CancelReturn', { orderId, type: 'cancel' })} style={{ flex: 1 }} />
           )}
+          {order.orderStatus === 'delivered' && order.items?.[0]?.productId && (
+            <Button 
+              title="Leave Review" 
+              onPress={() => navigation.navigate('WriteReview', { productId: order.items[0].productId })} 
+              style={{ flex: 1 }} 
+            />
+          )}
         </View>
         <Button 
           title="E-Receipt" 

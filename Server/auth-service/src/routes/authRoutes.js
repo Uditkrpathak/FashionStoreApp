@@ -16,6 +16,8 @@ import {
 import { requireAdmin, requirePermission } from '../middleware/adminMiddleware.js';
 import { createRateLimiter } from '../middleware/rateLimiter.js';
 
+import notificationRoutes from './notificationRoutes.js';
+
 const router = express.Router();
 
 const loginLimiter = createRateLimiter({
@@ -52,6 +54,9 @@ router.delete('/addresses/:addressId', removeAddress);
 // Wishlist
 router.post('/wishlist', wishlistRules, validateRequest, addToWishlist);
 router.delete('/wishlist/:productId', removeFromWishlist);
+
+// Notifications
+router.use('/notifications', notificationRoutes);
 
 // Admin User Management & Audit Routes
 router.get('/admin/users', requireAdmin, requirePermission('users.view'), getAllUsers);

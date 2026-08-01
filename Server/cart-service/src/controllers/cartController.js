@@ -202,14 +202,15 @@ export const seedCoupons = async (req, res, next) => {
   try {
     await Coupon.deleteMany();
     await Coupon.insertMany([
-      { code: 'SAVE10',     discountType: 'percentage', discountValue: 10,  minOrderAmount: 0,   maxDiscount: null, isActive: true },
-      { code: 'WELCOME20',  discountType: 'percentage', discountValue: 20,  minOrderAmount: 0,   maxDiscount: null, isActive: true },
-      { code: 'FLAT50',     discountType: 'percentage', discountValue: 50,  minOrderAmount: 0,   maxDiscount: null, isActive: true },
+      // ── Must stay in sync with KNOWN_MIN_SPEND in Client/src/features/cart/store/cartSlice.js ──
+      { code: 'SAVE10',     discountType: 'percentage', discountValue: 10,  minOrderAmount: 100, maxDiscount: null, isActive: true },
+      { code: 'WELCOME20',  discountType: 'percentage', discountValue: 20,  minOrderAmount: 150, maxDiscount: null, isActive: true },
       { code: 'WELCOME200', discountType: 'percentage', discountValue: 50,  minOrderAmount: 200, maxDiscount: null, isActive: true },
+      { code: 'FLAT50',     discountType: 'percentage', discountValue: 50,  minOrderAmount: 300, maxDiscount: null, isActive: true },
       { code: 'CASHBACK12', discountType: 'fixed',      discountValue: 100, minOrderAmount: 150, maxDiscount: 100,  isActive: true },
       { code: 'FEST2COST',  discountType: 'percentage', discountValue: 50,  minOrderAmount: 400, maxDiscount: null, isActive: true },
     ]);
-    res.json({ success: true, message: 'Coupons seeded' });
+    res.json({ success: true, message: 'Coupons seeded (6 coupons with min order enforcement)' });
   } catch (err) {
     next(err);
   }

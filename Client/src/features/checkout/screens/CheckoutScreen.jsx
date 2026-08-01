@@ -75,12 +75,27 @@ const CheckoutScreen = () => {
             return (
               <View key={key} style={styles.orderItem}>
                 <View style={styles.orderImageContainer}>
-                   <Image source={{ uri: item.image }} style={styles.orderImage} />
+                  <Image source={{ uri: item.image }} style={styles.orderImage} />
+                  {/* Quantity badge */}
+                  {item.quantity > 1 && (
+                    <View style={styles.qtyBadge}>
+                      <Text style={styles.qtyBadgeText}>×{item.quantity}</Text>
+                    </View>
+                  )}
                 </View>
                 <View style={styles.orderInfo}>
-                  <Text style={styles.orderTitle} numberOfLines={1}>{item.title}</Text>
-                  <Text style={styles.orderVariant}>Size : {item.size}</Text>
-                  <Text style={styles.orderPrice}>{formatPrice(item.price)}</Text>
+                  <Text style={styles.orderTitle} numberOfLines={2}>{item.title}</Text>
+                  <View style={styles.orderMetaRow}>
+                    {item.size ? <Text style={styles.orderVariant}>Size: {item.size}</Text> : null}
+                    {item.size && item.color ? <Text style={styles.orderDot}> · </Text> : null}
+                    {item.color ? <Text style={styles.orderVariant}>{item.color}</Text> : null}
+                  </View>
+                  <View style={styles.orderPriceRow}>
+                    <Text style={styles.orderPrice}>{formatPrice(item.price * item.quantity)}</Text>
+                    {item.quantity > 1 && (
+                      <Text style={styles.orderQtyNote}>({item.quantity} × {formatPrice(item.price)})</Text>
+                    )}
+                  </View>
                 </View>
               </View>
             );
@@ -135,15 +150,26 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: '#F0F0F0', marginVertical: spacing[2], marginBottom: spacing[6] },
 
   orderList: { gap: spacing[4] },
-  orderItem: { flexDirection: 'row', alignItems: 'center' },
+  orderItem: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing[2] },
   orderImageContainer: {
-    width: 70, height: 70, backgroundColor: '#F8F8F8', borderRadius: 12, overflow: 'hidden', marginRight: spacing[4]
+    width: 72, height: 72, backgroundColor: '#F8F8F8', borderRadius: 12,
+    overflow: 'hidden', marginRight: spacing[4], position: 'relative',
   },
   orderImage: { width: '100%', height: '100%' },
+  qtyBadge: {
+    position: 'absolute', bottom: 4, right: 4,
+    backgroundColor: 'rgba(0,0,0,0.62)', borderRadius: 8,
+    paddingHorizontal: 5, paddingVertical: 1,
+  },
+  qtyBadgeText: { color: '#FFF', fontSize: 10, fontWeight: '700' },
   orderInfo: { flex: 1 },
-  orderTitle: { ...textStyles.body1, fontWeight: '600', color: colors.text, marginBottom: 2 },
-  orderVariant: { ...textStyles.body2, color: colors.textMuted, marginBottom: 4 },
+  orderTitle: { ...textStyles.body1, fontWeight: '600', color: colors.text, marginBottom: 4 },
+  orderMetaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginBottom: 4 },
+  orderDot: { ...textStyles.caption, color: colors.textMuted },
+  orderVariant: { ...textStyles.caption, color: colors.textMuted },
+  orderPriceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
   orderPrice: { ...textStyles.body1, fontWeight: '800', color: colors.text },
+  orderQtyNote: { ...textStyles.caption, color: colors.textMuted },
   
   bottomSheet: {
     position: 'absolute', bottom: 0, left: 0, right: 0,

@@ -22,7 +22,27 @@ export const notificationApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Notification'],
     }),
+    registerPushToken: builder.mutation({
+      query: (pushToken) => ({
+        url: '/auth/notifications/push-token',
+        method: 'POST',
+        data: { pushToken },
+      }),
+    }),
+    updatePreferences: builder.mutation({
+      query: (preferences) => ({
+        url: '/auth/notifications/preferences',
+        method: 'PUT',
+        data: preferences,
+      }),
+    }),
   }),
 });
 
-export const { useGetNotificationsQuery, useMarkAsReadMutation, useMarkAllAsReadMutation } = notificationApi;
+export const { 
+  useGetNotificationsQuery, 
+  useMarkAsReadMutation, 
+  useMarkAllAsReadMutation,
+  useRegisterPushTokenMutation,
+  useUpdatePreferencesMutation
+} = notificationApi;

@@ -12,12 +12,16 @@ import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
 
-// minSpend MUST match the minOrderAmount values in the cart-service DB (cartController.js seedCoupons)
+// minSpend MUST stay in sync with KNOWN_MIN_SPEND in cartSlice.js & cart-service seedCoupons()
 const COUPONS = [
-  { code: 'WELCOME200', title: 'Get 50% OFF',          minSpend: 200, icon: Percent },
-  { code: 'CASHBACK12', title: 'Up to ₹100 cashback',  minSpend: 150, icon: Ticket  },
-  { code: 'FEST2COST',  title: 'Get 50% OFF for Combo', minSpend: 400, icon: Ticket  },
+  { code: 'SAVE10',     title: '10% OFF your order',        desc: 'Min. order ₹100',  minSpend: 100, icon: Percent },
+  { code: 'WELCOME20',  title: '20% OFF your order',        desc: 'Min. order ₹150',  minSpend: 150, icon: Percent },
+  { code: 'WELCOME200', title: '50% OFF your order',        desc: 'Min. order ₹200',  minSpend: 200, icon: Percent },
+  { code: 'FLAT50',     title: 'Flat 50% OFF',              desc: 'Min. order ₹300',  minSpend: 300, icon: Percent },
+  { code: 'CASHBACK12', title: '₹100 Cashback',             desc: 'Min. order ₹150',  minSpend: 150, icon: Ticket  },
+  { code: 'FEST2COST',  title: '50% OFF on Combo Orders',   desc: 'Min. order ₹400',  minSpend: 400, icon: Ticket  },
 ];
+
 
 const PromoCodeScreen = () => {
   const navigation = useNavigation();
@@ -94,8 +98,8 @@ const PromoCodeScreen = () => {
         {COUPONS.map((coupon) => {
           const Icon = coupon.icon;
           const isUnlocked = totalPrice >= coupon.minSpend;
-          const difference = coupon.minSpend - totalPrice;
-          
+          const difference  = Math.ceil(coupon.minSpend - totalPrice);
+
           return (
             <View key={coupon.code} style={styles.ticketCard}>
               {/* Left cutout */}
@@ -105,10 +109,16 @@ const PromoCodeScreen = () => {
 
               {/* Top content area */}
               <View style={styles.ticketTop}>
-                <Text style={styles.ticketCode}>{coupon.code}</Text>
-                
+                {/* Code + min-order badge row */}
+                <View style={styles.codeRow}>
+                  <Text style={styles.ticketCode}>{coupon.code}</Text>
+                  <View style={styles.minBadge}>
+                    <Text style={styles.minBadgeText}>{coupon.desc}</Text>
+                  </View>
+                </View>
+
                 <Text style={[styles.ticketRequirement, isUnlocked ? styles.unlockedText : styles.lockedText]}>
-                  {isUnlocked ? 'Coupon unlocked!' : `Add items worth ₹${difference} more to unlock`}
+                  {isUnlocked ? '✓ Coupon unlocked — ready to apply!' : `Add ₹${difference} more to unlock this offer`}
                 </Text>
 
                 <View style={styles.badgeRow}>
@@ -123,17 +133,18 @@ const PromoCodeScreen = () => {
               <View style={styles.separatorLine} />
 
               {/* Bottom button area */}
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.ticketBottom, !isUnlocked && styles.disabledBottom]}
                 onPress={() => isUnlocked && handleApplyCode(coupon.code)}
                 disabled={!isUnlocked}
               >
                 <Text style={[styles.bottomBtnText, !isUnlocked && styles.disabledBtnText]}>
-                  {isUnlocked ? 'APPLY CODE' : 'LOCKED'}
+                  {isUnlocked ? 'APPLY CODE' : `🔒 ADD ₹${difference} MORE`}
                 </Text>
               </TouchableOpacity>
             </View>
           );
+
         })}
       </ScrollView>
     </View>
@@ -184,6 +195,24 @@ const styles = StyleSheet.create({
   },
   ticketTop: {
     padding: spacing[4],
+  },
+  codeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  minBadge: {
+    backgroundColor: '#F3EDE8',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  minBadgeText: {
+    ...textStyles.caption,
+    color: colors.primary,
+    fontWeight: '700',
+    fontSize: 10,
   },
   ticketCode: {
     ...textStyles.h4,

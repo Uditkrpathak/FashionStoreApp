@@ -1,5 +1,5 @@
 // src/features/cart/screens/CartScreen.jsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   Image, ScrollView, TextInput,
@@ -17,14 +17,42 @@ import { formatPrice } from '../../../shared/utils/formatters';
 import { colors }    from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
+import { useToast } from '../../../context/ToastContext';
 
 const CartScreen = () => {
-  const navigation     = useNavigation();
-  const dispatch       = useAppDispatch();
-  const items          = useAppSelector(selectCartItems);
-  const totalPrice     = useAppSelector(selectCartTotalPrice);
+  const navigation      = useNavigation();
+  const dispatch        = useAppDispatch();
+  const { showToast }   = useToast();
+  const items           = useAppSelector(selectCartItems);
+  const totalPrice      = useAppSelector(selectCartTotalPrice);
   const discountedTotal = useAppSelector(selectDiscountedTotal);
-  const coupon         = useAppSelector(selectCoupon);
+  const coupon          = useAppSelector(selectCoupon);
+
+  // Auto-strip coupon from Redux if cart total drops below its minOrderAmount
+  useEffect(() => {
+    if (coupon) {
+      const minReq = coupon.minOrderAmount || 0;
+      if (minReq > 0 && totalPrice < minReq) {
+        dispatch(removeCoupon());
+        showToast(`Coupon removed: Cart must be at least ₹${minReq}`, 'warning');
+      }
+    }
+  }, [totalPrice, coupon]);
+
+  // Build coupon label for display
+  const couponLabel = coupon
+    ? (() => {
+        const type  = coupon.discountType || coupon.type;
+        const val   = coupon.discountValue ?? coupon.discount ?? 0;
+        const badge = (type === 'percentage' || type === 'percent') ? `${val}% OFF` : `₹${val} OFF`;
+        return `${coupon.code} Applied (${badge})`;
+      })()
+    : '';
+
+  // Guard: is the applied coupon still valid against current cart?
+  const couponIsInvalid = coupon
+    ? (coupon.minOrderAmount || 0) > 0 && totalPrice < (coupon.minOrderAmount || 0)
+    : false;
 
   if (items.length === 0) {
     return (
@@ -90,7 +118,7 @@ const CartScreen = () => {
             style={styles.promoInput} 
             placeholder={coupon ? coupon.code : "Promo Code"} 
             placeholderTextColor={coupon ? colors.primary : colors.textMuted}
-            value={coupon ? `${coupon.code} Applied (${coupon.discountType === 'percentage' || coupon.type === 'percent' ? `${coupon.discountValue || coupon.discount}%` : `₹${coupon.discountValue || coupon.discount}`} OFF)` : ''}
+            value={couponLabel}
             editable={false}
           />
           {coupon ? (
@@ -125,8 +153,14 @@ const CartScreen = () => {
         </View>
 
         <TouchableOpacity 
-          style={styles.checkoutBtn} 
-          onPress={() => navigation.navigate('Modals', { screen: 'CheckoutMain' })}
+          style={[styles.checkoutBtn, couponIsInvalid && styles.checkoutBtnDisabled]} 
+          onPress={() => {
+            if (couponIsInvalid) {
+              showToast(`Remove coupon — cart must be at least ₹${coupon.minOrderAmount} to use ${coupon.code}`, 'error');
+              return;
+            }
+            navigation.navigate('Modals', { screen: 'CheckoutMain' });
+          }}
         >
           <Text style={styles.checkoutBtnText}>Proceed to Checkout</Text>
         </TouchableOpacity>
@@ -207,6 +241,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary, borderRadius: 30,
     paddingVertical: spacing[5], alignItems: 'center',
     marginTop: spacing[6],
+  },
+  checkoutBtnDisabled: {
+    backgroundColor: '#C0A898',
+    opacity: 0.7,
   },
   checkoutBtnText: { ...textStyles.body1, color: colors.white, fontWeight: '700' },
 });

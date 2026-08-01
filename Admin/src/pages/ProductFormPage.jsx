@@ -13,6 +13,7 @@ export const ProductFormPage = ({ productToEdit, onBack }) => {
   const [gender, setGender] = useState(productToEdit?.gender || 'Men');
   const [category, setCategory] = useState(productToEdit?.category?._id || productToEdit?.category || '');
   const [imageUrl, setImageUrl] = useState(productToEdit?.images?.[0] || '');
+  const [initialRating, setInitialRating] = useState(productToEdit?.rating ? productToEdit.rating.toString() : '4.5');
 
   const [selectedSizes, setSelectedSizes] = useState(productToEdit?.sizes || ['S', 'M', 'L']);
   const [selectedColors, setSelectedColors] = useState(productToEdit?.colors || ['Black', 'White']);
@@ -71,6 +72,7 @@ export const ProductFormPage = ({ productToEdit, onBack }) => {
       images: [imageUrl.trim()],
       sizes: selectedSizes,
       colors: selectedColors,
+      initialRating: parseFloat(initialRating) || 4.5,
     };
 
     try {
@@ -184,6 +186,14 @@ export const ProductFormPage = ({ productToEdit, onBack }) => {
             <div>
               <label className="block text-xs font-bold text-[#1F2029] uppercase tracking-wider mb-2">Original / MRP (₹)</label>
               <input type="number" step="0.01" placeholder="2499" value={originalPrice} onChange={(e) => setOriginalPrice(e.target.value)} className="w-full p-3 rounded-xl border border-[#EDEDED] bg-[#FDFBF9] text-sm font-medium outline-none focus:border-[#704F38]" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-[#1F2029] uppercase tracking-wider mb-2">Initial Rating (0.0 - 5.0) *</label>
+              <input type="number" step="0.1" min="0" max="5" placeholder="4.5" value={initialRating} onChange={(e) => setInitialRating(e.target.value)} className="w-full p-3 rounded-xl border border-[#EDEDED] bg-[#FDFBF9] text-sm font-medium outline-none focus:border-[#704F38]" />
+              <span className="text-[10px] text-gray-500 mt-1 block">Seed value. Automatically recalculated after real customer reviews.</span>
             </div>
           </div>
 
