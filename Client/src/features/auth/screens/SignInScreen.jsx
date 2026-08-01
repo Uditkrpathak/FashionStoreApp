@@ -57,7 +57,16 @@ const SignInScreen = () => {
         <Controller
           control={control}
           name="identifier"
-          rules={{ validate: (v) => isEmail(v) === true || isPhone(v) === true || 'Enter a valid email or phone' }}
+          rules={{
+            validate: (v) => {
+              if (!v || !v.trim()) return 'Enter a valid email or phone number';
+              const trimmed = v.trim();
+              if (trimmed.includes('@')) {
+                return isEmail(trimmed);
+              }
+              return isPhone(trimmed);
+            }
+          }}
           render={({ field: { onChange, onBlur, value } }) => (
             <Input
               label="Email or Phone"

@@ -27,7 +27,7 @@ const SignUpScreen = () => {
 
   const onSubmit = async (data) => {
     try {
-      const res = await register({ name: data.name, email: data.email, password: data.password }).unwrap();
+      const res = await register({ name: data.name, email: data.email, password: data.password, phone: data.phone }).unwrap();
       if (res.devOtp) {
         Alert.alert('Development OTP', `Your verification code is: ${res.devOtp}`);
       }
@@ -53,7 +53,12 @@ const SignUpScreen = () => {
             <Input label="Email" placeholder="example@gmail.com" value={value} onChangeText={onChange} onBlur={onBlur} keyboardType="email-address" autoCapitalize="none" error={errors.email?.message} />
           )} />
 
-        <Controller control={control} name="password" rules={{ validate: isStrongPassword }}
+        <Controller control={control} name="phone" rules={{ validate: isPhone }}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <Input label="Phone" placeholder="9XXXXXXXXX" value={value} onChangeText={onChange} onBlur={onBlur} keyboardType="phone-pad" error={errors.phone?.message} />
+          )} />
+
+        <Controller control={control} name="password" rules={{ validate: minLength(6) }}
           render={({ field: { onChange, onBlur, value } }) => (
             <Input label="Password" placeholder="***************" value={value} onChangeText={onChange} onBlur={onBlur} secureTextEntry error={errors.password?.message} />
           )} />
