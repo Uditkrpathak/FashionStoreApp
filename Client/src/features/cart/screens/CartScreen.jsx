@@ -136,10 +136,7 @@ const CartScreen = () => {
           <Text style={styles.summaryLabel}>Sub-Total</Text>
           <Text style={styles.summaryValue}>{formatPrice(totalPrice)}</Text>
         </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Delivery Fee</Text>
-          <Text style={styles.summaryValue}>{formatPrice(25)}</Text>
-        </View>
+
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Discount</Text>
           <Text style={styles.summaryValue}>−{formatPrice(totalPrice - discountedTotal)}</Text>
@@ -149,7 +146,7 @@ const CartScreen = () => {
         
         <View style={styles.summaryRow}>
           <Text style={styles.totalLabel}>Total Cost</Text>
-          <Text style={styles.totalValue}>{formatPrice(discountedTotal + 25)}</Text>
+          <Text style={styles.totalValue}>{formatPrice(discountedTotal)}</Text>
         </View>
 
         <TouchableOpacity 
