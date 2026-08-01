@@ -15,14 +15,10 @@ import { requireAdmin, requirePermission } from '../middleware/adminMiddleware.j
 
 const router = express.Router();
 
-router.post('/seed', seedData);
-router.get('/categories', getCategories);
-router.get('/', getProductsRules, validateRequest, getProducts);
-router.get('/:id', productIdParamRules, validateRequest, getProductById);
-router.get('/:productId/reviews', productReviewsRules, validateRequest, getProductReviews);
-router.post('/reviews', addReviewRules, validateRequest, addReview);
+// Admin Catalog & Visibility Routes (Must be before /:id parameter routes)
+router.get('/admin/reviews', requireAdmin, requirePermission('products.view'), getAllReviewsAdmin);
+router.delete('/admin/reviews/:id', requireAdmin, requirePermission('products.edit'), deleteReviewAdmin);
 
-// Admin Catalog & Visibility Routes
 router.post('/admin/products', requireAdmin, requirePermission('products.edit'), createProduct);
 router.put('/admin/products/:id', requireAdmin, requirePermission('products.edit'), updateProduct);
 router.patch('/admin/products/:id/visibility', requireAdmin, requirePermission('products.edit'), toggleProductVisibility);
@@ -34,7 +30,12 @@ router.post('/admin/categories', requireAdmin, requirePermission('categories.edi
 router.put('/admin/categories/:id', requireAdmin, requirePermission('categories.edit'), updateCategory);
 router.delete('/admin/categories/:id', requireAdmin, requirePermission('categories.edit'), deleteCategory);
 
-router.get('/admin/reviews', requireAdmin, requirePermission('products.view'), getAllReviewsAdmin);
-router.delete('/admin/reviews/:id', requireAdmin, requirePermission('products.edit'), deleteReviewAdmin);
+// Public Routes
+router.post('/seed', seedData);
+router.get('/categories', getCategories);
+router.get('/', getProductsRules, validateRequest, getProducts);
+router.get('/:id', productIdParamRules, validateRequest, getProductById);
+router.get('/:productId/reviews', productReviewsRules, validateRequest, getProductReviews);
+router.post('/reviews', addReviewRules, validateRequest, addReview);
 
 export default router;

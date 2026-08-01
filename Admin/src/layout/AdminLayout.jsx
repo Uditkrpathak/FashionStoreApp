@@ -19,7 +19,8 @@ import {
   CreditCard,
   Settings,
   Sun,
-  Moon
+  Moon,
+  X
 } from 'lucide-react';
 
 export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
@@ -39,6 +40,17 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Keyboard Escape listener to close mobile sidebar
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && window.innerWidth < 768) {
+        setSidebarCollapsed(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, perm: 'dashboard.view' },
     { id: 'catalog', label: 'Products & Catalog', icon: ShoppingBag, perm: 'products.view' },
@@ -56,12 +68,19 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
     dispatch(logout());
   };
 
+  const handleNavClick = (itemId) => {
+    onTabChange(itemId);
+    if (window.innerWidth < 768) {
+      setSidebarCollapsed(true);
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-[#FDFBF9] dark:bg-[#0F1017] text-[#1F2029] dark:text-[#E2E8F0] transition-colors duration-300">
       {/* Sidebar Backdrop (mobile) */}
       {!sidebarCollapsed && (
         <div
-          className="fixed inset-0 bg-black/40 z-40 md:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm transition-opacity duration-300"
           onClick={() => setSidebarCollapsed(true)}
         />
       )}
@@ -69,23 +88,36 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
       {/* Sidebar */}
       <aside
         className={`bg-[#1F2029] dark:bg-[#12131C] text-white flex flex-col justify-between transition-all duration-300 z-50 border-r border-[#2E303F]/20 dark:border-[#262838]
-          fixed inset-y-0 left-0 md:sticky md:top-0 md:h-screen
+          fixed inset-y-0 left-0 md:sticky md:top-0 md:h-screen shadow-2xl md:shadow-none
           ${sidebarCollapsed ? '-translate-x-full md:translate-x-0 md:w-[72px]' : 'translate-x-0 w-64'}
         `}
       >
         <div>
-          {/* Brand Header */}
-          <div className={`flex items-center border-b border-[#2D2E3A]/50 gap-3 py-5 transition-all duration-300 ${
+          {/* Brand Header & Mobile Close X Button */}
+          <div className={`flex items-center justify-between border-b border-[#2D2E3A]/50 py-5 transition-all duration-300 ${
             sidebarCollapsed ? 'justify-center px-0' : 'px-5'
           }`}>
-            <div className="w-9 h-9 rounded-xl overflow-hidden bg-white flex items-center justify-center shadow-md p-1 border border-[#D4C4B7]/20 flex-shrink-0 transition-transform duration-300 hover:scale-105">
-              <img src={brandIcon} alt="FashionStore Admin" className="w-full h-full object-contain" />
-            </div>
-            {!sidebarCollapsed && (
-              <div className="transition-opacity duration-300">
-                <div className="text-base font-extrabold text-white tracking-wide">FashionStore</div>
-                <div className="text-[10px] font-black text-[#D4C4B7] tracking-widest uppercase">ADMIN PORTAL</div>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl overflow-hidden bg-white flex items-center justify-center shadow-md p-1 border border-[#D4C4B7]/20 flex-shrink-0 transition-transform duration-300 hover:scale-105">
+                <img src={brandIcon} alt="FashionStore Admin" className="w-full h-full object-contain" />
               </div>
+              {!sidebarCollapsed && (
+                <div className="transition-opacity duration-300">
+                  <div className="text-base font-extrabold text-white tracking-wide">FashionStore</div>
+                  <div className="text-[10px] font-black text-[#D4C4B7] tracking-widest uppercase">ADMIN PORTAL</div>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Explicit Close X Button */}
+            {!sidebarCollapsed && (
+              <button
+                onClick={() => setSidebarCollapsed(true)}
+                className="p-1.5 rounded-xl bg-[#2A2B37] hover:bg-[#704F38] text-[#9A9AB0] hover:text-white transition-colors md:hidden shadow-sm"
+                title="Close Mobile Navigation"
+              >
+                <X className="w-5 h-5" />
+              </button>
             )}
           </div>
 
@@ -97,7 +129,7 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => onTabChange(item.id)}
+                  onClick={() => handleNavClick(item.id)}
                   className={`group relative flex items-center rounded-xl transition-all duration-200 font-semibold text-xs ${
                     sidebarCollapsed
                       ? 'w-12 h-12 justify-center mx-auto'
@@ -173,12 +205,13 @@ export const AdminLayout = ({ activeTab, onTabChange, title, children }) => {
           <div className="flex items-center gap-4 min-w-0">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-1.5 rounded-lg hover:bg-[#FDFBF9] dark:hover:bg-[#202232] text-[#797979] dark:text-[#A0AEC0] hover:text-[#1F2029] dark:hover:text-white transition-colors flex-shrink-0"
+              className="p-1.5 rounded-xl hover:bg-[#FDFBF9] dark:hover:bg-[#202232] text-[#797979] dark:text-[#A0AEC0] hover:text-[#1F2029] dark:hover:text-white transition-colors flex-shrink-0 border border-[#EDEDED] dark:border-[#262838]"
+              title="Toggle Sidebar"
             >
               <Menu className="w-5 h-5" />
             </button>
             <div className="min-w-0">
-              <h1 className="text-base md:text-lg font-black text-[#1F2029] dark:text-white tracking-tight truncate max-w-[200px] sm:max-w-none">{title || 'Overview'}</h1>
+              <h1 className="text-base md:text-lg font-black text-[#1F2029] dark:text-white tracking-tight truncate max-w-[180px] sm:max-w-none">{title || 'Overview'}</h1>
             </div>
           </div>
 

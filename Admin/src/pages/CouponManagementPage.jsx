@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGetAdminCouponsQuery, useCreateCouponMutation, useUpdateCouponMutation, useDeleteCouponMutation } from '../services/adminCouponApi';
 import { Ticket, Plus, Trash2, Edit3, X } from 'lucide-react';
 import { Loader } from '../shared/components/Loader';
@@ -6,6 +6,16 @@ import { Loader } from '../shared/components/Loader';
 export const CouponManagementPage = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setModalVisible(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const [code, setCode] = useState('');
   const [discountType, setDiscountType] = useState('percentage');

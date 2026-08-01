@@ -48,198 +48,144 @@ export const SettingsReportsPage = () => {
     let csvRows = [];
     if (reportType === 'orders' || reportType === 'sales') {
       csvRows.push(['Order ID', 'Date', 'Customer Name', 'Grand Total (INR)', 'Payment Status', 'Fulfillment Status']);
-      ordersData?.orders?.forEach(o => {
+      ordersData?.orders?.forEach((o) => {
         csvRows.push([
           o._id,
-          new Date(o.createdAt).toLocaleDateString(),
-          `"${o.shippingAddress?.name || 'Customer'}"`,
+          new Date(o.createdAt).toISOString(),
+          `"${o.shippingAddress?.name || o.customerDetails?.name || 'Customer'}"`,
           o.totals?.grandTotal || 0,
-          o.paymentStatus,
-          o.orderStatus
-        ]);
-      });
-    } else if (reportType === 'audit') {
-      csvRows.push(['Timestamp', 'Admin ID', 'Actor Role', 'Action', 'Target Entity', 'Target ID', 'SHA256 Hash']);
-      auditData?.logs?.forEach(l => {
-        csvRows.push([
-          new Date(l.createdAt).toLocaleString(),
-          l.adminId,
-          l.actorRole || 'admin',
-          l.action,
-          l.targetEntity,
-          l.targetId || '',
-          l.hash || ''
+          o.paymentStatus || 'pending',
+          o.orderStatus || 'placed'
         ]);
       });
     }
 
-    const csvContent = "data:text/csv;charset=utf-8," + csvRows.map(e => e.join(",")).join("\n");
+    const csvContent = 'data:text/csv;charset=utf-8,' + csvRows.map((e) => e.join(',')).join('\n');
     const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${reportType}_report_${Date.now()}.csv`);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `fashionstore_${reportType}_report_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const toggles = configData?.config?.featureToggles || {
-    couponsEnabled: true,
+  const config = configData?.config || {};
+  const toggles = config.featureToggles || {
     returnsEnabled: true,
-    instantRefundsEnabled: true,
+    codPaymentEnabled: true,
+    reviewsAllowed: true,
     maintenanceMode: false
   };
 
   return (
     <div className="space-y-6">
-      {/* SECTION 1: REPORTS EXPORTER */}
-      <div className="bg-white p-6 rounded-2xl border border-[#EDEDED] shadow-sm space-y-4">
-        <div>
-          <h3 className="text-base font-black text-[#1F2029]">Reports & Data Exporter</h3>
-          <p className="text-xs text-[#797979]">Download formatted CSV sales, tax, and audit logs.</p>
+      {/* CSV Reports Download Box */}
+      <div className="bg-white dark:bg-[#181926] p-6 rounded-3xl border border-[#EDEDED] dark:border-[#262838] shadow-sm transition-colors">
+        <div className="mb-4">
+          <h3 className="text-sm font-black text-[#1F2029] dark:text-white uppercase tracking-wider flex items-center gap-2">
+            <FileSpreadsheet className="w-4 h-4 text-[#704F38] dark:text-[#E8B84E]" /> Export Data Reports & Financial Ledgers
+          </h3>
+          <p className="text-xs text-[#797979] dark:text-[#A0AEC0] font-medium mt-0.5">Download real raw CSV reports for external accounting and tax audit compliance.</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <button
-            onClick={() => handleExportCSV('sales')}
-            className="p-4 bg-[#FDFBF9] border border-[#EDEDED] hover:border-[#704F38] rounded-xl text-left transition-all hover:scale-[1.01]"
-          >
-            <FileSpreadsheet className="w-5 h-5 text-[#704F38] mb-2" />
-            <div className="text-xs font-black text-[#1F2029]">Sales Revenue Report</div>
-            <div className="text-[11px] text-[#797979] mt-0.5">Export all completed orders and total revenue.</div>
-          </button>
-
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <button
             onClick={() => handleExportCSV('orders')}
-            className="p-4 bg-[#FDFBF9] border border-[#EDEDED] hover:border-[#704F38] rounded-xl text-left transition-all hover:scale-[1.01]"
+            className="p-4 bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] hover:border-[#704F38] dark:hover:border-[#E8B84E] rounded-2xl text-left flex items-center justify-between group transition-all"
           >
-            <FileSpreadsheet className="w-5 h-5 text-[#704F38] mb-2" />
-            <div className="text-xs font-black text-[#1F2029]">Order Fulfillment Report</div>
-            <div className="text-[11px] text-[#797979] mt-0.5">Export order statuses and delivery SLA details.</div>
+            <div>
+              <div className="font-extrabold text-xs text-[#1F2029] dark:text-white">Orders & Fulfillment Export</div>
+              <div className="text-[10px] text-[#797979] dark:text-[#A0AEC0] font-medium mt-0.5">Complete orders dataset with line items</div>
+            </div>
+            <Download className="w-4 h-4 text-[#704F38] dark:text-[#E8B84E] group-hover:translate-y-0.5 transition-transform" />
           </button>
 
           <button
-            onClick={() => handleExportCSV('audit')}
-            className="p-4 bg-[#FDFBF9] border border-[#EDEDED] hover:border-[#704F38] rounded-xl text-left transition-all hover:scale-[1.01]"
+            onClick={() => handleExportCSV('sales')}
+            className="p-4 bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] hover:border-[#704F38] dark:hover:border-[#E8B84E] rounded-2xl text-left flex items-center justify-between group transition-all"
           >
-            <FileSpreadsheet className="w-5 h-5 text-[#704F38] mb-2" />
-            <div className="text-xs font-black text-[#1F2029]">Audit Log Evidence CSV</div>
-            <div className="text-[11px] text-[#797979] mt-0.5">Export SHA-256 tamper-evident log records.</div>
+            <div>
+              <div className="font-extrabold text-xs text-[#1F2029] dark:text-white">Revenue & Sales Report</div>
+              <div className="text-[10px] text-[#797979] dark:text-[#A0AEC0] font-medium mt-0.5">Settled revenue breakdown per gateway</div>
+            </div>
+            <Download className="w-4 h-4 text-[#704F38] dark:text-[#E8B84E] group-hover:translate-y-0.5 transition-transform" />
           </button>
         </div>
       </div>
 
-      {/* SECTION 2: MODULE FEATURE TOGGLES (KILL SWITCHES) */}
-      <div className="bg-white p-6 rounded-2xl border border-[#EDEDED] shadow-sm space-y-4">
-        <div>
-          <h3 className="text-base font-black text-[#1F2029]">System Feature Toggles (Kill Switches)</h3>
-          <p className="text-xs text-[#797979]">Enable or disable key platform features instantly across microservices.</p>
+      {/* Feature Control Switches */}
+      <div className="bg-white dark:bg-[#181926] p-6 rounded-3xl border border-[#EDEDED] dark:border-[#262838] shadow-sm transition-colors">
+        <div className="mb-4">
+          <h3 className="text-sm font-black text-[#1F2029] dark:text-white uppercase tracking-wider flex items-center gap-2">
+            <Settings className="w-4 h-4 text-[#704F38] dark:text-[#E8B84E]" /> Global Store Feature Toggles
+          </h3>
+          <p className="text-xs text-[#797979] dark:text-[#A0AEC0] font-medium mt-0.5">Control live store features instantly across mobile apps and checkout.</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="flex items-center justify-between p-4 bg-[#FDFBF9] rounded-xl border border-[#EDEDED]">
-            <div>
-              <div className="text-xs font-black text-[#1F2029]">Promo Coupon Module</div>
-              <div className="text-[11px] text-[#797979]">Allow customers to apply promo codes during checkout.</div>
-            </div>
-            <button onClick={() => handleToggleFeature('couponsEnabled')} disabled={isUpdatingConfig}>
-              {toggles.couponsEnabled ? <ToggleRight className="w-8 h-8 text-[#704F38]" /> : <ToggleLeft className="w-8 h-8 text-gray-400" />}
-            </button>
-          </div>
+        <div className="space-y-3">
+          {[
+            { key: 'returnsEnabled', title: 'Allow Product Returns & Refunds', desc: 'Permit customers to request returns from mobile app' },
+            { key: 'codPaymentEnabled', title: 'Cash on Delivery (COD)', desc: 'Allow COD payment option at mobile checkout' },
+            { key: 'reviewsAllowed', title: 'Customer Product Reviews', desc: 'Allow buyers to post ratings and product reviews' },
+            { key: 'maintenanceMode', title: 'Store Maintenance Guard', desc: 'Temporary store pause guard for platform upgrades' }
+          ].map((toggle) => {
+            const isEnabled = !!toggles[toggle.key];
+            return (
+              <div
+                key={toggle.key}
+                className="flex items-center justify-between p-4 rounded-2xl bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F]"
+              >
+                <div>
+                  <div className="font-extrabold text-xs text-[#1F2029] dark:text-white">{toggle.title}</div>
+                  <div className="text-[10px] text-[#797979] dark:text-[#A0AEC0] font-medium mt-0.5">{toggle.desc}</div>
+                </div>
 
-          <div className="flex items-center justify-between p-4 bg-[#FDFBF9] rounded-xl border border-[#EDEDED]">
-            <div>
-              <div className="text-xs font-black text-[#1F2029]">Return & Refund Requests</div>
-              <div className="text-[11px] text-[#797979]">Allow customers to initiate returns on delivered items.</div>
-            </div>
-            <button onClick={() => handleToggleFeature('returnsEnabled')} disabled={isUpdatingConfig}>
-              {toggles.returnsEnabled ? <ToggleRight className="w-8 h-8 text-[#704F38]" /> : <ToggleLeft className="w-8 h-8 text-gray-400" />}
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between p-4 bg-[#FDFBF9] rounded-xl border border-[#EDEDED]">
-            <div>
-              <div className="text-xs font-black text-[#1F2029]">Instant Credit Note Refunds</div>
-              <div className="text-[11px] text-[#797979]">Enable automated ledger safe credit note refund issuance.</div>
-            </div>
-            <button onClick={() => handleToggleFeature('instantRefundsEnabled')} disabled={isUpdatingConfig}>
-              {toggles.instantRefundsEnabled ? <ToggleRight className="w-8 h-8 text-[#704F38]" /> : <ToggleLeft className="w-8 h-8 text-gray-400" />}
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between p-4 bg-[#FDFBF9] rounded-xl border border-[#EDEDED]">
-            <div>
-              <div className="text-xs font-black text-[#1F2029]">Store Maintenance Mode</div>
-              <div className="text-[11px] text-[#797979]">Temporarily restrict customer ordering.</div>
-            </div>
-            <button onClick={() => handleToggleFeature('maintenanceMode')} disabled={isUpdatingConfig}>
-              {toggles.maintenanceMode ? <ToggleRight className="w-8 h-8 text-red-600" /> : <ToggleLeft className="w-8 h-8 text-gray-400" />}
-            </button>
-          </div>
+                <button
+                  onClick={() => handleToggleFeature(toggle.key)}
+                  disabled={isUpdatingConfig}
+                  className={`p-1 rounded-xl transition-all ${isEnabled ? 'text-[#047857] dark:text-[#34D399]' : 'text-[#797979] dark:text-[#A0AEC0]'}`}
+                >
+                  {isEnabled ? <ToggleRight className="w-7 h-7" /> : <ToggleLeft className="w-7 h-7" />}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* SECTION 3: SHA-256 AUDIT LOG TAMPER-VERIFICATION TOOL */}
-      <div className="bg-white p-6 rounded-2xl border border-[#EDEDED] shadow-sm space-y-4">
-        <div className="flex justify-between items-center border-b border-[#EDEDED] pb-4">
+      {/* Security Cryptographic Audit Verification */}
+      <div className="bg-white dark:bg-[#181926] p-6 rounded-3xl border border-[#EDEDED] dark:border-[#262838] shadow-sm transition-colors space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h3 className="text-base font-black text-[#1F2029]">Cryptographic Audit Log Verification</h3>
-            <p className="text-xs text-[#797979]">Verify that no audit log records have been modified or deleted from MongoDB.</p>
+            <h3 className="text-sm font-black text-[#1F2029] dark:text-white uppercase tracking-wider flex items-center gap-2">
+              <Lock className="w-4 h-4 text-[#704F38] dark:text-[#E8B84E]" /> Audit Log Integrity & Cryptographic Hash Check
+            </h3>
+            <p className="text-xs text-[#797979] dark:text-[#A0AEC0] font-medium mt-0.5">Verify that tamper-evident audit logs match cryptographic SHA-256 hash chains.</p>
           </div>
+
           <button
             onClick={handleVerifyClick}
             disabled={isVerifying}
-            className="px-4 py-2 bg-[#704F38] text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-md"
+            className="px-4 py-2.5 bg-[#704F38] hover:bg-[#8C6244] text-white rounded-xl text-xs font-extrabold shadow-md flex items-center gap-2"
           >
-            <ShieldCheck className="w-4 h-4" />
-            {isVerifying ? 'Verifying Chain...' : 'Run SHA-256 Chain Verification'}
+            {isVerifying ? 'Verifying Hashes...' : 'Run Cryptographic Check'}
           </button>
         </div>
 
         {integrityStatus && (
-          <div className={`p-4 rounded-xl text-xs font-bold border flex items-center gap-3 ${
-            integrityStatus.isTampered
-              ? 'bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA]'
-              : 'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]'
+          <div className={`p-4 rounded-2xl border text-xs font-bold flex items-center gap-3 ${
+            integrityStatus.valid
+              ? 'bg-[#ECFDF5] dark:bg-[#064E3B]/30 text-[#047857] dark:text-[#34D399] border-[#A7F3D0] dark:border-[#064E3B]/50'
+              : 'bg-[#FEF2F2] dark:bg-[#7F1D1D]/30 text-[#B91C1C] dark:text-[#F87171] border-[#FECACA] dark:border-[#7F1D1D]/50'
           }`}>
-            {integrityStatus.isTampered ? <ShieldAlert className="w-5 h-5 flex-shrink-0" /> : <ShieldCheck className="w-5 h-5 flex-shrink-0" />}
+            {integrityStatus.valid ? <ShieldCheck className="w-5 h-5 flex-shrink-0" /> : <ShieldAlert className="w-5 h-5 flex-shrink-0" />}
             <div>
-              <div>{integrityStatus.statusMessage}</div>
-              <div className="text-[11px] font-normal opacity-85 mt-0.5">Verified {integrityStatus.totalLogsVerified} log entries against unbroken SHA-256 previousHash links.</div>
+              <div className="font-black text-sm">{integrityStatus.valid ? 'Cryptographic Integrity Intact ✅' : 'Audit Tamper Detected ❌'}</div>
+              <div className="text-[11px] opacity-90 mt-0.5">{integrityStatus.message || 'All audit log records verified against SHA-256 genesis signatures.'}</div>
             </div>
           </div>
         )}
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs min-w-[750px]">
-            <thead>
-              <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[10px] font-black uppercase">
-                <th className="py-3 px-4">Timestamp</th>
-                <th className="py-3 px-4">Admin ID</th>
-                <th className="py-3 px-4">Action</th>
-                <th className="py-3 px-4">Entity</th>
-                <th className="py-3 px-4">SHA-256 Hash Chain</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#EDEDED]">
-              {isLoadingAudit ? (
-                <tr><td colSpan="5"><Loader message="Loading Log Evidence..." /></td></tr>
-              ) : (
-                auditData?.logs?.slice(0, 10).map((log) => (
-                  <tr key={log._id} className="hover:bg-[#FDFBF9]/50">
-                    <td className="py-3 px-4 text-[#797979]">{new Date(log.createdAt).toLocaleString()}</td>
-                    <td className="py-3 px-4 font-bold text-[#1F2029]">{log.adminId} ({log.actorRole || 'admin'})</td>
-                    <td className="py-3 px-4 font-extrabold text-[#704F38]">{log.action}</td>
-                    <td className="py-3 px-4 text-[#797979]">{log.targetEntity}</td>
-                    <td className="py-3 px-4 font-mono text-[10px] text-[#797979] max-w-xs truncate" title={log.hash}>
-                      {log.hash || 'Legacy Unhashed'}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
       </div>
     </div>
   );

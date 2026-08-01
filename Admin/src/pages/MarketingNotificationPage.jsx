@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   useGetAdminCouponsQuery, 
   useCreateCouponMutation, 
   useDeleteCouponMutation 
 } from '../services/adminCouponApi';
-import { Ticket, Plus, Trash2, Bell, AlertTriangle, Send, CheckCircle2 } from 'lucide-react';
+import { Ticket, Plus, Trash2, Bell, AlertTriangle, Send, CheckCircle2, X } from 'lucide-react';
 import { Loader } from '../shared/components/Loader';
 
 export const MarketingNotificationPage = () => {
@@ -16,6 +16,16 @@ export const MarketingNotificationPage = () => {
   const [discountValue, setDiscountValue] = useState(10);
   const [discountType, setDiscountType] = useState('percentage');
   const [minOrderAmount, setMinOrderAmount] = useState(0);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setCreateModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const { data: couponData, isLoading, refetch } = useGetAdminCouponsQuery();
   const [createCoupon, { isLoading: isCreating }] = useCreateCouponMutation();
@@ -45,12 +55,12 @@ export const MarketingNotificationPage = () => {
       setMinOrderAmount(0);
       refetch();
     } catch (err) {
-      alert(err.data?.message || 'Failed to create coupon');
+      alert(err.data?.message || 'Failed to create promo coupon');
     }
   };
 
-  const handleDeleteCouponClick = async (id) => {
-    if (confirm('Delete this coupon code?')) {
+  const handleDeleteCouponItem = async (id) => {
+    if (confirm('Delete promo coupon?')) {
       try {
         await deleteCoupon(id).unwrap();
         refetch();
@@ -60,79 +70,85 @@ export const MarketingNotificationPage = () => {
     }
   };
 
+  const coupons = couponData?.coupons || [];
+
   return (
     <div className="space-y-6">
       {/* Navigation Sub-Tabs */}
-      <div className="bg-white p-4 rounded-xl border border-[#EDEDED] shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex gap-2 border-b md:border-b-0 border-[#EDEDED] w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+      <div className="bg-white dark:bg-[#181926] p-3 rounded-2xl border border-[#EDEDED] dark:border-[#262838] shadow-sm flex justify-between items-center transition-colors">
+        <div className="flex gap-2">
           <button
             onClick={() => setActiveTab('coupons')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
-              activeTab === 'coupons' ? 'bg-[#704F38] text-white shadow-md' : 'bg-[#FDFBF9] text-[#797979] hover:text-[#1F2029]'
+            className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all ${
+              activeTab === 'coupons'
+                ? 'bg-[#704F38] text-white shadow-md'
+                : 'bg-[#FDFBF9] dark:bg-[#11121E] text-[#797979] dark:text-[#A0AEC0] border border-[#EDEDED] dark:border-[#2A2C3F]'
             }`}
           >
-            <Ticket className="w-4 h-4" />
-            Promo Coupons Management
+            Promo Vouchers ({coupons.length})
           </button>
           <button
             onClick={() => setActiveTab('templates')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
-              activeTab === 'templates' ? 'bg-[#704F38] text-white shadow-md' : 'bg-[#FDFBF9] text-[#797979] hover:text-[#1F2029]'
+            className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all ${
+              activeTab === 'templates'
+                ? 'bg-[#704F38] text-white shadow-md'
+                : 'bg-[#FDFBF9] dark:bg-[#11121E] text-[#797979] dark:text-[#A0AEC0] border border-[#EDEDED] dark:border-[#2A2C3F]'
             }`}
           >
-            <Bell className="w-4 h-4" />
-            Notification Rules & Templates
+            Push Notification Triggers
           </button>
         </div>
 
         {activeTab === 'coupons' && (
           <button
             onClick={() => setCreateModal(true)}
-            className="px-4 py-2.5 bg-[#704F38] hover:bg-[#8C6244] text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#704F38] hover:bg-[#8C6244] text-white text-xs font-black shadow-md shadow-[#704F38]/20 transition-all"
           >
-            <Plus className="w-4 h-4" /> Create Coupon Code
+            <Plus className="w-4 h-4" /> Create Coupon
           </button>
         )}
       </div>
 
-      {/* TAB 1: PROMO COUPONS */}
       {activeTab === 'coupons' && (
-        <div className="bg-white rounded-xl border border-[#EDEDED] shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-[#181926] rounded-3xl border border-[#EDEDED] dark:border-[#262838] shadow-sm overflow-hidden transition-colors">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm min-w-[750px]">
+            <table className="w-full text-left text-sm min-w-[700px]">
               <thead>
-                <tr className="bg-[#FDFBF9] border-b border-[#EDEDED] text-[#797979] text-[11px] font-extrabold uppercase tracking-wider">
+                <tr className="bg-[#FDFBF9] dark:bg-[#11121E] border-b border-[#EDEDED] dark:border-[#262838] text-[#797979] dark:text-[#A0AEC0] text-[11px] font-extrabold uppercase tracking-wider">
                   <th className="px-5 py-4">Coupon Code</th>
-                  <th className="px-5 py-4">Discount Rate</th>
-                  <th className="px-5 py-4">Min. Spend Requirement</th>
+                  <th className="px-5 py-4">Discount</th>
+                  <th className="px-5 py-4">Min. Order Value</th>
                   <th className="px-5 py-4">Status</th>
-                  <th className="px-5 py-4 text-right">Action</th>
+                  <th className="px-5 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#EDEDED]">
+              <tbody className="divide-y divide-[#EDEDED] dark:divide-[#262838]">
                 {isLoading ? (
-                  <tr><td colSpan="5"><Loader message="Loading Promo Coupons..." /></td></tr>
-                ) : couponData?.coupons?.length === 0 ? (
-                  <tr><td colSpan="5" className="p-8 text-center text-[#797979]">No promo coupons created.</td></tr>
+                  <tr><td colSpan="5"><Loader message="Loading Promo Vouchers..." /></td></tr>
+                ) : coupons.length === 0 ? (
+                  <tr><td colSpan="5" className="p-8 text-center text-[#797979] dark:text-[#A0AEC0] font-bold">No promo coupons available.</td></tr>
                 ) : (
-                  couponData?.coupons?.map((c) => (
-                    <tr key={c._id} className="hover:bg-[#FDFBF9]/50 transition-colors">
-                      <td className="px-5 py-4 font-black text-[#704F38] tracking-wider uppercase">{c.code}</td>
-                      <td className="px-5 py-4 font-extrabold text-[#1F2029]">
+                  coupons.map((c) => (
+                    <tr key={c._id} className="hover:bg-[#FDFBF9]/50 dark:hover:bg-[#1C1D2C] transition-colors">
+                      <td className="px-5 py-4 font-mono font-black text-xs text-[#704F38] dark:text-[#E8B84E] select-all">
+                        {c.code}
+                      </td>
+                      <td className="px-5 py-4 font-extrabold text-[#1F2029] dark:text-white">
                         {c.discountType === 'percentage' ? `${c.discountValue || c.discountPercent}% OFF` : `₹${c.discountValue} OFF`}
                       </td>
-                      <td className="px-5 py-4 text-xs font-bold text-[#797979]">
-                        ₹{(c.minOrderAmount || 0).toLocaleString('en-IN')}
+                      <td className="px-5 py-4 text-xs font-bold text-[#797979] dark:text-[#A0AEC0]">
+                        ₹{c.minOrderAmount || 0}
                       </td>
                       <td className="px-5 py-4">
-                        <span className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase bg-[#ECFDF5] text-[#047857] border border-[#A7F3D0]">
+                        <span className="px-3 py-1 rounded-xl text-[10px] font-black uppercase bg-[#ECFDF5] dark:bg-[#064E3B]/30 text-[#047857] dark:text-[#34D399] border border-[#A7F3D0] dark:border-[#064E3B]/50">
                           ACTIVE
                         </span>
                       </td>
                       <td className="px-5 py-4 text-right">
                         <button
-                          onClick={() => handleDeleteCouponClick(c._id)}
-                          className="p-2 bg-[#FEF2F2] hover:bg-red-100 text-[#E57373] rounded-lg transition-colors"
+                          onClick={() => handleDeleteCouponItem(c._id)}
+                          className="p-2 bg-[#FEF2F2] dark:bg-[#7F1D1D]/30 border border-[#FECACA] dark:border-[#7F1D1D]/50 hover:bg-[#EF4444] text-[#B91C1C] dark:text-[#F87171] hover:text-white rounded-xl shadow-sm transition-all"
+                          title="Delete Coupon"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -146,91 +162,78 @@ export const MarketingNotificationPage = () => {
         </div>
       )}
 
-      {/* TAB 2: NOTIFICATION TEMPLATES & RULES */}
       {activeTab === 'templates' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-2xl border border-[#EDEDED] shadow-sm space-y-3">
-            <h3 className="text-sm font-black text-[#1F2029]">Order Event Triggers</h3>
-            <p className="text-xs text-[#797979]">Rule-based mappings for automatic transactional notifications.</p>
-            <div className="space-y-2">
-              <div className="p-3 bg-[#FDFBF9] border border-[#EDEDED] rounded-xl text-xs font-bold text-[#1F2029] flex justify-between">
-                <span>ORDER_PLACED → Email & Push</span>
-                <span className="text-[#047857]">ACTIVE</span>
-              </div>
-              <div className="p-3 bg-[#FDFBF9] border border-[#EDEDED] rounded-xl text-xs font-bold text-[#1F2029] flex justify-between">
-                <span>ORDER_SHIPPED → Courier Dispatch SMS</span>
-                <span className="text-[#047857]">ACTIVE</span>
-              </div>
-              <div className="p-3 bg-[#FDFBF9] border border-[#EDEDED] rounded-xl text-xs font-bold text-[#1F2029] flex justify-between">
-                <span>TICKET_RESOLVED → Support Resolution Email</span>
-                <span className="text-[#047857]">ACTIVE</span>
-              </div>
-            </div>
+        <div className="bg-white dark:bg-[#181926] p-6 rounded-3xl border border-[#EDEDED] dark:border-[#262838] shadow-sm space-y-4 text-xs text-[#797979] dark:text-[#A0AEC0] font-medium transition-colors">
+          <div className="flex items-center gap-2 font-black text-[#1F2029] dark:text-white text-sm">
+            <Bell className="w-4 h-4 text-[#704F38] dark:text-[#E8B84E]" /> Push Notification Triggers & Automated Reminders
           </div>
+          <p>Order status updates and fulfillment tracking notifications are automatically dispatched to mobile devices upon lifecycle state changes.</p>
         </div>
       )}
 
       {/* Create Coupon Modal */}
       {createModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-[#EDEDED]">
-            <div className="flex justify-between items-center mb-6 border-b border-[#EDEDED] pb-4">
-              <h3 className="text-base font-black text-[#1F2029]">Create Promo Coupon Code</h3>
-              <button onClick={() => setCreateModal(false)} className="text-[#797979] hover:text-[#1F2029]">✕</button>
+          <div className="bg-white dark:bg-[#181926] rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-[#EDEDED] dark:border-[#262838] transition-colors">
+            <div className="flex justify-between items-center mb-6 border-b border-[#EDEDED] dark:border-[#262838] pb-4">
+              <h3 className="text-base font-black text-[#1F2029] dark:text-white">Create Promo Coupon</h3>
+              <button onClick={() => setCreateModal(false)} className="text-[#797979] dark:text-[#A0AEC0] hover:text-[#1F2029] dark:hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             <form onSubmit={handleCreateCouponSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-[#1F2029] uppercase mb-1">Coupon Code *</label>
+                <label className="block text-xs font-extrabold text-[#1F2029] dark:text-white uppercase mb-1">Coupon Code *</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. FESTIVE50"
+                  placeholder="SUMMER20"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-[#FDFBF9] border border-[#EDEDED] rounded-xl outline-none text-sm font-black uppercase text-[#704F38]"
+                  className="w-full px-3.5 py-2.5 bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] rounded-xl outline-none text-sm font-mono font-bold text-[#1F2029] dark:text-white uppercase"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#1F2029] uppercase mb-1">Discount Type</label>
+                <label className="block text-xs font-extrabold text-[#1F2029] dark:text-white uppercase mb-1">Discount Type</label>
                 <select
                   value={discountType}
                   onChange={(e) => setDiscountType(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-[#FDFBF9] border border-[#EDEDED] rounded-xl text-xs font-bold"
+                  className="w-full px-3.5 py-2.5 bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] rounded-xl outline-none text-xs font-bold text-[#1F2029] dark:text-white"
                 >
-                  <option value="percentage">Percentage Off (%)</option>
-                  <option value="fixed">Fixed Amount Off (₹)</option>
+                  <option value="percentage">Percentage (%)</option>
+                  <option value="fixed">Fixed Amount (₹)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#1F2029] uppercase mb-1">Discount Value *</label>
+                <label className="block text-xs font-extrabold text-[#1F2029] dark:text-white uppercase mb-1">Discount Value *</label>
                 <input
                   type="number"
                   required
                   min="1"
                   value={discountValue}
                   onChange={(e) => setDiscountValue(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-[#FDFBF9] border border-[#EDEDED] rounded-xl text-sm font-bold"
+                  className="w-full px-3.5 py-2.5 bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] rounded-xl outline-none text-sm font-bold text-[#1F2029] dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#1F2029] uppercase mb-1">Min Order Amount (Auto-Revalidated in Cart)</label>
+                <label className="block text-xs font-extrabold text-[#1F2029] dark:text-white uppercase mb-1">Min Order Amount (₹)</label>
                 <input
                   type="number"
                   min="0"
                   value={minOrderAmount}
                   onChange={(e) => setMinOrderAmount(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-[#FDFBF9] border border-[#EDEDED] rounded-xl text-sm font-bold"
+                  className="w-full px-3.5 py-2.5 bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] rounded-xl outline-none text-sm font-bold text-[#1F2029] dark:text-white"
                 />
               </div>
 
               <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setCreateModal(false)} className="px-4 py-2.5 rounded-xl bg-[#FDFBF9] border border-[#EDEDED] text-xs font-bold text-[#797979]">Cancel</button>
-                <button type="submit" disabled={isCreating} className="px-5 py-2.5 rounded-xl bg-[#704F38] text-white text-xs font-extrabold shadow-md">
-                  {isCreating ? 'Creating...' : 'Save Coupon Code'}
+                <button type="button" onClick={() => setCreateModal(false)} className="px-4 py-2.5 rounded-xl bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] text-xs font-extrabold text-[#797979] dark:text-[#A0AEC0]">Cancel</button>
+                <button type="submit" disabled={isCreating} className="px-5 py-2.5 rounded-xl bg-[#704F38] hover:bg-[#8C6244] text-white text-xs font-extrabold shadow-md">
+                  {isCreating ? 'Saving...' : 'Save Coupon'}
                 </button>
               </div>
             </form>

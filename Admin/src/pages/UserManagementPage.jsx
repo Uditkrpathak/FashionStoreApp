@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { 
   useGetAdminUsersQuery, 
   useUpdateUserRoleMutation, 
@@ -10,6 +11,19 @@ import {
   useGetActiveSessionsQuery,
   useRevokeSessionMutation
 } from '../services/adminAuthApi';
+import {
+  setUserViewMode,
+  toggleStarUser,
+  setUserSearch,
+  setUserRoleFilter,
+  setUserPage,
+  selectUserViewMode,
+  selectStarredUsers,
+  selectUserSearchQuery,
+  selectUserRoleFilter,
+  selectUserPage,
+} from '../app/adminUiSlice';
+import { UserCard } from '../shared/components/UserCard';
 import { 
   Search, Shield, UserX, UserCheck, RefreshCw, X, Check, KeyRound, 
   Laptop, Smartphone, Power, Plus, ShieldAlert, Eye, EyeOff, Activity, Sliders,
@@ -34,14 +48,18 @@ const ALL_CAPABILITIES = [
 ];
 
 export const UserManagementPage = () => {
+  const dispatch = useDispatch();
+
+  // Redux UI State
+  const userViewMode = useSelector(selectUserViewMode);
+  const starredUsers = useSelector(selectStarredUsers);
+  const search = useSelector(selectUserSearchQuery);
+  const roleFilter = useSelector(selectUserRoleFilter);
+  const page = useSelector(selectUserPage);
+
   const [activeTab, setActiveTab] = useState('users'); // 'users' | 'activity' | 'roles' | 'sessions'
 
-  // Users Tab state
-  const [userViewMode, setUserViewMode] = useState('grid'); // 'grid' (Figma layout) | 'table'
-  const [starredUsers, setStarredUsers] = useState([]);
-  const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
-  const [page, setPage] = useState(1);
+  // Modal Dialog States
   const [selectedUser, setSelectedUser] = useState(null);
   const [roleModalVisible, setRoleModalVisible] = useState(false);
   const [selectedRole, setSelectedRole] = useState('user');
@@ -74,12 +92,12 @@ export const UserManagementPage = () => {
   const [deleteRole, { isLoading: isDeletingRole }] = useDeleteRoleMutation();
   const [revokeSession, { isLoading: isRevokingSession }] = useRevokeSessionMutation();
 
-  const handleOpenRoleModal = (user) => {
+  const handleOpenRoleModal = useCallback((user) => {
     setSelectedUser(user);
     setSelectedRole(user.role || 'user');
     setSelectedPermissions(user.permissions || []);
     setRoleModalVisible(true);
-  };
+  }, []);
 
   const handleSaveRole = async () => {
     if (!selectedUser) return;
@@ -92,12 +110,37 @@ export const UserManagementPage = () => {
     }
   };
 
-  const handleOpenStatusModal = (user) => {
+  const handleOpenStatusModal = useCallback((user) => {
     setSelectedUser(user);
     setTargetStatus(user.status === 'blocked' ? 'active' : 'blocked');
     setStatusReason('');
     setStatusModalVisible(true);
-  };
+  }, []);
+
+  const handleOpenDetail = useCallback((user) => {
+    setUserDetailModal(user);
+  }, []);
+
+  const handleToggleStar = useCallback((userId) => {
+    dispatch(toggleStarUser(userId));
+  }, [dispatch]);
+
+  const handleCloseAllModals = useCallback(() => {
+    setRoleModalVisible(false);
+    setStatusModalVisible(false);
+    setUserDetailModal(null);
+    setCreateRoleModal(false);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        handleCloseAllModals();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleCloseAllModals]);
 
   const handleSaveStatus = async () => {
     if (!selectedUser) return;
@@ -240,7 +283,7 @@ export const UserManagementPage = () => {
                 type="text"
                 placeholder="Search here..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => dispatch(setUserSearch(e.target.value))}
                 className="w-full py-2.5 bg-transparent border-none outline-none text-sm text-[#1F2029] dark:text-white placeholder-[#797979] dark:placeholder-[#A0AEC0]"
               />
             </div>
@@ -250,7 +293,7 @@ export const UserManagementPage = () => {
               {['', 'super_admin', 'admin', 'user'].map((r) => (
                 <button
                   key={r || 'all'}
-                  onClick={() => setRoleFilter(r)}
+                  onClick={() => dispatch(setUserRoleFilter(r))}
                   className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap ${
                     roleFilter === r
                       ? 'bg-[#704F38] text-white shadow-md'
@@ -265,7 +308,7 @@ export const UserManagementPage = () => {
             {/* View Mode Toggle (Figma Grid vs Table) */}
             <div className="flex items-center gap-1 bg-[#FDFBF9] dark:bg-[#11121E] p-1 rounded-xl border border-[#EDEDED] dark:border-[#2A2C3F]">
               <button
-                onClick={() => setUserViewMode('grid')}
+                onClick={() => dispatch(setUserViewMode('grid'))}
                 className={`p-2 rounded-lg transition-all ${
                   userViewMode === 'grid'
                     ? 'bg-[#704F38] text-white shadow-md'
@@ -276,7 +319,7 @@ export const UserManagementPage = () => {
                 <LayoutGrid className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setUserViewMode('table')}
+                onClick={() => dispatch(setUserViewMode('table'))}
                 className={`p-2 rounded-lg transition-all ${
                   userViewMode === 'table'
                     ? 'bg-[#704F38] text-white shadow-md'
@@ -311,112 +354,17 @@ export const UserManagementPage = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {usersData?.users?.map((user) => {
-                    const isStarred = starredUsers.includes(user._id);
-                    const isBlocked = user.status === 'blocked';
-
-                    return (
-                      <div
-                        key={user._id}
-                        className="bg-white dark:bg-[#181926] p-6 rounded-3xl border border-[#EDEDED] dark:border-[#262838] shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-center relative flex flex-col items-center justify-between group"
-                      >
-                        {/* Top Card Bar: Star & Options */}
-                        <div className="w-full flex items-center justify-between mb-2">
-                          <button
-                            onClick={() => toggleStarUser(user._id)}
-                            className={`p-1.5 rounded-xl transition-colors ${
-                              isStarred
-                                ? 'text-[#E8B84E]'
-                                : 'text-[#CBD5E1] dark:text-[#475569] hover:text-[#E8B84E]'
-                            }`}
-                            title={isStarred ? 'Unstar User' : 'Star User'}
-                          >
-                            <Star className="w-4 h-4 fill-current" />
-                          </button>
-
-                          <div className="relative group/menu">
-                            <button className="p-1.5 rounded-xl text-[#94A3B8] hover:text-[#1F2029] dark:hover:text-white transition-colors">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </button>
-                            <div className="absolute right-0 top-7 w-44 bg-white dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] rounded-2xl shadow-xl py-2 hidden group-hover/menu:block z-30">
-                              <button
-                                onClick={() => setUserDetailModal(user)}
-                                className="w-full px-4 py-2 text-left text-xs font-extrabold text-[#1F2029] dark:text-white hover:bg-[#FDFBF9] dark:hover:bg-[#1C1D2C] flex items-center gap-2"
-                              >
-                                <Activity className="w-3.5 h-3.5" /> View Profile
-                              </button>
-                              <button
-                                onClick={() => handleOpenRoleModal(user)}
-                                className="w-full px-4 py-2 text-left text-xs font-extrabold text-[#3B82F6] hover:bg-[#FDFBF9] dark:hover:bg-[#1C1D2C] flex items-center gap-2"
-                              >
-                                <Shield className="w-3.5 h-3.5" /> Edit Role
-                              </button>
-                              <button
-                                onClick={() => handleOpenStatusModal(user)}
-                                className={`w-full px-4 py-2 text-left text-xs font-extrabold flex items-center gap-2 ${
-                                  isBlocked ? 'text-[#4CAF50]' : 'text-[#E57373]'
-                                } hover:bg-[#FDFBF9] dark:hover:bg-[#1C1D2C]`}
-                              >
-                                {isBlocked ? (
-                                  <><UserCheck className="w-3.5 h-3.5" /> Unblock</>
-                                ) : (
-                                  <><UserX className="w-3.5 h-3.5" /> Block Account</>
-                                )}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Large Avatar with Status Dot */}
-                        <div className="relative my-2">
-                          <div className="w-20 h-20 rounded-2xl bg-[#F8FAFC] dark:bg-[#11121E] border border-[#E2E8F0] dark:border-[#2A2C3F] shadow-inner flex items-center justify-center text-2xl font-black text-[#704F38] dark:text-[#E8B84E]">
-                            {(user.name || user.email || 'U').charAt(0).toUpperCase()}
-                          </div>
-                          <span
-                            className={`w-4 h-4 rounded-full border-2 border-white dark:border-[#181926] absolute -bottom-1 -right-1 shadow-sm ${
-                              isBlocked ? 'bg-[#EF4444]' : 'bg-[#10B981]'
-                            }`}
-                            title={isBlocked ? 'Blocked Account' : 'Active Account'}
-                          />
-                        </div>
-
-                        {/* User Details */}
-                        <div className="w-full mb-4 px-2">
-                          <h4 className="text-base font-black text-[#1F2029] dark:text-white truncate">
-                            {user.name || 'Anonymous User'}
-                          </h4>
-                          <p className="text-xs font-extrabold text-[#797979] dark:text-[#A0AEC0] mt-0.5 uppercase tracking-wider truncate">
-                            {(user.role || 'user').replace('_', ' ')}
-                          </p>
-                        </div>
-
-                        {/* 3 Circular Action Buttons (Figma Style) */}
-                        <div className="flex items-center justify-center gap-3 w-full pt-4 border-t border-[#EDEDED] dark:border-[#262838]">
-                          <a
-                            href={`mailto:${user.email}`}
-                            title={`Send Email to ${user.email}`}
-                            className="w-10 h-10 rounded-2xl bg-[#F1F5F9] dark:bg-[#11121E] hover:bg-[#704F38] dark:hover:bg-[#E8B84E] text-[#475569] dark:text-[#94A3B8] hover:text-white dark:hover:text-[#1F2029] flex items-center justify-center transition-all duration-200 shadow-sm"
-                          >
-                            <Mail className="w-4 h-4" />
-                          </a>
-                          <button
-                            onClick={() => alert(`Phone: ${user.phone || 'No phone number linked'}`)}
-                            title="View Contact Phone"
-                            className="w-10 h-10 rounded-2xl bg-[#F1F5F9] dark:bg-[#11121E] hover:bg-[#704F38] dark:hover:bg-[#E8B84E] text-[#475569] dark:text-[#94A3B8] hover:text-white dark:hover:text-[#1F2029] flex items-center justify-center transition-all duration-200 shadow-sm"
-                          >
-                            <Phone className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => setUserDetailModal(user)}
-                            title="View User Details"
-                            className="w-10 h-10 rounded-2xl bg-[#F1F5F9] dark:bg-[#11121E] hover:bg-[#704F38] dark:hover:bg-[#E8B84E] text-[#475569] dark:text-[#94A3B8] hover:text-white dark:hover:text-[#1F2029] flex items-center justify-center transition-all duration-200 shadow-sm"
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {usersData?.users?.map((user) => (
+                    <UserCard
+                      key={user._id}
+                      user={user}
+                      isStarred={starredUsers.includes(user._id)}
+                      onToggleStar={handleToggleStar}
+                      onOpenDetail={handleOpenDetail}
+                      onOpenRoleModal={handleOpenRoleModal}
+                      onOpenStatusModal={handleOpenStatusModal}
+                    />
+                  ))}
                 </div>
               )}
             </div>
@@ -449,9 +397,27 @@ export const UserManagementPage = () => {
                       usersData?.users?.map((user) => (
                         <tr key={user._id} className="hover:bg-[#FDFBF9]/50 dark:hover:bg-[#1C1D2C] transition-colors">
                           <td className="px-5 py-4">
-                            <div className="font-extrabold text-[#1F2029] dark:text-white">{user.name}</div>
-                            <div className="text-[10px] font-mono font-bold text-[#704F38] dark:text-[#E8B84E] mt-0.5 select-all">
-                              #USR-{user._id.slice(-6).toUpperCase()}
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-[#F8FAFC] dark:bg-[#11121E] border border-[#E2E8F0] dark:border-[#2A2C3F] flex items-center justify-center font-black text-sm text-[#704F38] dark:text-[#E8B84E] overflow-hidden flex-shrink-0">
+                                {user.avatar ? (
+                                  <img
+                                    src={user.avatar}
+                                    alt={user.name || 'Avatar'}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                    }}
+                                  />
+                                ) : (
+                                  (user.name || user.email || 'U').charAt(0).toUpperCase()
+                                )}
+                              </div>
+                              <div>
+                                <div className="font-extrabold text-[#1F2029] dark:text-white">{user.name}</div>
+                                <div className="text-[10px] font-mono font-bold text-[#704F38] dark:text-[#E8B84E] mt-0.5 select-all">
+                                  #USR-{user._id.slice(-6).toUpperCase()}
+                                </div>
+                              </div>
                             </div>
                           </td>
                           <td className="px-5 py-4 text-[#797979] dark:text-[#A0AEC0] font-medium">{user.email}</td>
