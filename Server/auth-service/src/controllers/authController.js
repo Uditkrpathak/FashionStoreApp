@@ -115,7 +115,7 @@ export const login = async (req, res) => {
       });
     }
 
-    const email = req.body.email?.toLowerCase();
+    const identifier = (req.body.email || req.body.phone || req.body.identifier || '').trim().toLowerCase();
     const { password, captchaAnswer, captchaToken } = req.body;
 
     // Validate CAPTCHA for admin accounts if provided
@@ -127,10 +127,15 @@ export const login = async (req, res) => {
       }
     }
 
-    let user = await User.findOne({ email });
+    let user = await User.findOne({
+      $or: [
+        { email: identifier },
+        { phone: identifier }
+      ]
+    });
 
     // On-demand Auto-Seeding for Default Super Admin
-    if (!user && email === 'admin@fashionstore.com') {
+    if (!user && identifier === 'admin@fashionstore.com') {
       user = new User({
         name: 'System Super Admin',
         email: 'admin@fashionstore.com',
@@ -151,7 +156,7 @@ export const login = async (req, res) => {
     }
     
     if (user.password !== password) {
-      if (email === 'admin@fashionstore.com' && password === 'Admin@123') {
+      if (identifier === 'admin@fashionstore.com' && password === 'Admin@123') {
         user.password = 'Admin@123';
         user.role = 'super_admin';
         user.permissions = ['*'];

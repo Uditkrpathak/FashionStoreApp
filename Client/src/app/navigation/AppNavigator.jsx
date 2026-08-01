@@ -144,6 +144,15 @@ const AppNavigator = () => {
   const [registerPushToken] = useRegisterPushTokenMutation();
 
   useEffect(() => {
+    // Expo SDK 53 removed remote push notification support from Expo Go. Skip registration when running in Expo Go to prevent runtime crash.
+    const isExpoGo = Constants.appOwnership === 'expo' || Constants.executionEnvironment === 'storeClient';
+    if (isExpoGo) {
+      if (__DEV__) {
+        console.log('[Push Notification] Running in Expo Go — push notification listeners skipped (use development build for native FCM/APNS).');
+      }
+      return;
+    }
+
     const registerForPushNotifications = async () => {
       try {
         const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -169,13 +178,18 @@ const AppNavigator = () => {
     registerForPushNotifications();
 
     // Listen to notification responses (tapping notifications)
-    const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
-      const data = response.notification.request.content.data;
-      // Handle deep links here if any, e.g. orderId, productId
-    });
+    let responseSubscription;
+    try {
+      responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
+        const data = response.notification.request.content.data;
+        // Handle deep links here if any, e.g. orderId, productId
+      });
+    } catch (_) {}
 
     return () => {
-      responseSubscription.remove();
+      if (responseSubscription && responseSubscription.remove) {
+        responseSubscription.remove();
+      }
     };
   }, []);
 

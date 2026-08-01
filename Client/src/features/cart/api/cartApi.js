@@ -70,8 +70,8 @@ export const cartApi = baseApi.injectEndpoints({
               dispatch(setSelectedAddress(data.addresses[0]));
             }
           }
-        } catch (err) {
-          console.error('getAddresses sync error', err);
+        } catch (_) {
+          // Silent catch when address query is unauthenticated or offline
         }
       },
     }),
