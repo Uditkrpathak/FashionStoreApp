@@ -26,7 +26,7 @@ app.use((req, res, next) => {
 });
 
 const getServiceUrl = (envVar, defaultLiveUrl, localPort) => {
-  if (process.env.USE_REMOTE_SERVICES === 'true' || process.env.NODE_ENV === 'production') {
+  if (process.env.USE_REMOTE_SERVICES === 'true') {
     let url = (envVar || defaultLiveUrl).trim();
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       url = `https://${url}.onrender.com`;
