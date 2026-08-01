@@ -104,7 +104,15 @@ const OrderDetailScreen = () => {
           {order.orderStatus === 'delivered' && order.items?.[0]?.productId && (
             <Button 
               title="Leave Review" 
-              onPress={() => navigation.navigate('WriteReview', { productId: order.items[0].productId })} 
+              onPress={() => navigation.navigate('WriteReview', { 
+                productId: order.items[0].productId,
+                // Pass snapshot data so it works even if product was reseeded
+                productSnapshot: {
+                  title: order.items[0].title,
+                  image: order.items[0].image,
+                  price: order.items[0].priceAtAdd ?? order.items[0].price,
+                }
+              })} 
               style={{ flex: 1 }} 
             />
           )}

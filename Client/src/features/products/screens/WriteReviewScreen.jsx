@@ -19,11 +19,12 @@ const StarIcon = ({ filled, onPress }) => (
 const WriteReviewScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { productId } = route.params ?? {};
+  const { productId, productSnapshot } = route.params ?? {};
   const { showToast } = useToast();
 
   const { data: productData, isLoading: isProductLoading } = useGetProductByIdQuery(productId, { skip: !productId });
-  const product = productData?.product;
+  // Use live catalog product, or fall back to the snapshot stored in the order at purchase time
+  const product = productData?.product ?? productSnapshot ?? null;
 
   const [addReview, { isLoading: isSubmitting }] = useAddReviewMutation();
   const [rating, setRating] = useState(0);
@@ -62,8 +63,8 @@ const WriteReviewScreen = () => {
           <ActivityIndicator style={{ marginVertical: 20 }} color={colors.primary} />
         ) : product ? (
           <View style={styles.productCard}>
-            {product.images?.[0] ? (
-              <Image source={{ uri: product.images[0] }} style={styles.productImage} />
+            {(product.images?.[0] || product.image) ? (
+              <Image source={{ uri: product.images?.[0] ?? product.image }} style={styles.productImage} />
             ) : (
               <View style={styles.productImagePlaceholder} />
             )}
