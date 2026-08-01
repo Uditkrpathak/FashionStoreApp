@@ -41,7 +41,7 @@ const Input = ({
 
   return (
     <View style={[styles.wrapper, style]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {Boolean(label) && <Text style={styles.label}>{label}</Text>}
       <View
         style={[
           styles.container,

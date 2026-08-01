@@ -14,10 +14,20 @@ import { toggleWishlist, selectIsWishlisted } from '../../wishlist/store/wishlis
 import { setSelectedProduct } from '../../products/store/productSlice';
 import { selectUser } from '../../auth/store/authSlice';
 import { useUpdateProfileMutation } from '../../auth/api/authApi';
+import { useGetNotificationsQuery } from '../../notifications/api/notificationApi';
 import MapSelectorModal from '../../../shared/components/MapSelectorModal';
 import { colors } from '../../../theme/colors';
 import { spacing, layout } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
+import { 
+  JacketSvgIcon, 
+  ShirtSvgIcon, 
+  TShirtSvgIcon, 
+  DressSvgIcon, 
+  JeansSvgIcon, 
+  ShoesSvgIcon, 
+  AccessoriesSvgIcon 
+} from '../../../shared/components/FashionCategoryIcons';
 
 const { width } = Dimensions.get('window');
 
@@ -38,15 +48,15 @@ const BANNERS = [
     subtitle: 'Up to 60% off on\nall summer apparel',
     buttonText: 'Explore',
     image: require('../../../../assets/images/banner_summer.jpg'),
-    backgroundColor: '#EAE1DF',
+    backgroundColor: '#EAE6E1',
     imageStyle: { right: -5, bottom: -5, width: 140, height: 165 },
     resizeMode: 'cover',
   },
   {
     id: '3',
-    title: 'Trending Outfits',
-    subtitle: 'Unleash your style\nwith our latest picks',
-    buttonText: 'View Details',
+    title: 'Trending Styles',
+    subtitle: 'Discover top picks\nfor this season',
+    buttonText: 'View All',
     image: require('../../../../assets/images/banner_trending.jpg'),
     backgroundColor: '#E2E6E3',
     imageStyle: { right: 0, bottom: 0, width: 145, height: 160, borderRadius: 16 },
@@ -55,11 +65,26 @@ const BANNERS = [
 ];
 
 const getCategoryIcon = (name) => {
-  const lower = name.toLowerCase();
-  if (lower.includes('shirt') || lower.includes('tee')) return <Shirt size={26} color={colors.primary} />;
-  if (lower.includes('dress')) return <Sparkles size={26} color={colors.primary} />;
-  if (lower.includes('pant') || lower.includes('jean')) return <Scissors size={26} color={colors.primary} />;
-  return <Box size={26} color={colors.primary} />;
+  const lower = (name || '').toLowerCase();
+  if (lower.includes('jacket') || lower.includes('coat') || lower.includes('blazer') || lower.includes('outerwear')) {
+    return <JacketSvgIcon size={28} color="#704F38" />;
+  }
+  if (lower.includes('t-shirt') || lower.includes('tshirt') || lower.includes('tee')) {
+    return <TShirtSvgIcon size={28} color="#704F38" />;
+  }
+  if (lower.includes('shirt') || lower.includes('top')) {
+    return <ShirtSvgIcon size={28} color="#704F38" />;
+  }
+  if (lower.includes('dress') || lower.includes('gown') || lower.includes('skirt') || lower.includes('frock')) {
+    return <DressSvgIcon size={28} color="#704F38" />;
+  }
+  if (lower.includes('pant') || lower.includes('jean') || lower.includes('trouser') || lower.includes('bottom')) {
+    return <JeansSvgIcon size={28} color="#704F38" />;
+  }
+  if (lower.includes('shoe') || lower.includes('footwear') || lower.includes('sneaker') || lower.includes('boot')) {
+    return <ShoesSvgIcon size={28} color="#704F38" />;
+  }
+  return <AccessoriesSvgIcon size={28} color="#704F38" />;
 };
 
 const HomeScreen = () => {
@@ -68,6 +93,7 @@ const HomeScreen = () => {
   const user = useAppSelector(selectUser);
   const { data: productsData, isLoading: prodLoading, refetch } = useGetProductsQuery({ limit: 20 });
   const { data: categoriesData } = useGetCategoriesQuery();
+  const { data: notifData } = useGetNotificationsQuery();
   const [activeFilter, setActiveFilter] = useState('All');
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
   const [mapVisible, setMapVisible] = useState(false);
@@ -77,6 +103,8 @@ const HomeScreen = () => {
 
   const products = productsData?.products ?? [];
   const categories = categoriesData?.categories ?? [];
+
+  const unreadNotifCount = notifData?.notifications?.filter(n => !n.isRead)?.length || 0;
 
   // Filter and sort products based on selected pill
   const getFilteredProducts = () => {
@@ -130,9 +158,13 @@ const HomeScreen = () => {
               <ChevronDown size={16} width={16} height={16} color="#1F2029" stroke="#1F2029" strokeWidth={2.2} style={{ marginLeft: 4 }} />
             </View>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('ProfileTab')}>
+          <TouchableOpacity 
+            style={styles.bellBtn} 
+            onPress={() => navigation.navigate('ProfileTab', { screen: 'Notifications' })}
+            activeOpacity={0.8}
+          >
             <Bell size={20} width={20} height={20} color="#1F2029" stroke="#1F2029" strokeWidth={2} />
-            <View style={styles.bellDot} />
+            {unreadNotifCount > 0 && <View style={styles.bellDot} />}
           </TouchableOpacity>
         </View>
 
@@ -143,14 +175,15 @@ const HomeScreen = () => {
             activeOpacity={0.9}
             onPress={() => navigation.navigate('SearchTab')}
           >
-            <Search size={20} width={20} height={20} color="#1F2029" stroke="#1F2029" strokeWidth={2} style={{ marginRight: spacing[3] }} />
-            <Text style={styles.searchPlaceholder}>Search "Product Name"</Text>
+            <Search size={18} width={18} height={18} color="#797979" stroke="#797979" strokeWidth={2} style={{ marginRight: 8 }} />
+            <Text style={styles.searchPlaceholder}>Search clothes, shoes...</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.filterBtn}
             onPress={() => navigation.navigate('Filter')}
+            activeOpacity={0.85}
           >
-            <SlidersHorizontal size={18} width={18} height={18} color="#1F2029" stroke="#1F2029" strokeWidth={2.2} />
+            <SlidersHorizontal size={20} width={20} height={20} color="#FFFFFF" stroke="#FFFFFF" strokeWidth={2.4} />
           </TouchableOpacity>
         </View>
 
@@ -162,7 +195,7 @@ const HomeScreen = () => {
             showsHorizontalScrollIndicator={false}
             onScroll={(e) => {
               const offset = e.nativeEvent.contentOffset.x;
-              const index = Math.round(offset / (width - 36)); // width - 48 (width of card) + 12 (marginRight) = width - 36
+              const index = Math.round(offset / (width - 36));
               if (index !== activeBannerIndex && index >= 0 && index < BANNERS.length) {
                 setActiveBannerIndex(index);
               }
@@ -212,7 +245,7 @@ const HomeScreen = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>Category</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('SearchTab', { screen: 'Search' })}>
                 <Text style={styles.seeAll}>See All</Text>
               </TouchableOpacity>
             </View>
@@ -222,6 +255,7 @@ const HomeScreen = () => {
                   key={cat._id}
                   style={styles.categoryItem}
                   onPress={() => navigation.navigate('ProductListing', { categoryId: cat._id, title: cat.name })}
+                  activeOpacity={0.8}
                 >
                   <View style={styles.categoryIconCircle}>
                     {getCategoryIcon(cat.name)}
@@ -248,24 +282,35 @@ const HomeScreen = () => {
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-            {['All', 'Newest', 'Popular', 'Man', 'Women'].map((filter) => (
+            {['All', 'Man', 'Women', 'Newest', 'Popular'].map((pill) => (
               <TouchableOpacity
-                key={filter}
-                style={[styles.filterPill, activeFilter === filter && styles.filterPillActive]}
-                onPress={() => setActiveFilter(filter)}
+                key={pill}
+                style={[
+                  styles.filterPill,
+                  activeFilter === pill && styles.filterPillActive
+                ]}
+                onPress={() => setActiveFilter(pill)}
               >
-                <Text style={[styles.filterPillText, activeFilter === filter && styles.filterPillTextActive]}>{filter}</Text>
+                <Text
+                  style={[
+                    styles.filterPillText,
+                    activeFilter === pill && styles.filterPillTextActive
+                  ]}
+                >
+                  {pill}
+                </Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
 
-          <View style={styles.grid}>
-            {filteredProducts.map((item) => (
-              <View key={item._id} style={styles.gridItem}>
+          {/* Product Grid */}
+          <View style={styles.productGrid}>
+            {filteredProducts.slice(0, 10).map((item) => (
+              <View key={item._id} style={styles.productCol}>
                 <ProductCard
                   item={item}
-                  onPress={handleProductPress}
-                  onWishlistPress={(p) => dispatch(toggleWishlist({ productId: p._id, ...p }))}
+                  onPress={() => handleProductPress(item)}
+                  onWishlistPress={() => dispatch(toggleWishlist(item))}
                   isWishlisted={isProductWishlisted(item._id)}
                 />
               </View>
@@ -274,30 +319,33 @@ const HomeScreen = () => {
         </View>
       </ScrollView>
 
+      {/* Map Location Selector Modal */}
       <MapSelectorModal
         visible={mapVisible}
         onClose={() => setMapVisible(false)}
-        onConfirm={handleLocationConfirm}
+        onConfirmLocation={handleLocationConfirm}
       />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background }, // White background
+  container: { flex: 1, backgroundColor: colors.white },
   header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    padding: spacing[6], paddingTop: Platform.OS === 'ios' ? 60 : spacing[10],
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing[6], paddingTop: Platform.OS === 'ios' ? 60 : spacing[10],
   },
   greeting: { ...textStyles.body2, color: colors.textMuted },
   tagline: { ...textStyles.body1, color: colors.text, fontWeight: '700', marginTop: 2 },
   bellBtn: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surfaceAlt,
-    alignItems: 'center', justifyContent: 'center'
+    width: 44, height: 44, borderRadius: 22, backgroundColor: '#F5F5F5',
+    alignItems: 'center', justifyContent: 'center', borderBorderWidth: 1, borderColor: '#EAEAEA'
   },
   bellDot: {
-    position: 'absolute', top: 12, right: 12, width: 8, height: 8,
-    borderRadius: 4, backgroundColor: colors.sale, borderWidth: 1, borderColor: colors.surfaceAlt
+    position: 'absolute', top: 11, right: 11, width: 8, height: 8,
+    borderRadius: 4, backgroundColor: '#FF4D4D', borderWidth: 1.5, borderColor: '#FFFFFF'
   },
   searchRow: {
     flexDirection: 'row',
@@ -315,8 +363,8 @@ const styles = StyleSheet.create({
   },
   searchPlaceholder: { ...textStyles.body2, color: colors.textMuted },
   filterBtn: {
-    width: 50, height: 50, borderRadius: 25, backgroundColor: colors.primary, // Brown
-    alignItems: 'center', justifyContent: 'center',
+    width: 50, height: 50, borderRadius: 25, backgroundColor: '#704F38', // Brand Luxury Brown
+    alignItems: 'center', justifyContent: 'center', shadowColor: '#704F38', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 5
   },
   carouselContainer: {
     marginBottom: spacing[6],
@@ -328,11 +376,30 @@ const styles = StyleSheet.create({
   banner: {
     width: width - 48,
     marginRight: 12,
-    padding: spacing[5],
-    borderRadius: layout.cardRadiusLg,
-    flexDirection: 'row',
-    overflow: 'hidden',
     height: 160,
+    borderRadius: layout.cardRadius,
+    padding: spacing[5],
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  bannerTextContainer: { flex: 1, zIndex: 2 },
+  bannerTitle: { ...textStyles.body2, color: colors.textMuted, fontWeight: '600' },
+  bannerSub: { ...textStyles.h3, color: colors.text, fontWeight: '800', marginTop: 4, marginBottom: 12 },
+  bannerBtn: {
+    backgroundColor: colors.primary, paddingHorizontal: spacing[4], paddingVertical: spacing[2],
+    borderRadius: 20, alignSelf: 'flex-start'
+  },
+  bannerBtnText: { ...textStyles.label, color: colors.white },
+  bannerImage: {
+    width: 130,
+    height: 150,
+    borderRadius: layout.cardRadius,
+    position: 'absolute',
+    right: -10,
+    bottom: -10,
   },
   dotsContainer: {
     flexDirection: 'row',
@@ -348,26 +415,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#E0E0E0',
   },
   dotActive: {
-    width: 16,
+    width: 18,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#624735',
-  },
-  bannerTextContainer: { flex: 1, paddingRight: spacing[2], justifyContent: 'center' },
-  bannerTitle: { ...textStyles.h3, color: colors.text, marginBottom: spacing[1] },
-  bannerSub: { ...textStyles.caption, color: colors.textMuted, marginBottom: spacing[4], lineHeight: 18 },
-  bannerBtn: {
-    backgroundColor: colors.primary, paddingHorizontal: spacing[4], paddingVertical: spacing[2],
-    borderRadius: 20, alignSelf: 'flex-start'
-  },
-  bannerBtnText: { ...textStyles.label, color: colors.white },
-  bannerImage: {
-    width: 130,
-    height: 150,
-    borderRadius: layout.cardRadius,
-    position: 'absolute',
-    right: -10,
-    bottom: -10,
+    backgroundColor: colors.primary,
   },
   section: { marginBottom: spacing[6] },
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[4], paddingHorizontal: spacing[6] },
@@ -376,34 +427,38 @@ const styles = StyleSheet.create({
   categoryScroll: { paddingHorizontal: spacing[6], gap: spacing[5] },
   categoryItem: { alignItems: 'center' },
   categoryIconCircle: {
-    width: 64, height: 64, borderRadius: 32, backgroundColor: '#FAF6F2', // Light beige circle
+    width: 64, height: 64, borderRadius: 32, backgroundColor: '#FAF5F0', // Warm luxury beige circle
+    borderWidth: 1, borderColor: '#F0E8DF',
     alignItems: 'center', justifyContent: 'center', marginBottom: spacing[2]
   },
   categoryText: { ...textStyles.caption, color: colors.text, fontWeight: '600' },
   timerRow: { flexDirection: 'row', alignItems: 'center' },
   timerText: { ...textStyles.caption, color: colors.textMuted, marginRight: spacing[2] },
   timerBox: { backgroundColor: '#F1E9DE', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 2 },
-  timerNum: { ...textStyles.caption, fontWeight: '700', color: colors.primary }, // Brown text
+  timerNum: { ...textStyles.caption, fontWeight: '700', color: colors.primary },
   timerColon: { ...textStyles.caption, color: colors.text, marginHorizontal: 2, fontWeight: '700' },
   filterScroll: { paddingHorizontal: spacing[6], marginBottom: spacing[5], gap: spacing[2] },
   filterPill: {
     paddingHorizontal: spacing[5], paddingVertical: 8,
-    borderRadius: 20, backgroundColor: colors.white,
-    borderWidth: 1, borderColor: colors.border,
-    marginRight: spacing[2],
+    borderRadius: 20, backgroundColor: colors.surfaceAlt,
+    borderWidth: 1, borderColor: 'transparent'
   },
-  filterPillActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  filterPillText: { ...textStyles.body2, color: colors.text },
-  filterPillTextActive: { color: colors.white },
-  grid: {
+  filterPillActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary
+  },
+  filterPillText: { ...textStyles.body2, color: colors.textMuted, fontWeight: '600' },
+  filterPillTextActive: { color: colors.white, fontWeight: '700' },
+  productGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: spacing[4],
-    justifyContent: 'space-between',
+    paddingHorizontal: spacing[6] - 6,
   },
-  gridItem: {
-    width: '48%', // Allows 2 columns with a small gap
-  },
+  productCol: {
+    width: '50%',
+    paddingHorizontal: 6,
+    marginBottom: spacing[4],
+  }
 });
 
 export default HomeScreen;

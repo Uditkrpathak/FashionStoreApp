@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { User, CreditCard, ClipboardList, Settings, HelpCircle, Lock, Users, LogOut, ChevronRight } from 'lucide-react-native';
+import { User, Bell, CreditCard, ClipboardList, Settings, HelpCircle, Lock, Users, LogOut, ChevronRight } from 'lucide-react-native';
 import { useAppDispatch } from '../../../shared/hooks/useAppDispatch';
 import { useAppSelector } from '../../../shared/hooks/useAppSelector';
 import { selectUser, logout } from '../../auth/store/authSlice';
@@ -15,6 +15,7 @@ import { textStyles } from '../../../theme/typography';
 
 const MENU = [
   { icon: User, label: 'Your profile', route: 'EditProfile' },
+  { icon: Bell, label: 'Notifications', route: 'Notifications' },
   { icon: CreditCard, label: 'Payment Methods', route: 'SavedCards' },
   { icon: ClipboardList, label: 'My Orders', route: 'Modals', screen: 'MyOrders' },
   { icon: Settings, label: 'Settings', route: 'Settings' },

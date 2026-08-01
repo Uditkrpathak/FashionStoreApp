@@ -106,7 +106,7 @@ const ProductDetailScreen = () => {
               style={styles.iconBtn} 
               onPress={() => dispatch(toggleWishlist({ productId: product._id, ...product }))}
             >
-              <Heart size={24} width={24} height={24} color={isWishlisted ? '#0B0805' : '#1F2029'} stroke={isWishlisted ? '#0B0805' : '#1F2029'} strokeWidth={2.2} fill={isWishlisted ? '#0B0805' : 'transparent'} />
+              <Heart size={22} width={22} height={22} color={isWishlisted ? '#E53935' : '#1F2029'} stroke={isWishlisted ? '#E53935' : '#1F2029'} strokeWidth={2.2} fill={isWishlisted ? '#E53935' : 'transparent'} />
             </TouchableOpacity>
           </View>
 

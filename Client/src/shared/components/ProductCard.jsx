@@ -16,35 +16,46 @@ import { formatPrice } from '../utils/formatters';
 
 const ProductCard = ({
   item,
+  product,
   onPress,
   onWishlistPress,
   isWishlisted = false,
   style,
 }) => {
+  const p = item || product || {};
+  const imageUri = p.image || (p.images && p.images[0]) || 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea';
+  const title = p.title || 'Product';
+  const price = p.price || 0;
+  const rating = p.rating;
+
   return (
     <TouchableOpacity
       style={[styles.card, style]}
-      onPress={() => onPress?.(item)}
+      onPress={() => onPress?.(p)}
       activeOpacity={0.88}
     >
-      {/* Image */}
+      {/* Image Container */}
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: item.image || (item.images && item.images[0]) }}
+          source={{ uri: imageUri }}
           style={styles.image}
           resizeMode="cover"
         />
         
-        {/* Wishlist button */}
+        {/* Wishlist Button - Perfectly Centered Circle */}
         <Pressable
-          style={styles.wishlistBtn}
-          onPress={() => onWishlistPress?.(item)}
+          style={[
+            styles.wishlistBtn,
+            isWishlisted && styles.wishlistBtnActive
+          ]}
+          onPress={() => onWishlistPress?.(p)}
           hitSlop={8}
         >
           <Heart 
             size={16} 
-            color={isWishlisted ? '#0B0805' : colors.textMuted} 
-            fill={isWishlisted ? '#0B0805' : 'transparent'} 
+            color={isWishlisted ? '#E53935' : '#1F2029'} 
+            fill={isWishlisted ? '#E53935' : 'transparent'} 
+            strokeWidth={2.2}
           />
         </Pressable>
       </View>
@@ -52,15 +63,15 @@ const ProductCard = ({
       {/* Info */}
       <View style={styles.info}>
         <View style={styles.titleRow}>
-          <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
-          {item.rating ? (
+          <Text style={styles.title} numberOfLines={1}>{title}</Text>
+          {rating ? (
             <View style={styles.ratingRow}>
               <Text style={styles.star}>★</Text>
-              <Text style={styles.rating}>{item.rating.toFixed(1)}</Text>
+              <Text style={styles.rating}>{typeof rating === 'number' ? rating.toFixed(1) : rating}</Text>
             </View>
           ) : null}
         </View>
-        <Text style={styles.price}>{formatPrice(item.price)}</Text>
+        <Text style={styles.price}>{formatPrice(price)}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -69,58 +80,78 @@ const ProductCard = ({
 const styles = StyleSheet.create({
   card: {
     width: '100%',
-    marginBottom: spacing[4],
+    backgroundColor: colors.white,
+    borderRadius: layout.cardRadius,
+    overflow: 'hidden',
   },
   imageContainer: {
-    width:  '100%',
-    aspectRatio: 0.85, // To make it a bit taller than a square
-    borderRadius: spacing[4],
+    width: '100%',
+    aspectRatio: 0.85,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: layout.cardRadius,
     overflow: 'hidden',
-    backgroundColor: '#E5E5E5', // Placeholder color
-    marginBottom: spacing[2],
+    position: 'relative',
   },
   image: {
-    width:  '100%',
+    width: '100%',
     height: '100%',
   },
   wishlistBtn: {
-    position:        'absolute',
-    top:             spacing[2],
-    right:           spacing[2],
-    width:           28,
-    height:          28,
-    borderRadius:    14,
-    backgroundColor: colors.white,
-    alignItems:      'center',
-    justifyContent:  'center',
+    position: 'absolute',
+    top: spacing[2.5],
+    right: spacing[2.5],
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center', // Centered vertically & horizontally
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  wishlistBtnActive: {
+    backgroundColor: '#FFF0F0',
+    borderColor: '#FFCDD2',
+    borderWidth: 1,
   },
   info: {
-    paddingHorizontal: spacing[1],
+    paddingTop: spacing[2.5],
+    paddingBottom: spacing[1],
   },
   titleRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing[0.5],
+    justifyContent: 'space-between',
+    marginBottom: spacing[1],
   },
   title: {
     ...textStyles.body2,
-    color:        colors.text,
-    fontWeight:   '600',
+    color: colors.text,
+    fontWeight: '600',
     flex: 1,
-    marginRight: spacing[2],
+    marginRight: spacing[1],
   },
   ratingRow: {
     flexDirection: 'row',
-    alignItems:    'center',
-    gap:           2,
+    alignItems: 'center',
   },
-  star:        { color: colors.gold, fontSize: fontSizes.sm },
-  rating:      { ...textStyles.caption, color: colors.textMuted, fontWeight: '500' },
+  star: {
+    fontSize: 12,
+    color: '#FFB800',
+    marginRight: 2,
+  },
+  rating: {
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+    fontWeight: '500',
+  },
   price: {
-    ...textStyles.subtitle2,
-    color:  colors.text,
-    fontWeight: '700',
+    ...textStyles.body1,
+    color: colors.text,
+    fontWeight: '800',
   },
 });
 

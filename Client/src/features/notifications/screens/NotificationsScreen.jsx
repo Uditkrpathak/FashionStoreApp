@@ -145,8 +145,8 @@ const styles = StyleSheet.create({
   cardDesc: { fontSize: 12, color: '#797979', lineHeight: 18, fontWeight: '400' },
   timeText: { fontSize: 11, color: '#9E9E9E', fontWeight: '600', marginTop: 2 },
 
-  emptyContainer: { flex: 1, alignItems: 'center', justifyContainer: 'center', padding: spacing[8], marginTop: 80 },
-  emptyIconBg: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#F7F4F0', alignItems: 'center', justifyContainer: 'center', marginBottom: spacing[4] },
+  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing[8], marginTop: 80 },
+  emptyIconBg: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#F7F4F0', alignItems: 'center', justifyContent: 'center', marginBottom: spacing[4] },
   emptyTitle: { fontSize: 18, fontWeight: '800', color: '#1F2029', marginBottom: spacing[2] },
   emptySub: { fontSize: 13, color: '#797979', textAlign: 'center', lineHeight: 20 },
 });
