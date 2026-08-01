@@ -369,22 +369,17 @@ export const getAllOrdersAdmin = async (req, res, next) => {
   try {
     const { page = 1, limit = 20, status, search } = req.query;
     
-    // Only show orders where payment is completed OR payment method is COD
-    const validPaymentCondition = {
-      $or: [
-        { paymentStatus: 'completed' },
-        { paymentStatus: 'paid' },
-        { paymentMethod: 'COD' },
-        { 'paymentMethod.id': 'COD' },
-        { 'paymentMethod.name': 'COD' },
-        { 'paymentMethod.type': 'COD' }
-      ]
-    };
-
-    const query = { $and: [validPaymentCondition] };
+    const query = {};
 
     if (status) {
-      query.$and.push({ orderStatus: status });
+      query.orderStatus = status;
+    }
+
+    if (search) {
+      query.$or = [
+        { 'customerDetails.name': { $regex: search, $options: 'i' } },
+        { 'customerDetails.email': { $regex: search, $options: 'i' } },
+      ];
     }
 
     const orders = await Order.find(query)
@@ -402,6 +397,7 @@ export const getAllOrdersAdmin = async (req, res, next) => {
     next(err);
   }
 };
+
 
 export const updateOrderStatus = async (req, res, next) => {
   try {
