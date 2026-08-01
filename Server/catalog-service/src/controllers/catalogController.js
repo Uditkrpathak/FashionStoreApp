@@ -450,19 +450,29 @@ export const getProductById = async (req, res, next) => {
 
 // ── Helper: recalculate product rating from active reviews ──
 const recalcProductRating = async (productId) => {
-  const result = await Review.aggregate([
-    { $match: { productId: new (await import('mongoose')).default.Types.ObjectId(productId), status: 'active' } },
-    { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } }
-  ]);
-  const avg   = result.length > 0 ? Math.round(result[0].avg * 100) / 100 : 0;
-  const count = result.length > 0 ? result[0].count : 0;
-  await Product.findByIdAndUpdate(productId, { rating: avg, reviewsCount: count });
-  return { avg, count };
+  try {
+    const mongoose = (await import('mongoose')).default;
+    if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+      return { avg: 0, count: 0 };
+    }
+    const targetObjId = new mongoose.Types.ObjectId(productId);
+    const result = await Review.aggregate([
+      { $match: { productId: targetObjId, status: 'active' } },
+      { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } }
+    ]);
+    const avg   = result.length > 0 ? Math.round(result[0].avg * 100) / 100 : 0;
+    const count = result.length > 0 ? result[0].count : 0;
+    await Product.findByIdAndUpdate(productId, { rating: avg, reviewsCount: count });
+    return { avg, count };
+  } catch (err) {
+    console.error('recalcProductRating error:', err.message);
+    return { avg: 0, count: 0 };
+  }
 };
 
 export const addReview = async (req, res, next) => {
   try {
-    const { productId, rating, comment } = req.body;
+    const { productId, rating, comment, productTitle } = req.body;
     const userId   = req.headers['x-user-id'];
     const userName = req.headers['x-user-name'] || 'Anonymous';
 
@@ -479,12 +489,27 @@ export const addReview = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Review must be 500 characters or less' });
     }
 
-    // Validate product exists
-    const product = await Product.findById(productId);
+    const mongoose = (await import('mongoose')).default;
+    let product = null;
+    let targetProductId = productId;
+
+    if (productId && mongoose.Types.ObjectId.isValid(productId)) {
+      product = await Product.findById(productId);
+    }
+
+    // If product ID wasn't found in DB (e.g. catalog reseeded after order placement), fallback match by title
+    if (!product && productTitle) {
+      const escapedTitle = productTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      product = await Product.findOne({ title: new RegExp(`^${escapedTitle}$`, 'i') });
+      if (product) {
+        targetProductId = product._id.toString();
+      }
+    }
+
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
 
     // Check for duplicate review (handled by unique index, but give friendly error)
-    const existing = await Review.findOne({ productId, userId });
+    const existing = await Review.findOne({ productId: targetProductId, userId });
     if (existing) {
       return res.status(409).json({ success: false, message: 'You have already reviewed this product' });
     }
@@ -494,29 +519,40 @@ export const addReview = async (req, res, next) => {
     try {
       const orderUri = process.env.ORDER_MONGO_URI || process.env.MONGO_URI || '';
       if (orderUri) {
-        const mongoose = (await import('mongoose')).default;
         let orderConn = mongoose.connections.find(c => c.name === 'fashion_orders');
         if (!orderConn || orderConn.readyState !== 1) {
           orderConn = mongoose.createConnection(orderUri.replace(/\/[^/]*$/, '/fashion_orders'));
         }
         const OrderModel = orderConn.models['Order'] ||
-          orderConn.model('Order', new mongoose.Schema({ userId: String, status: String, items: [{ productId: String }] }));
+          orderConn.model('Order', new mongoose.Schema({
+            userId: String,
+            orderStatus: String,
+            status: String,
+            items: [{ productId: String, title: String }]
+          }));
+        
         const deliveredOrder = await OrderModel.findOne({
-          userId, status: 'delivered', 'items.productId': productId
+          userId,
+          $or: [{ orderStatus: 'delivered' }, { status: 'delivered' }],
+          $or: [
+            { 'items.productId': targetProductId },
+            { 'items.productId': productId },
+            ...(productTitle ? [{ 'items.title': new RegExp(`^${productTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }] : [])
+          ]
         });
         verifiedPurchase = !!deliveredOrder;
       }
     } catch (_) { /* verified purchase check is optional */ }
 
     const review = new Review({
-      productId, userId, rating: ratingNum,
+      productId: targetProductId, userId, rating: ratingNum,
       comment: (comment || '').trim(),
       userName, status: 'active', verifiedPurchase
     });
     await review.save();
 
     // Recalculate product rating from active reviews only
-    const { avg, count } = await recalcProductRating(productId);
+    const { avg, count } = await recalcProductRating(targetProductId);
 
     res.status(201).json({
       success: true,

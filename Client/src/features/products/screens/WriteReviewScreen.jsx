@@ -40,11 +40,16 @@ const WriteReviewScreen = () => {
       return;
     }
     try {
-      await addReview({ productId, rating, comment: comment.trim() }).unwrap();
+      await addReview({
+        productId,
+        rating,
+        comment: comment.trim(),
+        productTitle: product?.title,
+      }).unwrap();
       showToast('Review submitted! Thank you', 'success');
       navigation.goBack();
     } catch (err) {
-      showToast(err.data?.message || 'Failed to submit review.', 'error');
+      showToast(err.data?.message || err.message || 'Failed to submit review.', 'error');
     }
   };
 

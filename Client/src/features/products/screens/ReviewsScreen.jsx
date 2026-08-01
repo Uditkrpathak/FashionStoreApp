@@ -55,6 +55,15 @@ const ReviewsScreen = () => {
         renderItem={renderReview}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          !isLoading && (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyIcon}>⭐</Text>
+              <Text style={styles.emptyTitle}>No Reviews Yet</Text>
+              <Text style={styles.emptySubtitle}>Be the first to review this product after your purchase!</Text>
+            </View>
+          )
+        }
       />
     </View>
   );
@@ -95,6 +104,10 @@ const styles = StyleSheet.create({
   date:    { ...textStyles.caption, color: colors.textMuted },
   stars:   { color: colors.gold, fontSize: 14 },
   comment: { ...textStyles.body2, color: colors.textMuted, lineHeight: 22 },
+  emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 60, paddingHorizontal: 20 },
+  emptyIcon: { fontSize: 40, marginBottom: 12 },
+  emptyTitle: { ...textStyles.h6, color: colors.text, marginBottom: 4 },
+  emptySubtitle: { ...textStyles.caption, color: colors.textMuted, textAlign: 'center', lineHeight: 18 },
 });
 
 export default ReviewsScreen;
