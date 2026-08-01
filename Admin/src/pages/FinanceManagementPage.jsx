@@ -74,6 +74,7 @@ export const FinanceManagementPage = () => {
                   
                   const isCOD = rawMethod.includes('cod');
                   const isPaid = order.paymentStatus === 'completed' || order.paymentStatus === 'paid';
+                  const isCancelled = order.orderStatus === 'cancelled';
 
                   const gatewayLabel = isCOD ? 'COD (DIRECT)' : (order.paymentGateway ? order.paymentGateway.toUpperCase() : 'RAZORPAY');
                   
@@ -81,17 +82,19 @@ export const FinanceManagementPage = () => {
                     ? 'Cash on Delivery (COD)'
                     : (rawMethod === 'card' ? 'Credit / Debit Card' : (rawMethod === 'upi' ? 'UPI Instant' : 'Online Payment'));
 
-                  const statusBadge = isCOD
-                    ? 'bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]'
-                    : (isPaid
-                      ? 'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]'
-                      : (order.paymentStatus === 'refunded' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]'));
+                  const statusBadge = isCancelled
+                    ? 'bg-red-50 text-red-700 border-red-200'
+                    : (isCOD
+                      ? 'bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]'
+                      : (isPaid
+                        ? 'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]'
+                        : (order.paymentStatus === 'refunded' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]')));
 
-                  const statusText = isCOD ? 'PAY ON DELIVERY' : (order.paymentStatus || 'PENDING').toUpperCase();
+                  const statusText = isCancelled ? 'CANCELLED' : (isCOD ? 'PAY ON DELIVERY' : (order.paymentStatus || 'PENDING').toUpperCase());
 
-                  const invoiceBtnLabel = isCOD
-                    ? 'Delivery Invoice'
-                    : (isPaid ? 'Tax Invoice' : 'Pro-Forma Draft');
+                  const invoiceBtnLabel = isCancelled
+                    ? 'Cancelled Invoice'
+                    : (isCOD ? 'Delivery Invoice' : (isPaid ? 'Tax Invoice' : 'Pro-Forma Draft'));
 
                   return (
                     <tr key={order._id} className="hover:bg-[#FDFBF9]/50 transition-colors">
@@ -140,14 +143,17 @@ export const FinanceManagementPage = () => {
         
         const isCOD = rawMethod.includes('cod');
         const isPaid = selectedInvoiceOrder.paymentStatus === 'completed' || selectedInvoiceOrder.paymentStatus === 'paid';
+        const isCancelledOrder = selectedInvoiceOrder.orderStatus === 'cancelled';
 
-        const invoiceHeading = isCOD
-          ? 'Delivery Invoice & Cash Receipt'
-          : (isPaid ? 'Official Tax Invoice' : 'Pro-Forma Invoice');
+        const invoiceHeading = isCancelledOrder
+          ? 'Cancelled Order Invoice'
+          : (isCOD ? 'Delivery Invoice & Cash Receipt' : (isPaid ? 'Official Tax Invoice' : 'Pro-Forma Invoice'));
 
-        const invoiceSubheading = isCOD
-          ? 'Payment Method: Cash on Delivery (Pay upon Package Delivery)'
-          : (isPaid ? 'Payment Status: COMPLETED / PAID' : 'PRO-FORMA DRAFT - AWAITING ONLINE PAYMENT');
+        const invoiceSubheading = isCancelledOrder
+          ? 'ORDER CANCELLED — This order has been cancelled and no payment is due.'
+          : (isCOD
+            ? 'Payment Method: Cash on Delivery (Pay upon Package Delivery)'
+            : (isPaid ? 'Payment Status: COMPLETED / PAID' : 'PRO-FORMA DRAFT - AWAITING ONLINE PAYMENT'));
 
         return (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
@@ -168,7 +174,20 @@ export const FinanceManagementPage = () => {
               </div>
 
               {/* Printable Invoice Container */}
-              <div id="printable-invoice" className="p-6 bg-[#FDFBF9] border border-[#EDEDED] rounded-2xl space-y-6">
+              <div id="printable-invoice" className="p-6 bg-[#FDFBF9] border border-[#EDEDED] rounded-2xl space-y-6 relative overflow-hidden">
+                {isCancelledOrder && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <div className="text-[80px] font-black text-red-500/10 uppercase tracking-widest rotate-[-30deg] select-none">
+                      CANCELLED
+                    </div>
+                  </div>
+                )}
+                {isCancelledOrder && (
+                  <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                    <span className="text-red-600 font-black text-xs uppercase tracking-wide">⚠ Order Cancelled</span>
+                    <span className="text-red-500 text-xs font-medium">— This order was cancelled. No payment is due. No delivery will be made.</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-start border-b border-[#EDEDED] pb-4">
                   <div>
                     <h1 className="text-xl font-black text-[#1F2029]">FashionStore Enterprise</h1>
