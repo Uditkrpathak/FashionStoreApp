@@ -90,7 +90,17 @@ const MyOrdersScreen = () => {
                           <Text style={styles.ratingBadgeText}>Rated: {firstItem.userRating} ★</Text>
                         </View>
                       ) : (
-                        <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('WriteReview', { productId: firstItem.productId })}>
+                        <TouchableOpacity 
+                          style={styles.actionBtn} 
+                          onPress={() => navigation.navigate('WriteReview', { 
+                            productId: firstItem.productId,
+                            productSnapshot: {
+                              title: firstItem.title,
+                              image: firstItem.image,
+                              price: firstItem.priceAtAdd ?? firstItem.price,
+                            }
+                          })}
+                        >
                           <Text style={styles.actionBtnText}>Leave Review</Text>
                         </TouchableOpacity>
                       )

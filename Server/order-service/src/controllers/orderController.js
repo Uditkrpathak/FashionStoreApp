@@ -206,7 +206,7 @@ export const getOrders = async (req, res, next) => {
         const orderObj = order.toObject ? order.toObject() : order;
         orderObj.items = await Promise.all(orderObj.items.map(async (item) => {
           try {
-            if (!CatReview) return item;
+            if (!CatReview || !item.productId || !mongoose.Types.ObjectId.isValid(item.productId)) return item;
             const review = await CatReview.findOne({
               productId: item.productId,
               userId: orderObj.userId

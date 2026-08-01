@@ -358,7 +358,39 @@ export const seedData = async (req, res, next) => {
     ];
 
     // 2. Insert Batch Products
-    await Product.insertMany(prods);
+    const insertedProducts = await Product.insertMany(prods);
+
+    // Seed sample reviews for initial products so review screens show active reviews
+    const sampleReviews = [];
+    const sampleReviewTexts = [
+      { rating: 5, comment: 'Absolutely love the material! Fits true to size and feels very high quality.', name: 'Sophia R.', verified: true },
+      { rating: 5, comment: 'Great purchase. Color and fabric match the images perfectly.', name: 'Alex M.', verified: true },
+      { rating: 4, comment: 'Very comfortable and stylish. Delivery was fast too.', name: 'Daniel K.', verified: false },
+      { rating: 5, comment: 'Exceeded my expectations! Will definitely order in another color.', name: 'Emma L.', verified: true },
+      { rating: 4, comment: 'Good quality for the price. Highly recommend.', name: 'Michael T.', verified: true },
+    ];
+
+    for (const prod of insertedProducts.slice(0, 20)) {
+      const count = (prod.title.length % 3) + 2;
+      for (let i = 0; i < count; i++) {
+        const rev = sampleReviewTexts[(i + prod.title.length) % sampleReviewTexts.length];
+        sampleReviews.push({
+          productId: prod._id,
+          userId: `seed_user_${i + 1}`,
+          rating: rev.rating,
+          comment: rev.comment,
+          userName: rev.name,
+          verifiedPurchase: rev.verified,
+          status: 'active'
+        });
+      }
+    }
+    if (sampleReviews.length > 0) {
+      await Review.insertMany(sampleReviews);
+      for (const prod of insertedProducts.slice(0, 20)) {
+        await recalcProductRating(prod._id.toString());
+      }
+    }
 
     // 3. Dynamic Aggregation: Calculate actual counts of inserted items per category to keep indicators fully accurate
     const categoriesList = [catJacket, catShirt, catTShirt, catDress, catJeans, catShoes, catBlazer, catTrousers];
@@ -369,7 +401,7 @@ export const seedData = async (req, res, next) => {
 
     res.json({
       success: true,
-      message: `Database successfully cleared and re-seeded with ${prods.length} deep category products across Men and Women.`
+      message: `Database successfully cleared and re-seeded with ${prods.length} deep category products and sample reviews.`
     });
   } catch (err) {
     next(err);
@@ -616,14 +648,21 @@ export const getProductReviews = async (req, res, next) => {
     const sort = sortMap[sortBy] || sortMap.recent;
 
     const filter = { productId, status: 'active' };
+
+    const mongoose = (await import('mongoose')).default;
+    const targetObjId = (productId && mongoose.Types.ObjectId.isValid(productId))
+      ? new mongoose.Types.ObjectId(productId)
+      : productId;
+    const aggFilter = { productId: targetObjId, status: 'active' };
+
     const [reviews, total] = await Promise.all([
       Review.find(filter).sort(sort).skip((page - 1) * limit).limit(limit),
       Review.countDocuments(filter)
     ]);
 
-    // Rating breakdown
+    // Rating breakdown using typed ObjectId filter
     const breakdown = await Review.aggregate([
-      { $match: filter },
+      { $match: aggFilter },
       { $group: { _id: '$rating', count: { $sum: 1 } } }
     ]);
     const ratingBreakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };

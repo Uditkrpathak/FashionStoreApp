@@ -17,6 +17,8 @@ import ProfileStack from './ProfileStack';
 import ModalStack from './ModalStack';
 
 import ProductDetailScreen from '../../features/products/screens/ProductDetailScreen';
+import ReviewsScreen from '../../features/products/screens/ReviewsScreen';
+import WriteReviewScreen from '../../features/products/screens/WriteReviewScreen';
 
 import Badge from '../../shared/components/Badge';
 import { colors } from '../../theme/colors';
@@ -197,6 +199,8 @@ const AppNavigator = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Tabs" component={BottomTabs} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <Stack.Screen name="Reviews" component={ReviewsScreen} />
+      <Stack.Screen name="WriteReview" component={WriteReviewScreen} />
       <Stack.Screen name="Filter" component={FilterScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="Sort" component={SortScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="Modals" component={ModalStack}
