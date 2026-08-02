@@ -140,11 +140,16 @@ routes.forEach((route) => {
     (req, res, next) => {
       const isProtected = route.protectedPaths.some(p => req.path.startsWith(p));
       const isWebhook = req.path.startsWith('/payment-webhook');
-      
-      if (isProtected && !isWebhook) {
+      const isTicketPost = req.path.startsWith('/tickets') && req.method === 'POST';
+
+      if (isProtected && !isWebhook && !isTicketPost) {
         verifyToken(req, res, next);
       } else {
-        next();
+        if (req.headers.authorization) {
+          verifyToken(req, res, () => next());
+        } else {
+          next();
+        }
       }
     },
     proxy

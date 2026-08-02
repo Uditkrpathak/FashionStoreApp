@@ -107,9 +107,9 @@ const ChatSupportScreen = () => {
     setMessages((prev) => [...prev, userMessage]);
     setInputText('');
 
-    // Trigger ticket creation in backend order-service DB
+    // Trigger ticket creation in backend order-service DB with resilient fallback
     try {
-      await createTicket({
+      await submitTicketPayload({
         userId: currentUser?._id || `user_${Date.now()}`,
         userName: userDisplayName,
         userEmail: currentUser?.email || 'customer@fashionstore.com',
@@ -117,7 +117,7 @@ const ChatSupportScreen = () => {
         category: 'general',
         priority: 'medium',
         message: messageText,
-      }).unwrap();
+      });
     } catch (err) {
       console.log('[Support Ticket API] Call logged:', err?.message || err);
     }
@@ -155,12 +155,31 @@ const ChatSupportScreen = () => {
   const [ticketDescription, setTicketDescription] = useState('');
   const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
 
+  const submitTicketPayload = async (payload) => {
+    try {
+      return await createTicket(payload).unwrap();
+    } catch (apiErr) {
+      console.log('[ChatSupportScreen] Primary gateway error, triggering direct order-service fallback:', apiErr);
+      const directTarget = 'https://fashion-order-service-a4xr.onrender.com/tickets';
+      const response = await fetch(directTarget, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (response.ok && data?.success) {
+        return data;
+      }
+      throw new Error(data?.message || 'Ticket creation failed');
+    }
+  };
+
   const handleCreateTicketSubmit = async () => {
     if (!ticketSubject.trim() || !ticketDescription.trim()) return;
     setIsSubmittingTicket(true);
 
     try {
-      await createTicket({
+      await submitTicketPayload({
         userId: currentUser?._id || `user_${Date.now()}`,
         userName: userDisplayName,
         userEmail: currentUser?.email || 'customer@fashionstore.com',
@@ -168,7 +187,7 @@ const ChatSupportScreen = () => {
         category: ticketCategory.toLowerCase(),
         priority: ticketPriority,
         message: ticketDescription.trim(),
-      }).unwrap();
+      });
 
       const userMessage = {
         id: Date.now().toString(),
@@ -205,6 +224,8 @@ const ChatSupportScreen = () => {
       }, 1200);
     } catch (err) {
       console.log('[Create Ticket Error]', err);
+      const errMsg = err.data?.message || err.message || 'Failed to create support ticket. Please check connection.';
+      alert(`Ticket Error: ${errMsg}`);
     } finally {
       setIsSubmittingTicket(false);
     }
