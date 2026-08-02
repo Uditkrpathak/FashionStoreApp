@@ -47,6 +47,15 @@ const NotificationsScreen = () => {
     }
   };
 
+  const handleNotifPress = (notif) => {
+    if (!notif.isRead) {
+      markAsRead(notif._id);
+    }
+    if (notif.type === 'order') {
+      navigation.navigate('Modals', { screen: 'MyOrders' });
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Header Bar */}
@@ -93,7 +102,7 @@ const NotificationsScreen = () => {
                   <TouchableOpacity 
                     key={notif._id} 
                     style={[styles.card, !notif.isRead && styles.unreadCard]}
-                    onPress={() => markAsRead(notif._id)}
+                    onPress={() => handleNotifPress(notif)}
                     activeOpacity={0.88}
                   >
                     <View style={[styles.iconContainer, !notif.isRead && styles.unreadIconContainer]}>

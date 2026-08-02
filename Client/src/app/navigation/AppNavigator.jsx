@@ -19,6 +19,7 @@ import ModalStack from './ModalStack';
 import ProductDetailScreen from '../../features/products/screens/ProductDetailScreen';
 import ReviewsScreen from '../../features/products/screens/ReviewsScreen';
 import WriteReviewScreen from '../../features/products/screens/WriteReviewScreen';
+import NotificationsScreen from '../../features/notifications/screens/NotificationsScreen';
 
 import Badge from '../../shared/components/Badge';
 import { colors } from '../../theme/colors';
@@ -116,6 +117,11 @@ const BottomTabs = () => {
         name="ProfileTab"
         component={ProfileStack}
         options={{ tabBarIcon: (props) => <TabIcon IconComponent={User} {...props} /> }}
+        listeners={({ navigation }) => ({
+          tabPress: () => {
+            navigation.navigate('ProfileTab', { screen: 'ProfileHome' });
+          },
+        })}
       />
     </Tab.Navigator>
   );
@@ -198,6 +204,7 @@ const AppNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Tabs" component={BottomTabs} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
       <Stack.Screen name="Reviews" component={ReviewsScreen} />
       <Stack.Screen name="WriteReview" component={WriteReviewScreen} />

@@ -160,7 +160,7 @@ const HomeScreen = () => {
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.bellBtn} 
-            onPress={() => navigation.navigate('ProfileTab', { screen: 'Notifications' })}
+            onPress={() => navigation.navigate('Notifications')}
             activeOpacity={0.8}
           >
             <Bell size={20} width={20} height={20} color="#1F2029" stroke="#1F2029" strokeWidth={2} />

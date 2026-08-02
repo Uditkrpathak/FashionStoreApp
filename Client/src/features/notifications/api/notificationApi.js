@@ -13,6 +13,21 @@ export const notificationApi = baseApi.injectEndpoints({
         url: `/auth/notifications/${id}/read`,
         method: 'PUT',
       }),
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          notificationApi.util.updateQueryData('getNotifications', undefined, (draft) => {
+            if (draft?.notifications) {
+              const item = draft.notifications.find((n) => n._id === id);
+              if (item) item.isRead = true;
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
       invalidatesTags: ['Notification'],
     }),
     markAllAsRead: builder.mutation({
@@ -20,6 +35,22 @@ export const notificationApi = baseApi.injectEndpoints({
         url: '/auth/notifications/read-all',
         method: 'PUT',
       }),
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          notificationApi.util.updateQueryData('getNotifications', undefined, (draft) => {
+            if (draft?.notifications) {
+              draft.notifications.forEach((n) => {
+                n.isRead = true;
+              });
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
       invalidatesTags: ['Notification'],
     }),
     registerPushToken: builder.mutation({

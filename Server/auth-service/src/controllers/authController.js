@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import Role from '../models/Role.js';
 import Session from '../models/Session.js';
 import AuditLog from '../models/AuditLog.js';
+import Notification from '../models/Notification.js';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import crypto, { randomUUID } from 'crypto';
@@ -305,6 +306,20 @@ export const verifyOtp = async (req, res) => {
     user.otp = undefined;
     user.otpExpires = undefined;
     await user.save();
+
+    // Create real welcome notification in database for new user
+    try {
+      const existingWelcome = await Notification.findOne({ userId: user._id, title: 'Welcome to Fashion Store!' });
+      if (!existingWelcome) {
+        await Notification.create({
+          userId: user._id,
+          title: 'Welcome to Fashion Store!',
+          message: 'Thank you for joining! Explore our latest trends & enjoy exclusive member rewards.',
+          type: 'promo',
+          isRead: false
+        });
+      }
+    } catch (_) {}
     
     const token = jwt.sign(
       { id: user._id, email: user.email, name: user.name, role: user.role, permissions: user.permissions || [], isOtpVerified: true },
