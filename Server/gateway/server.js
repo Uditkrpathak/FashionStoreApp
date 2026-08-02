@@ -135,16 +135,20 @@ routes.forEach((route) => {
     }
   });
 
-  app.use(route.path, (req, res, next) => {
-    const isProtected = route.protectedPaths.some(p => req.path.startsWith(p));
-    const isWebhook = req.path.startsWith('/payment-webhook');
-    
-    if (isProtected && !isWebhook) {
-      verifyToken(req, res, () => proxy(req, res, next));
-    } else {
-      proxy(req, res, next);
-    }
-  });
+  app.use(
+    route.path,
+    (req, res, next) => {
+      const isProtected = route.protectedPaths.some(p => req.path.startsWith(p));
+      const isWebhook = req.path.startsWith('/payment-webhook');
+      
+      if (isProtected && !isWebhook) {
+        verifyToken(req, res, next);
+      } else {
+        next();
+      }
+    },
+    proxy
+  );
 });
 
 app.get('/health', (req, res) => {
