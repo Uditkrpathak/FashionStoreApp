@@ -113,10 +113,11 @@ const axiosBaseQuery =
       });
       return { data: result.data };
     } catch (axiosError) {
-      const status = axiosError.response?.status;
-      const message = axiosError.response?.data?.message;
+      const isNoRefreshToken = axiosError.message === 'No refresh token';
+      const status = axiosError.response?.status ?? (isNoRefreshToken ? 401 : undefined);
+      const message = axiosError.response?.data?.message || axiosError.message;
 
-      // Handle unauthorized or stale session (e.g. user deleted/database reset)
+      // Handle unauthorized or stale session (e.g. user deleted/database reset or expired refresh token)
       if (status === 401 || (status === 404 && message === 'User not found')) {
         api.dispatch(logout());
       }

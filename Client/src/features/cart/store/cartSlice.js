@@ -148,7 +148,7 @@ export const clearCart = () => async (dispatch) => {
   try {
     await dispatch(cartApi.endpoints.clearCartRemote.initiate()).unwrap();
   } catch (err) {
-    console.error('Failed to clear remote cart', err);
+    // Ignore cart clear errors for guest users or expired tokens
   }
 };
 
