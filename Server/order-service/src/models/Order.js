@@ -27,7 +27,7 @@ const OrderSchema = new mongoose.Schema({
     discount: Number,
     grandTotal: Number
   },
-  orderStatus: { type: String, default: 'placed', enum: ['placed', 'confirmed', 'shipped', 'delivered', 'cancelled', 'returned'] },
+  orderStatus: { type: String, default: 'placed', enum: ['placed', 'confirmed', 'shipped', 'delivered', 'cancelled', 'return_requested', 'returned'] },
   statusHistory: [{
     status: String,
     timestamp: { type: Date, default: Date.now },

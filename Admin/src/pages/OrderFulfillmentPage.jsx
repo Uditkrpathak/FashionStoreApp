@@ -21,6 +21,7 @@ const STATUS_TABS = [
   { id: 'confirmed', label: 'Confirmed' },
   { id: 'shipped', label: 'Shipped' },
   { id: 'delivered', label: 'Delivered' },
+  { id: 'return_requested', label: 'Return Requests' },
   { id: 'returned', label: 'Returned' },
   { id: 'cancelled', label: 'Cancelled' },
 ];
@@ -330,10 +331,11 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
                           currentStatus === 'confirmed' ? 'bg-[#EEF2FF] dark:bg-[#312E81]/30 text-[#4338CA] dark:text-[#818CF8] border-[#C7D2FE] dark:border-[#312E81]/50' :
                           currentStatus === 'shipped' ? 'bg-[#F3E8FF] dark:bg-[#581C87]/30 text-[#6B21A8] dark:text-[#C084FC] border-[#E9D5FF] dark:border-[#581C87]/50' :
                           currentStatus === 'delivered' ? 'bg-[#ECFDF5] dark:bg-[#064E3B]/30 text-[#047857] dark:text-[#34D399] border-[#A7F3D0] dark:border-[#064E3B]/50' :
-                          currentStatus === 'returned' ? 'bg-[#FFF7ED] dark:bg-[#7C2D12]/30 text-[#C2410C] dark:text-[#FB923C] border-[#FFEDD5] dark:border-[#7C2D12]/50' :
+                          currentStatus === 'return_requested' ? 'bg-[#FFF7ED] dark:bg-[#7C2D12]/30 text-[#C2410C] dark:text-[#FB923C] border-[#FFEDD5] dark:border-[#7C2D12]/50 animate-pulse' :
+                          currentStatus === 'returned' ? 'bg-[#F3F4F6] dark:bg-[#1F2937]/30 text-[#4B5563] dark:text-[#9CA3AF] border-[#E5E7EB] dark:border-[#374151]' :
                           'bg-[#FEF2F2] dark:bg-[#7F1D1D]/30 text-[#B91C1C] dark:text-[#F87171] border-[#FECACA] dark:border-[#7F1D1D]/50'
                         }`}>
-                          {currentStatus.toUpperCase()}
+                          {currentStatus === 'return_requested' ? 'RETURN REQUESTED' : currentStatus.toUpperCase()}
                         </span>
                       </td>
 
@@ -364,12 +366,20 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
                               <CheckCircle2 className="w-3.5 h-3.5" /> Deliver
                             </button>
                           )}
+                          {currentStatus === 'return_requested' && (
+                            <button
+                              onClick={() => handleOpenReturnModal(order)}
+                              className="inline-flex items-center gap-1.5 bg-[#C2410C] hover:bg-[#9A3412] text-white px-3 py-1.5 rounded-xl text-xs font-black shadow-md shadow-[#C2410C]/20 transition-all animate-pulse"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" /> Review Return Request
+                            </button>
+                          )}
                           {currentStatus === 'delivered' && (
                             <button
                               onClick={() => handleOpenReturnModal(order)}
-                              className="inline-flex items-center gap-1.5 bg-[#C2410C] hover:bg-[#9A3412] text-white px-3 py-1.5 rounded-xl text-xs font-black shadow-md shadow-[#C2410C]/20 transition-all"
+                              className="inline-flex items-center gap-1.5 bg-[#1F2029] dark:bg-[#11121E] hover:bg-[#704F38] text-white px-3 py-1.5 rounded-xl text-xs font-black border border-[#EDEDED] dark:border-[#2A2C3F] shadow-sm transition-all"
                             >
-                              <RotateCcw className="w-3.5 h-3.5" /> Return / Refund
+                              <RotateCcw className="w-3.5 h-3.5" /> Initiate Return
                             </button>
                           )}
                           <button
@@ -468,6 +478,16 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
             </div>
 
             <form onSubmit={handleProcessReturnSubmit} className="space-y-4">
+              {returnModalOrder.returnRequest?.reason && (
+                <div className="bg-[#FFF7ED] dark:bg-[#7C2D12]/30 p-3 rounded-2xl border border-[#FFEDD5] dark:border-[#7C2D12]/50 text-xs">
+                  <div className="font-extrabold text-[#C2410C] dark:text-[#FB923C] uppercase text-[10px] mb-1">
+                    Customer Return Reason:
+                  </div>
+                  <div className="font-bold text-[#1F2029] dark:text-white">
+                    "{returnModalOrder.returnRequest.reason}"
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-xs font-extrabold text-[#1F2029] dark:text-white uppercase mb-2">Return Decision</label>
                 <div className="flex gap-2">

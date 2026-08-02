@@ -307,15 +307,36 @@ export const returnOrder = async (req, res, next) => {
       }
     } catch (_) {}
 
-    const { reason } = req.body;
-    const order = await Order.findOneAndUpdate(
-      { _id: req.params.id, userId: req.headers['x-user-id'], orderStatus: 'delivered' },
-      { orderStatus: 'returned', $push: { statusHistory: { status: 'returned', reason } } },
-      { new: true }
-    );
-    if (!order) return res.status(400).json({ success: false, message: 'Cannot return this order' });
+    const { reason, returnType } = req.body;
+    const userId = req.headers['x-user-id'];
 
-    // Notify user of return request
+    const order = await Order.findOne({
+      _id: req.params.id,
+      ...(userId ? { userId } : {}),
+      orderStatus: 'delivered'
+    });
+
+    if (!order) {
+      return res.status(400).json({ success: false, message: 'Cannot request return for this order (order must be delivered)' });
+    }
+
+    order.orderStatus = 'return_requested';
+    order.returnRequest = {
+      status: 'pending',
+      reason: reason || 'Customer requested return',
+      returnType: returnType || 'refund',
+      requestedAt: new Date()
+    };
+    order.statusHistory.push({
+      status: 'return_requested',
+      timestamp: new Date(),
+      reason: reason || 'Return requested by customer',
+      actorId: userId || 'customer'
+    });
+
+    await order.save();
+
+    // Notify user of return request submission
     try {
       let authServiceUrl = (process.env.USE_REMOTE_SERVICES === 'true' || process.env.RENDER === 'true') && process.env.AUTH_SERVICE_URL
         ? process.env.AUTH_SERVICE_URL.trim()
@@ -329,13 +350,17 @@ export const returnOrder = async (req, res, next) => {
         body: JSON.stringify({
           userId: order.userId,
           title: 'Return Request Submitted 📦',
-          message: `Your return request for order #${order._id.toString().slice(-8).toUpperCase()} has been received. We\'ll process it shortly.`,
+          message: `Your return request for order #${order._id.toString().slice(-8).toUpperCase()} has been received and is pending admin approval.`,
           type: 'order'
         })
       });
     } catch (_) { /* notification dispatch failure is non-fatal */ }
 
-    res.json({ success: true, order });
+    res.json({ 
+      success: true, 
+      message: 'Return request submitted successfully. Pending store admin review.',
+      order 
+    });
   } catch (err) {
     next(err);
   }
@@ -654,22 +679,55 @@ export const processReturnAction = async (req, res, next) => {
       order.returnRequest = {};
     }
 
-    order.returnRequest.status = action === 'approve' ? 'approved' : 'rejected';
+    const isApprove = action === 'approve';
+
+    order.returnRequest.status = isApprove ? 'approved' : 'rejected';
     order.returnRequest.returnType = returnType || order.returnRequest.returnType || 'refund';
     order.returnRequest.processedAt = new Date();
     order.returnRequest.adminNotes = adminNotes || '';
 
-    if (action === 'approve') {
+    if (isApprove) {
       order.orderStatus = 'returned';
       order.statusHistory.push({
         status: 'returned',
         timestamp: new Date(),
-        reason: `Return request approved. Type: ${order.returnRequest.returnType}`,
-        actorId: req.headers['x-user-id']
+        reason: `Return request APPROVED by Admin. Resolution: ${order.returnRequest.returnType}. Notes: ${adminNotes || 'None'}`,
+        actorId: req.headers['x-user-id'] || 'admin'
+      });
+    } else {
+      order.orderStatus = 'delivered';
+      order.statusHistory.push({
+        status: 'delivered',
+        timestamp: new Date(),
+        reason: `Return request REJECTED by Admin. Notes: ${adminNotes || 'None'}`,
+        actorId: req.headers['x-user-id'] || 'admin'
       });
     }
 
     await order.save();
+
+    // Send decision notification to customer
+    try {
+      let authServiceUrl = (process.env.USE_REMOTE_SERVICES === 'true' || process.env.RENDER === 'true') && process.env.AUTH_SERVICE_URL
+        ? process.env.AUTH_SERVICE_URL.trim()
+        : 'http://localhost:5001';
+      if (!authServiceUrl.startsWith('http://') && !authServiceUrl.startsWith('https://')) {
+        authServiceUrl = `https://${authServiceUrl}.onrender.com`;
+      }
+      await fetch(`${authServiceUrl}/notifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: order.userId,
+          title: isApprove ? 'Return Approved! ✅' : 'Return Request Update ℹ️',
+          message: isApprove 
+            ? `Your return request for order #${order._id.toString().slice(-8).toUpperCase()} was approved. Resolution: ${order.returnRequest.returnType}.`
+            : `Your return request for order #${order._id.toString().slice(-8).toUpperCase()} was declined by admin.`,
+          type: 'order'
+        })
+      });
+    } catch (_) {}
+
     res.json({ success: true, message: `Return request ${action}d successfully`, order });
   } catch (err) {
     next(err);
