@@ -537,19 +537,16 @@ export const getDashboardStats = async (req, res, next) => {
     });
     const totalRevenue = completedOrders.reduce((sum, o) => sum + (o.totals?.grandTotal || 0), 0);
 
-    // Calculate real 6-month monthly sales & order telemetry from DB
+    // Calculate real 12-month monthly sales & order telemetry from DB
     const now = new Date();
-    const last6Months = [];
+    const currentYear = now.getFullYear();
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      last6Months.push({
-        year: d.getFullYear(),
-        monthNum: d.getMonth() + 1,
-        label: monthNames[d.getMonth()]
-      });
-    }
+    
+    const full12Months = monthNames.map((label, idx) => ({
+      year: currentYear,
+      monthNum: idx + 1,
+      label
+    }));
 
     const monthlyStatsRaw = await Order.aggregate([
       {
@@ -572,7 +569,7 @@ export const getDashboardStats = async (req, res, next) => {
       }
     ]);
 
-    const monthlyStats = last6Months.map(m => {
+    const monthlyStats = full12Months.map(m => {
       const found = monthlyStatsRaw.find(r => r._id.year === m.year && r._id.month === m.monthNum);
       return {
         month: m.label,

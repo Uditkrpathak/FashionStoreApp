@@ -3,15 +3,18 @@ import { BarChart3 } from 'lucide-react';
 
 export const MonthlyBarChart = ({ monthlyStats = [] }) => {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const currentYear = new Date().getFullYear();
 
   // Map real monthly stats array to 12 months
   const monthlyData = months.map((m, idx) => {
     const monthNum = idx + 1;
-    const found = monthlyStats.find((s) => s.month === monthNum);
+    const found = monthlyStats.find(
+      (s) => s.monthNum === monthNum || s.month === m || s.month === monthNum
+    );
     return {
       month: m,
-      revenue: found ? found.revenue : 0,
-      orders: found ? found.orders : 0,
+      revenue: found ? found.revenue || 0 : 0,
+      orders: found ? found.orders || 0 : 0,
     };
   });
 
@@ -31,21 +34,22 @@ export const MonthlyBarChart = ({ monthlyStats = [] }) => {
           </p>
         </div>
         <span className="text-xs font-black px-3 py-1 bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] rounded-xl text-[#704F38] dark:text-[#E8B84E]">
-          Year 2026
+          Year {currentYear}
         </span>
       </div>
 
       {/* 12 Month Bar Graph */}
-      <div className="flex items-end justify-between gap-2.5 h-48 pt-6 pb-2 border-b border-[#EDEDED] dark:border-[#262838]">
+      <div className="flex items-stretch justify-between gap-2.5 h-48 pt-4 pb-2 border-b border-[#EDEDED] dark:border-[#262838]">
         {monthlyData.map((d, idx) => {
           const heightPercent = d.revenue > 0 ? Math.min(100, Math.max(15, (d.revenue / maxRevenue) * 100)) : 10;
           const isCurrent = idx === currentMonthIdx;
 
           return (
-            <div key={d.month} className="flex-1 flex flex-col items-center gap-2 group relative">
-              <div className="w-full bg-[#F1F5F9] dark:bg-[#11121E] rounded-t-xl h-full flex items-end overflow-hidden">
+            <div key={d.month} className="flex-1 flex flex-col items-center justify-end gap-2 group relative h-full">
+              {/* Bar Track Container */}
+              <div className="w-full bg-[#F1F5F9] dark:bg-[#11121E] rounded-t-xl flex-1 flex items-end overflow-hidden p-0.5">
                 <div
-                  className={`w-full rounded-t-xl transition-all duration-500 ${
+                  className={`w-full rounded-t-lg transition-all duration-500 ${
                     isCurrent
                       ? 'bg-[#704F38] dark:bg-[#E8B84E] shadow-md'
                       : 'bg-[#704F38]/30 dark:bg-[#E8B84E]/30 group-hover:bg-[#704F38] dark:group-hover:bg-[#E8B84E]'
