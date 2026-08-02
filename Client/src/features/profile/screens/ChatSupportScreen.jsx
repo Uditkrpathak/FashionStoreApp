@@ -11,6 +11,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, MoreVertical, Play, Plus, Mic, Send } from 'lucide-react-native';
@@ -146,6 +148,68 @@ const ChatSupportScreen = () => {
     }, 1500);
   };
 
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  const [ticketSubject, setTicketSubject] = useState('');
+  const [ticketCategory, setTicketCategory] = useState('Order Issue');
+  const [ticketPriority, setTicketPriority] = useState('normal');
+  const [ticketDescription, setTicketDescription] = useState('');
+  const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
+
+  const handleCreateTicketSubmit = async () => {
+    if (!ticketSubject.trim() || !ticketDescription.trim()) return;
+    setIsSubmittingTicket(true);
+
+    try {
+      await createTicket({
+        userId: currentUser?._id || `user_${Date.now()}`,
+        userName: userDisplayName,
+        userEmail: currentUser?.email || 'customer@fashionstore.com',
+        subject: ticketSubject.trim(),
+        category: ticketCategory.toLowerCase(),
+        priority: ticketPriority,
+        message: ticketDescription.trim(),
+      }).unwrap();
+
+      const userMessage = {
+        id: Date.now().toString(),
+        sender: 'user',
+        senderName: userDisplayName,
+        senderAvatar: userAvatarUrl,
+        type: 'text',
+        text: `🎫 [SUPPORT TICKET CREATED]\nSubject: ${ticketSubject.trim()}\nCategory: ${ticketCategory}\nDetails: ${ticketDescription.trim()}`,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase(),
+      };
+
+      setMessages((prev) => [...prev, userMessage]);
+      setTicketSubject('');
+      setTicketDescription('');
+      setIsTicketModalOpen(false);
+
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+
+      setIsTyping(true);
+      setTimeout(() => {
+        setIsTyping(false);
+        const agentReply = {
+          id: (Date.now() + 1).toString(),
+          sender: 'angie',
+          senderName: CHAT_PARTNER.name,
+          senderAvatar: CHAT_PARTNER.avatar,
+          type: 'text',
+          text: `Thank you! Your ticket "${ticketSubject.trim()}" has been submitted to our support team and is logged on the Super Admin Dashboard.`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase(),
+        };
+        setMessages((prev) => [...prev, agentReply]);
+      }, 1200);
+    } catch (err) {
+      console.log('[Create Ticket Error]', err);
+    } finally {
+      setIsSubmittingTicket(false);
+    }
+  };
+
   const renderMessageItem = ({ item }) => {
     const isMe = item.sender === 'user';
 
@@ -236,8 +300,12 @@ const ChatSupportScreen = () => {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.headerCircleBtn}>
-          <MoreVertical size={20} color={colors.text} />
+        <TouchableOpacity 
+          style={styles.headerTicketBtn}
+          onPress={() => setIsTicketModalOpen(true)}
+        >
+          <Plus size={14} color="#704F38" />
+          <Text style={styles.headerTicketBtnText}>Ticket</Text>
         </TouchableOpacity>
       </View>
 
@@ -251,8 +319,30 @@ const ChatSupportScreen = () => {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={() => (
-            <View style={styles.dateHeader}>
-              <Text style={styles.dateHeaderText}>TODAY</Text>
+            <View style={{ marginBottom: 12 }}>
+              {/* Formal Ticket Creation Banner */}
+              <TouchableOpacity 
+                style={styles.createTicketBanner}
+                onPress={() => setIsTicketModalOpen(true)}
+                activeOpacity={0.85}
+              >
+                <View style={styles.bannerLeft}>
+                  <View style={styles.bannerIconCircle}>
+                    <Plus size={16} color="#704F38" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.bannerTitle}>Need official help?</Text>
+                    <Text style={styles.bannerSub}>Create a ticket for returns, refunds or order issues</Text>
+                  </View>
+                </View>
+                <View style={styles.bannerPill}>
+                  <Text style={styles.bannerPillText}>+ Create Ticket</Text>
+                </View>
+              </TouchableOpacity>
+
+              <View style={styles.dateHeader}>
+                <Text style={styles.dateHeaderText}>TODAY</Text>
+              </View>
             </View>
           )}
           ListFooterComponent={() =>
@@ -268,7 +358,10 @@ const ChatSupportScreen = () => {
 
         {/* Input area matching exact screenshot layout */}
         <View style={styles.inputArea}>
-          <TouchableOpacity style={styles.plusButton}>
+          <TouchableOpacity 
+            style={styles.plusButton}
+            onPress={() => setIsTicketModalOpen(true)}
+          >
             <Plus size={20} color={colors.textMuted} />
           </TouchableOpacity>
 
@@ -296,6 +389,96 @@ const ChatSupportScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Ticket Creation Modal */}
+      <Modal
+        visible={isTicketModalOpen}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsTicketModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>🎫 Raise Support Ticket</Text>
+              <TouchableOpacity onPress={() => setIsTicketModalOpen(false)}>
+                <Text style={styles.modalCloseBtn}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.inputLabel}>Subject / Issue Title</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="e.g. Issue with Order #ORD-1002"
+                value={ticketSubject}
+                onChangeText={setTicketSubject}
+              />
+
+              <Text style={styles.inputLabel}>Category</Text>
+              <View style={styles.chipRow}>
+                {['Order Issue', 'Refund', 'Return', 'Exchange', 'General'].map((cat) => (
+                  <TouchableOpacity
+                    key={cat}
+                    onPress={() => setTicketCategory(cat)}
+                    style={[
+                      styles.chip,
+                      ticketCategory === cat && styles.chipActive,
+                    ]}
+                  >
+                    <Text style={[styles.chipText, ticketCategory === cat && styles.chipTextActive]}>
+                      {cat}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.inputLabel}>Priority Level</Text>
+              <View style={styles.chipRow}>
+                {['normal', 'high', 'urgent'].map((prio) => (
+                  <TouchableOpacity
+                    key={prio}
+                    onPress={() => setTicketPriority(prio)}
+                    style={[
+                      styles.chip,
+                      ticketPriority === prio && styles.chipActive,
+                    ]}
+                  >
+                    <Text style={[styles.chipText, ticketPriority === prio && styles.chipTextActive]}>
+                      {prio.toUpperCase()}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.inputLabel}>Details / Message</Text>
+              <TextInput
+                style={[styles.modalInput, { height: 90, textAlignVertical: 'top' }]}
+                multiline
+                numberOfLines={4}
+                placeholder="Describe your issue in detail..."
+                value={ticketDescription}
+                onChangeText={setTicketDescription}
+              />
+
+              <TouchableOpacity
+                style={[
+                  styles.submitTicketBtn,
+                  (!ticketSubject.trim() || !ticketDescription.trim()) && styles.btnDisabled,
+                ]}
+                disabled={!ticketSubject.trim() || !ticketDescription.trim() || isSubmittingTicket}
+                onPress={handleCreateTicketSubmit}
+              >
+                {isSubmittingTicket ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text style={styles.submitTicketBtnText}>Submit Support Ticket</Text>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -569,6 +752,171 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 3,
+  },
+  headerTicketBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  headerTicketBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#704F38',
+  },
+  createTicketBanner: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#EFEFEF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+    marginBottom: 8,
+  },
+  bannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  bannerIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FDFBF9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#EFEFEF',
+  },
+  bannerTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#1F2029',
+  },
+  bannerSub: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#797979',
+    marginTop: 2,
+  },
+  bannerPill: {
+    backgroundColor: '#704F38',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  bannerPillText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 24,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EDEDED',
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#1F2029',
+  },
+  modalCloseBtn: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#797979',
+    padding: 4,
+  },
+  inputLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#704F38',
+    textTransform: 'uppercase',
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  modalInput: {
+    backgroundColor: '#F9F9FB',
+    borderWidth: 1,
+    borderColor: '#EFEFEF',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1F2029',
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  chipActive: {
+    backgroundColor: '#704F38',
+    borderColor: '#704F38',
+  },
+  chipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#4B5563',
+  },
+  chipTextActive: {
+    color: '#FFFFFF',
+  },
+  submitTicketBtn: {
+    backgroundColor: '#704F38',
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 12,
+  },
+  btnDisabled: {
+    opacity: 0.5,
+  },
+  submitTicketBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '900',
   },
 });
 

@@ -74,7 +74,7 @@ export const getTicketById = async (req, res) => {
 
 export const createTicket = async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] || req.body.userId;
+    const userId = req.headers['x-user-id'] || req.body.userId || `usr_${Date.now()}`;
     const userName = req.headers['x-user-name'] || req.body.userName || 'Customer';
     const userEmail = req.headers['x-user-email'] || req.body.userEmail || '';
     const { orderId, subject, category, priority, message } = req.body;
@@ -85,6 +85,9 @@ export const createTicket = async (req, res) => {
 
     const ticketNumber = `TCK-${Math.floor(100000 + Math.random() * 900000)}`;
 
+    const normCategory = (category || 'general').toLowerCase();
+    const normPriority = (priority || 'medium').toLowerCase() === 'normal' ? 'medium' : (priority || 'medium').toLowerCase();
+
     const ticket = new Ticket({
       ticketNumber,
       userId,
@@ -92,8 +95,8 @@ export const createTicket = async (req, res) => {
       userEmail,
       orderId,
       subject,
-      category: category || 'general',
-      priority: priority || 'medium',
+      category: normCategory,
+      priority: normPriority,
       status: 'open',
       messages: [{
         senderId: userId,
@@ -104,8 +107,10 @@ export const createTicket = async (req, res) => {
     });
 
     await ticket.save();
+    console.log(`[TICKET CREATED REAL SUCCESS] #${ticketNumber} created for ${userName} (${userEmail})`);
     res.status(201).json({ success: true, ticket });
   } catch (err) {
+    console.error('🚨 [CREATE TICKET ERROR]', err);
     res.status(500).json({ success: false, message: err.message });
   }
 };

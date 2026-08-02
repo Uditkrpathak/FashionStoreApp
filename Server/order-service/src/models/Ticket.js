@@ -7,8 +7,16 @@ const TicketSchema = new mongoose.Schema({
   userEmail: { type: String, default: '' },
   orderId: String,
   subject: { type: String, required: true },
-  category: { type: String, enum: ['order', 'refund', 'product', 'delivery', 'general'], default: 'general' },
-  priority: { type: String, enum: ['low', 'medium', 'high', 'urgent'], default: 'medium' },
+  category: { 
+    type: String, 
+    enum: ['order', 'refund', 'product', 'delivery', 'return', 'exchange', 'general', 'order issue'], 
+    default: 'general' 
+  },
+  priority: { 
+    type: String, 
+    enum: ['low', 'medium', 'high', 'urgent', 'normal'], 
+    default: 'medium' 
+  },
   status: { type: String, enum: ['open', 'in_progress', 'escalated', 'resolved', 'closed'], default: 'open' },
   messages: [{
     senderId: String,
