@@ -558,6 +558,24 @@ const recalcProductRating = async (productId) => {
 
 export const addReview = async (req, res, next) => {
   try {
+    // Check Store Reviews Allowed feature toggle
+    try {
+      let authServiceUrl = (process.env.USE_REMOTE_SERVICES === 'true' || process.env.RENDER === 'true') && process.env.AUTH_SERVICE_URL
+        ? process.env.AUTH_SERVICE_URL.trim()
+        : 'http://localhost:5001';
+      if (!authServiceUrl.startsWith('http://') && !authServiceUrl.startsWith('https://')) {
+        authServiceUrl = `https://${authServiceUrl}.onrender.com`;
+      }
+      const resp = await fetch(`${authServiceUrl}/settings/config`);
+      const data = await resp.json();
+      if (resp.ok && data?.config?.featureToggles?.reviewsAllowed === false) {
+        return res.status(400).json({
+          success: false,
+          message: 'Product reviews are currently disabled by store admin.'
+        });
+      }
+    } catch (_) {}
+
     const { productId, rating, comment, productTitle } = req.body;
     const userId   = req.headers['x-user-id'];
     const userName = req.headers['x-user-name'] || 'Anonymous';

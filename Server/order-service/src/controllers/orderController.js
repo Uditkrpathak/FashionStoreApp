@@ -85,6 +85,17 @@ export const createOrder = async (req, res, next) => {
             message: 'The store is currently in maintenance mode. Placing new orders is temporarily disabled.'
           });
         }
+
+        if (config?.featureToggles?.codPaymentEnabled === false) {
+          const pm = req.body.paymentMethod;
+          const pmType = typeof pm === 'string' ? pm.toLowerCase() : pm?.type?.toLowerCase() || pm?.id?.toLowerCase();
+          if (pmType === 'cod') {
+            return res.status(400).json({
+              success: false,
+              message: 'Cash on Delivery (COD) payment option is currently disabled by store admin.'
+            });
+          }
+        }
       }
     } catch (_) {}
 

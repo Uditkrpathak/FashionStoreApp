@@ -11,6 +11,8 @@ const StoreConfigSchema = new mongoose.Schema({
   featureToggles: {
     couponsEnabled: { type: Boolean, default: true },
     returnsEnabled: { type: Boolean, default: true },
+    codPaymentEnabled: { type: Boolean, default: true },
+    reviewsAllowed: { type: Boolean, default: true },
     instantRefundsEnabled: { type: Boolean, default: true },
     maintenanceMode: { type: Boolean, default: false }
   },
