@@ -51,6 +51,11 @@ export const authApi = baseApi.injectEndpoints({
       }
     }),
 
+    getStoreConfig: builder.query({
+      query: () => ({ url: '/auth/settings/config' }),
+      providesTags: ['Auth'],
+    }),
+
     updateProfile: builder.mutation({
       query: (body) => ({ url: '/auth/profile', method: 'PATCH', data: body }),
       invalidatesTags: ['Auth', 'User'],
@@ -76,5 +81,6 @@ export const {
   useResetPasswordMutation,
   useRefreshTokenMutation,
   useGetMeQuery,
+  useGetStoreConfigQuery,
   useUpdateProfileMutation,
 } = authApi;

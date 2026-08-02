@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAppDispatch } from '../../../shared/hooks/useAppDispatch';
 import { useAppSelector } from '../../../shared/hooks/useAppSelector';
 import { setPaymentMethod, selectPaymentMethod } from '../store/checkoutSlice';
+import { useGetStoreConfigQuery } from '../../auth/api/authApi';
 import Button from '../../../shared/components/Button';
 import { colors } from '../../../theme/colors';
 import { spacing, shadows } from '../../../theme/spacing';
@@ -21,6 +22,15 @@ const CheckoutPaymentScreen = () => {
   const dispatch   = useAppDispatch();
   const selected   = useAppSelector(selectPaymentMethod);
 
+  const { data: configData } = useGetStoreConfigQuery();
+  const codDisabled = configData?.config?.featureToggles?.codPaymentEnabled === false;
+
+  React.useEffect(() => {
+    if (codDisabled && selected?.type === 'cod') {
+      dispatch(setPaymentMethod({ type: 'razorpay' }));
+    }
+  }, [codDisabled, selected]);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -29,19 +39,34 @@ const CheckoutPaymentScreen = () => {
         <View style={{ width: 32 }} />
       </View>
       <View style={styles.content}>
-        {METHODS.map((m) => (
-          <TouchableOpacity key={m.id} style={[styles.card, selected?.type === m.id && styles.cardActive]}
-            onPress={() => dispatch(setPaymentMethod({ type: m.id }))}>
-            <Text style={styles.icon}>{m.icon}</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.label}>{m.label}</Text>
-              <Text style={styles.sub}>{m.sub}</Text>
-            </View>
-            <View style={styles.radio}>
-              {selected?.type === m.id && <View style={styles.radioDot} />}
-            </View>
-          </TouchableOpacity>
-        ))}
+        {METHODS.map((m) => {
+          const isDisabled = m.id === 'cod' && codDisabled;
+          return (
+            <TouchableOpacity 
+              key={m.id} 
+              disabled={isDisabled}
+              style={[
+                styles.card, 
+                selected?.type === m.id && styles.cardActive,
+                isDisabled && { opacity: 0.5, backgroundColor: '#F3F4F6' }
+              ]}
+              onPress={() => dispatch(setPaymentMethod({ type: m.id }))}
+            >
+              <Text style={styles.icon}>{m.icon}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.label, isDisabled && { color: colors.textMuted }]}>
+                  {m.label} {isDisabled ? '(Disabled)' : ''}
+                </Text>
+                <Text style={styles.sub}>
+                  {isDisabled ? 'COD payment is disabled by store admin' : m.sub}
+                </Text>
+              </View>
+              <View style={styles.radio}>
+                {selected?.type === m.id && <View style={styles.radioDot} />}
+              </View>
+            </TouchableOpacity>
+          );
+        })}
         <TouchableOpacity style={styles.addCard} onPress={() => navigation.navigate('AddCard')}>
           <Text style={styles.addCardText}>+ Add New Card</Text>
         </TouchableOpacity>
