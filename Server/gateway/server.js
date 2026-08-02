@@ -159,6 +159,51 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.get(['/health/services', '/api/v1/system/services-health'], async (req, res) => {
+  const serviceTargets = [
+    { name: 'Gateway Service', port: 5000, url: null },
+    { name: 'Auth Service', port: 5001, url: `${AUTH_TARGET}/health` },
+    { name: 'Catalog Service', port: 5002, url: `${CATALOG_TARGET}/health` },
+    { name: 'Cart Service', port: 5003, url: `${CART_TARGET}/health` },
+    { name: 'Order Service', port: 5004, url: `${ORDER_TARGET}/health` }
+  ];
+
+  const results = await Promise.all(
+    serviceTargets.map(async (srv) => {
+      if (!srv.url) {
+        return { name: srv.name, port: srv.port, latency: 2, status: 'online' };
+      }
+      const start = Date.now();
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        const resp = await fetch(srv.url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        const latency = Math.max(1, Date.now() - start);
+        return {
+          name: srv.name,
+          port: srv.port,
+          latency,
+          status: resp.ok ? (latency > 500 ? 'degraded' : 'online') : 'degraded'
+        };
+      } catch (err) {
+        return {
+          name: srv.name,
+          port: srv.port,
+          latency: 0,
+          status: 'offline'
+        };
+      }
+    })
+  );
+
+  res.json({
+    success: true,
+    timestamp: new Date(),
+    services: results
+  });
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Gateway Service running on port ${PORT}`);
 });

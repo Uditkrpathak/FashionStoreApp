@@ -6,7 +6,7 @@ import { RevenueChart } from '../shared/components/RevenueChart';
 import { MonthlyBarChart } from '../shared/components/MonthlyBarChart';
 import { RoleDonutChart } from '../shared/components/RoleDonutChart';
 import { CustomerReviewsWidget } from '../shared/components/CustomerReviewsWidget';
-import { ServerStatusWidget } from '../shared/components/ServerStatusWidget';
+import { SupportTicketsWidget } from '../shared/components/SupportTicketsWidget';
 import { FigmaContactsWidget } from '../shared/components/FigmaContactsWidget';
 import { RecentActivityWidget } from '../shared/components/RecentActivityWidget';
 
@@ -169,8 +169,8 @@ export const DashboardPage = ({ onNavigateToTab }) => {
 
         {/* RIGHT SIDEBAR: 1 COLUMN (LIVE WIDGETS & AUDIT TIMELINE) */}
         <div className="lg:col-span-1 space-y-8">
-          {/* Widget 1: Server Microservice Health Status Bar Graph */}
-          <ServerStatusWidget />
+          {/* Widget 1: Customer Support Queue */}
+          <SupportTicketsWidget onNavigateToTickets={onNavigateToTab} />
 
           {/* Widget 2: Real Customer Contacts Grid with User Profile Avatars */}
           <FigmaContactsWidget onNavigateToUsers={onNavigateToTab} />

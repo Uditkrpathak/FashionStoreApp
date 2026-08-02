@@ -21,6 +21,40 @@ export const ServerStatusWidget = () => {
 
   const pingAllServices = useCallback(async () => {
     setIsRefreshing(true);
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+    const gatewayHealthUrl = apiBase.endsWith('/api/v1') 
+      ? apiBase.replace('/api/v1', '/health/services') 
+      : 'http://localhost:5000/health/services';
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      const res = await fetch(gatewayHealthUrl, {
+        method: 'GET',
+        signal: controller.signal,
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.success && Array.isArray(data?.services)) {
+          setServices(data.services.map(s => ({
+            name: s.name,
+            port: s.port,
+            latency: s.latency || 10,
+            status: s.status || 'online'
+          })));
+          setIsRefreshing(false);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('[SERVER STATUS WIDGET] Gateway aggregator ping failed, falling back to individual pings:', err.message);
+    }
+
+    // Fallback: Ping each endpoint individually
     const updated = await Promise.all(
       SERVICE_CONFIGS.map(async (srv) => {
         const start = performance.now();
