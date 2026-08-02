@@ -45,47 +45,44 @@ export const DashboardPage = ({ onNavigateToTab }) => {
         {/* LEFT AREA: 2 COLUMNS (MAIN DASHBOARD ANALYTICS & CHARTS) */}
         <div className="lg:col-span-2 space-y-8">
           
-          {/* Top Section: 4 KPI Mini Cards + Revenue Sparkline Chart */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-            {/* 4 Mini KPI Grid */}
-            <div className="grid grid-cols-2 gap-4">
-              {miniKpiCards.map((card, idx) => {
-                const Icon = card.icon;
-                return (
+          {/* Top Section: Compact 4 KPI Cards Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {miniKpiCards.map((card, idx) => {
+              const Icon = card.icon;
+              return (
+                <div
+                  key={idx}
+                  className="bg-white dark:bg-[#181926] p-4 rounded-2xl border border-[#EDEDED] dark:border-[#262838] shadow-sm hover:shadow-md transition-all flex items-center gap-3.5"
+                >
                   <div
-                    key={idx}
-                    className="bg-white dark:bg-[#181926] p-4 rounded-3xl border border-[#EDEDED] dark:border-[#262838] shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: card.bg }}
                   >
-                    <div
-                      className="w-10 h-10 rounded-2xl flex items-center justify-center mb-3"
-                      style={{ backgroundColor: card.bg }}
-                    >
-                      <Icon className="w-5 h-5" style={{ color: card.color }} />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-extrabold text-[#797979] dark:text-[#A0AEC0] uppercase tracking-wider block">
-                        {card.title}
-                      </span>
-                      <span className="text-lg font-black text-[#1F2029] dark:text-white mt-0.5 block truncate">
-                        {card.value}
-                      </span>
-                    </div>
+                    <Icon className="w-5 h-5" style={{ color: card.color }} />
                   </div>
-                );
-              })}
-            </div>
-
-            {/* Revenue Analytics Sparkline Chart */}
-            <div>
-              <RevenueChart
-                monthlyStats={stats.monthlyStats}
-                totalRevenue={stats.totalRevenue}
-                totalOrders={stats.totalOrders}
-              />
-            </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[10px] font-extrabold text-[#797979] dark:text-[#A0AEC0] uppercase tracking-wider block truncate">
+                      {card.title}
+                    </span>
+                    <span className="text-base sm:text-lg font-black text-[#1F2029] dark:text-white mt-0.5 block truncate">
+                      {card.value}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          {/* 12-Month Sales & Fulfillment Bar Chart */}
+          {/* Large Hero Revenue Analytics Sparkline Chart */}
+          <div>
+            <RevenueChart
+              monthlyStats={stats.monthlyStats}
+              totalRevenue={stats.totalRevenue}
+              totalOrders={stats.totalOrders}
+            />
+          </div>
+
+          {/* Large 12-Month Sales & Fulfillment Bar Chart */}
           <div>
             <MonthlyBarChart monthlyStats={stats.monthlyStats} />
           </div>
