@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "420306438359",
+    "project_id": "fashionstore-71d57",
+    "storage_bucket": "fashionstore-71d57.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:420306438359:android:c3ac1e3bb448e730404892",
+        "android_client_info": {
+          "package_name": "com.uditkr.fashionstore"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDF1KgqhQg-XQp8jim-2BYX5aeuiqQiKaA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
