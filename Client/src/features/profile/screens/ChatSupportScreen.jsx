@@ -358,10 +358,10 @@ const ChatSupportScreen = () => {
             </View>
           )}
           ListFooterComponent={() =>
-            isTyping ? (
+            isSendingMsg ? (
               <View style={styles.typingIndicatorContainer}>
                 <Image source={{ uri: CHAT_PARTNER.avatar }} style={styles.miniAvatar} />
-                <Text style={styles.typingText}>Angie is typing</Text>
+                <Text style={styles.typingText}>Sending message...</Text>
                 <ActivityIndicator size="small" color={colors.textMuted} style={{ marginLeft: 6 }} />
               </View>
             ) : null

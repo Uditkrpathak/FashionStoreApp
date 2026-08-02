@@ -21,7 +21,7 @@ const TicketSchema = new mongoose.Schema({
   messages: [{
     senderId: String,
     senderName: String,
-    role: { type: String, enum: ['user', 'support', 'admin', 'system'], default: 'user' },
+    role: { type: String, enum: ['user', 'support', 'admin', 'super_admin', 'system'], default: 'user' },
     message: String,
     attachments: [String],
     isInternalNote: { type: Boolean, default: false },

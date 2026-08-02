@@ -154,9 +154,15 @@ export const createTicket = async (req, res) => {
 export const replyTicket = async (req, res) => {
   try {
     const { id } = req.params;
-    const senderId = req.headers['x-user-id'] || 'support';
-    const senderName = req.headers['x-user-name'] || 'Support Agent';
-    const senderRole = req.headers['x-user-role'] || 'support';
+    const senderId = req.headers['x-user-id'] || req.body.senderId || 'support';
+    const senderName = req.headers['x-user-name'] || req.body.senderName || 'Support Agent';
+    let senderRole = req.headers['x-user-role'] || req.body.role || 'support';
+
+    const validRoles = ['user', 'support', 'admin', 'super_admin', 'system'];
+    if (!validRoles.includes(senderRole)) {
+      senderRole = 'support';
+    }
+
     const { message, isInternalNote, attachments } = req.body;
 
     if (!message) return res.status(400).json({ success: false, message: 'Message cannot be empty' });
