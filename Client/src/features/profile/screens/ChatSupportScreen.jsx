@@ -18,13 +18,17 @@ import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, MoreVertical, Play, Plus, Mic, Send } from 'lucide-react-native';
 import { useAppSelector } from '../../../shared/hooks/useAppSelector';
 import { selectUser } from '../../auth/store/authSlice';
-import { useCreateTicketMutation } from '../../orders/api/orderApi';
+import { 
+  useCreateTicketMutation, 
+  useGetUserTicketsQuery, 
+  useReplyTicketMutation 
+} from '../../orders/api/orderApi';
 import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
 
 const CHAT_PARTNER = {
-  name: 'Angie Brekke',
+  name: 'Support Team',
   avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=150&auto=format&fit=crop',
   status: 'Online',
 };
@@ -36,35 +40,8 @@ const INITIAL_MESSAGES = [
     senderName: CHAT_PARTNER.name,
     senderAvatar: CHAT_PARTNER.avatar,
     type: 'text',
-    text: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-    time: '08:04 pm',
-  },
-  {
-    id: '2',
-    sender: 'user',
-    senderName: 'Esther Howard',
-    senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop',
-    type: 'text',
-    text: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-    time: '08:04 pm',
-  },
-  {
-    id: '3',
-    sender: 'angie',
-    senderName: CHAT_PARTNER.name,
-    senderAvatar: CHAT_PARTNER.avatar,
-    type: 'image',
-    imageUrl: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=400&auto=format&fit=crop',
-    time: '08:04 pm',
-  },
-  {
-    id: '4',
-    sender: 'user',
-    senderName: 'Esther Howard',
-    senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop',
-    type: 'audio',
-    duration: '0:13',
-    time: '08:04 pm',
+    text: 'Hello! 👋 How can we help you today? Create a ticket or type below to contact support.',
+    time: 'Just now',
   },
 ];
 
@@ -73,79 +50,94 @@ const ChatSupportScreen = () => {
   const currentUser = useAppSelector(selectUser);
   const flatListRef = useRef(null);
 
-  const [createTicket] = useCreateTicketMutation();
-  const [messages, setMessages] = useState(INITIAL_MESSAGES);
-  const [inputText, setInputText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-
-  // Sync user info from Redux store if available
-  const userDisplayName = currentUser?.name || 'Esther Howard';
+  const userDisplayName = currentUser?.name || 'Customer';
   const userAvatarUrl = currentUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop';
 
+  // Fetch real user tickets from backend
+  const { data: userTicketsData, isLoading: isLoadingTickets } = useGetUserTicketsQuery(
+    { userId: currentUser?._id, userEmail: currentUser?.email },
+    { skip: !currentUser?._id && !currentUser?.email, pollingInterval: 10000 }
+  );
+
+  const [createTicket] = useCreateTicketMutation();
+  const [replyTicket] = useReplyTicketMutation();
+
+  const userTickets = userTicketsData?.tickets || [];
+  const [selectedTicketId, setSelectedTicketId] = useState(null);
+  const [inputText, setInputText] = useState('');
+  const [isSendingMsg, setIsSendingMsg] = useState(false);
+
+  // Auto select top ticket if not set
   useEffect(() => {
-    // Scroll to bottom on load
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: false });
-    }, 100);
-  }, []);
+    if (userTickets.length > 0 && !selectedTicketId) {
+      setSelectedTicketId(userTickets[0]._id);
+    }
+  }, [userTickets]);
 
-  const handleSend = async () => {
-    if (!inputText.trim()) return;
+  const activeTicket = userTickets.find((t) => t._id === selectedTicketId) || userTickets[0];
 
-    const messageText = inputText.trim();
-
-    const userMessage = {
-      id: Date.now().toString(),
-      sender: 'user',
-      senderName: userDisplayName,
-      senderAvatar: userAvatarUrl,
-      type: 'text',
-      text: messageText,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInputText('');
-
-    // Trigger ticket creation in backend order-service DB with resilient fallback
-    try {
-      await submitTicketPayload({
-        userId: currentUser?._id || `user_${Date.now()}`,
-        userName: userDisplayName,
-        userEmail: currentUser?.email || 'customer@fashionstore.com',
-        subject: `Support Chat: ${messageText.slice(0, 35)}...`,
-        category: 'general',
-        priority: 'medium',
-        message: messageText,
-      });
-    } catch (err) {
-      console.log('[Support Ticket API] Call logged:', err?.message || err);
+  // Derive real message list for display
+  const messages = React.useMemo(() => {
+    if (!activeTicket || !activeTicket.messages || activeTicket.messages.length === 0) {
+      return INITIAL_MESSAGES;
     }
 
-    // Auto scroll to bottom
+    return activeTicket.messages.map((m, index) => {
+      const isMe = m.role === 'user' || m.senderId === currentUser?._id;
+      const formattedTime = m.createdAt
+        ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase()
+        : 'Just now';
+
+      return {
+        id: m._id || index.toString(),
+        sender: isMe ? 'user' : 'angie',
+        senderName: isMe ? (m.senderName || userDisplayName) : (m.senderName || CHAT_PARTNER.name),
+        senderAvatar: isMe ? userAvatarUrl : CHAT_PARTNER.avatar,
+        type: 'text',
+        text: m.message,
+        time: formattedTime,
+      };
+    });
+  }, [activeTicket, currentUser, userDisplayName, userAvatarUrl]);
+
+  useEffect(() => {
     setTimeout(() => {
       flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+    }, 150);
+  }, [messages.length, selectedTicketId]);
 
-    // Simulate agent typing and replying
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      const agentReply = {
-        id: (Date.now() + 1).toString(),
-        sender: 'angie',
-        senderName: CHAT_PARTNER.name,
-        senderAvatar: CHAT_PARTNER.avatar,
-        type: 'text',
-        text: 'Thank you for reaching out! Your support ticket has been created and our team is reviewing it.',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase(),
-      };
-      setMessages((prev) => [...prev, agentReply]);
+  const handleSend = async () => {
+    if (!inputText.trim() || isSendingMsg) return;
 
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }, 1500);
+    const messageText = inputText.trim();
+    setInputText('');
+    setIsSendingMsg(true);
+
+    try {
+      if (activeTicket?._id) {
+        // Send reply to active ticket
+        await replyTicket({ id: activeTicket._id, message: messageText }).unwrap();
+      } else {
+        // No active ticket, create one directly
+        const res = await createTicket({
+          userId: currentUser?._id || `user_${Date.now()}`,
+          userName: userDisplayName,
+          userEmail: currentUser?.email || '',
+          subject: `Support Chat: ${messageText.slice(0, 35)}...`,
+          category: 'general',
+          priority: 'medium',
+          message: messageText,
+        }).unwrap();
+
+        if (res?.ticket?._id) {
+          setSelectedTicketId(res.ticket._id);
+        }
+      }
+    } catch (err) {
+      console.log('[Send Support Message Error]', err);
+    } finally {
+      setIsSendingMsg(false);
+    }
   };
 
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
@@ -155,77 +147,32 @@ const ChatSupportScreen = () => {
   const [ticketDescription, setTicketDescription] = useState('');
   const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
 
-  const submitTicketPayload = async (payload) => {
-    try {
-      return await createTicket(payload).unwrap();
-    } catch (apiErr) {
-      console.log('[ChatSupportScreen] Primary gateway error, triggering direct order-service fallback:', apiErr);
-      const directTarget = 'https://fashion-order-service-a4xr.onrender.com/tickets';
-      const response = await fetch(directTarget, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await response.json();
-      if (response.ok && data?.success) {
-        return data;
-      }
-      throw new Error(data?.message || 'Ticket creation failed');
-    }
-  };
-
   const handleCreateTicketSubmit = async () => {
     const finalSubject = ticketSubject.trim() || 'General Customer Support Issue';
     const finalMessage = ticketDescription.trim() || 'Customer submitted a support request via Chat Support screen.';
     setIsSubmittingTicket(true);
 
     try {
-      await submitTicketPayload({
-        userId: currentUser?._id || `user_${Date.now()}`,
+      const res = await createTicket({
+        userId: currentUser?._id || `usr_${Date.now()}`,
         userName: userDisplayName,
-        userEmail: currentUser?.email || 'customer@fashionstore.com',
+        userEmail: currentUser?.email || '',
         subject: finalSubject,
         category: ticketCategory.toLowerCase(),
         priority: ticketPriority,
         message: finalMessage,
-      });
+      }).unwrap();
 
-      const userMessage = {
-        id: Date.now().toString(),
-        sender: 'user',
-        senderName: userDisplayName,
-        senderAvatar: userAvatarUrl,
-        type: 'text',
-        text: `🎫 [SUPPORT TICKET CREATED]\nSubject: ${finalSubject}\nCategory: ${ticketCategory}\nDetails: ${finalMessage}`,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase(),
-      };
-
-      setMessages((prev) => [...prev, userMessage]);
       setTicketSubject('');
       setTicketDescription('');
       setIsTicketModalOpen(false);
 
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-
-      setIsTyping(true);
-      setTimeout(() => {
-        setIsTyping(false);
-        const agentReply = {
-          id: (Date.now() + 1).toString(),
-          sender: 'angie',
-          senderName: CHAT_PARTNER.name,
-          senderAvatar: CHAT_PARTNER.avatar,
-          type: 'text',
-          text: `Thank you! Your ticket "${ticketSubject.trim()}" has been submitted to our support team and is logged on the Super Admin Dashboard.`,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase(),
-        };
-        setMessages((prev) => [...prev, agentReply]);
-      }, 1200);
+      if (res?.ticket?._id) {
+        setSelectedTicketId(res.ticket._id);
+      }
     } catch (err) {
       console.log('[Create Ticket Error]', err);
-      const errMsg = err.data?.message || err.message || 'Failed to create support ticket. Please check connection.';
+      const errMsg = err?.data?.message || err?.message || 'Failed to create support ticket.';
       alert(`Ticket Error: ${errMsg}`);
     } finally {
       setIsSubmittingTicket(false);
@@ -362,8 +309,51 @@ const ChatSupportScreen = () => {
                 </View>
               </TouchableOpacity>
 
+              {/* User Created Tickets List Carousel/Pills */}
+              {userTickets.length > 0 && (
+                <View style={{ marginVertical: 12 }}>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#704F38', marginBottom: 8, letterSpacing: 0.5 }}>
+                    YOUR SUPPORT TICKETS ({userTickets.length})
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                    {userTickets.map((t) => {
+                      const isSelected = (activeTicket?._id === t._id);
+                      const statusColor = t.status === 'open' ? '#2196F3' : t.status === 'in_progress' ? '#FF9800' : t.status === 'escalated' ? '#E91E63' : '#4CAF50';
+                      return (
+                        <TouchableOpacity
+                          key={t._id}
+                          onPress={() => setSelectedTicketId(t._id)}
+                          style={{
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            borderRadius: 12,
+                            backgroundColor: isSelected ? '#704F38' : '#FFFFFF',
+                            borderWidth: 1,
+                            borderColor: isSelected ? '#704F38' : '#E0E0E0',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 6,
+                          }}
+                        >
+                          <Text style={{ fontSize: 12, fontWeight: '700', color: isSelected ? '#FFFFFF' : '#333333' }}>
+                            #{t.ticketNumber}
+                          </Text>
+                          <View style={{ backgroundColor: statusColor, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
+                            <Text style={{ fontSize: 9, fontWeight: '800', color: '#FFFFFF', textTransform: 'uppercase' }}>
+                              {t.status}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              )}
+
               <View style={styles.dateHeader}>
-                <Text style={styles.dateHeaderText}>TODAY</Text>
+                <Text style={styles.dateHeaderText}>
+                  {activeTicket ? `TICKET: ${activeTicket.ticketNumber} (${(activeTicket.subject || '').toUpperCase()})` : 'TODAY'}
+                </Text>
               </View>
             </View>
           )}

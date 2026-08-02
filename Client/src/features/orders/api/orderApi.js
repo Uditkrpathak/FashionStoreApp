@@ -50,7 +50,30 @@ export const orderApi = baseApi.injectEndpoints({
 
     createTicket: builder.mutation({
       query: (body) => ({ url: '/orders/tickets', method: 'POST', data: body }),
-      invalidatesTags: [{ type: 'Order', id: 'LIST' }],
+      invalidatesTags: [{ type: 'Ticket', id: 'LIST' }],
+    }),
+
+    getUserTickets: builder.query({
+      query: (params) => ({ url: '/orders/tickets/my', params }),
+      providesTags: (result) =>
+        result?.tickets
+          ? [
+              ...result.tickets.map(({ _id }) => ({ type: 'Ticket', id: _id })),
+              { type: 'Ticket', id: 'LIST' },
+            ]
+          : [{ type: 'Ticket', id: 'LIST' }],
+    }),
+
+    replyTicket: builder.mutation({
+      query: ({ id, message }) => ({
+        url: `/orders/tickets/${id}/reply`,
+        method: 'POST',
+        data: { message },
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'Ticket', id },
+        { type: 'Ticket', id: 'LIST' },
+      ],
     }),
   }),
 });
@@ -64,4 +87,6 @@ export const {
   useCancelOrderMutation,
   useReturnOrderMutation,
   useCreateTicketMutation,
+  useGetUserTicketsQuery,
+  useReplyTicketMutation,
 } = orderApi;

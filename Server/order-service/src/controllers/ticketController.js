@@ -51,6 +51,42 @@ export const getAllTickets = async (req, res) => {
   }
 };
 
+export const getUserTickets = async (req, res) => {
+  try {
+    const userId = req.headers['x-user-id'] || req.query.userId;
+    const userEmail = req.headers['x-user-email'] || req.query.userEmail;
+
+    const filter = [];
+    if (userId) filter.push({ userId });
+    if (userEmail) filter.push({ userEmail });
+
+    let query = {};
+    if (filter.length > 0) {
+      query = { $or: filter };
+    } else {
+      return res.json({ success: true, tickets: [] });
+    }
+
+    const tickets = await Ticket.find(query).sort({ createdAt: -1 }).lean();
+
+    const now = new Date();
+    const ticketsWithSla = tickets.map(t => {
+      let slaStatus = 'On Track';
+      if (t.status !== 'resolved' && t.status !== 'closed' && t.slaDeadline) {
+        const deadline = new Date(t.slaDeadline);
+        const diffHours = (deadline - now) / (1000 * 60 * 60);
+        if (diffHours < 0) slaStatus = 'Breached';
+        else if (diffHours <= 4) slaStatus = 'At Risk';
+      }
+      return { ...t, slaStatus };
+    });
+
+    res.json({ success: true, tickets: ticketsWithSla });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 export const getTicketById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -75,8 +111,8 @@ export const getTicketById = async (req, res) => {
 export const createTicket = async (req, res) => {
   try {
     const userId = req.headers['x-user-id'] || req.body.userId || `usr_${Date.now()}`;
-    const userName = req.headers['x-user-name'] || req.body.userName || 'Customer';
-    const userEmail = req.headers['x-user-email'] || req.body.userEmail || '';
+    const userName = req.headers['x-user-name'] || req.body.userName || req.body.name || 'Customer';
+    const userEmail = req.headers['x-user-email'] || req.body.userEmail || req.body.email || '';
     const { orderId, subject, category, priority, message } = req.body;
 
     if (!subject || !message) {

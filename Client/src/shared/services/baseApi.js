@@ -36,6 +36,7 @@ export const baseApi = createApi({
     'Coupon',
     'AuditLog',
     'AdminStats',
+    'Ticket',
   ],
 
   // Endpoints injected by feature modules — do not define here
