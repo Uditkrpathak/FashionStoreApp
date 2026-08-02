@@ -420,7 +420,7 @@ export const getCategories = async (req, res, next) => {
 
 export const getProducts = async (req, res, next) => {
   try {
-    const { q, categoryId, sort, limit = 20, isFeatured, brand, gender, rating, priceMin, priceMax } = req.query;
+    const { q, categoryId, category, sort, limit = 50, isFeatured, brand, gender, rating, priceMin, priceMax } = req.query;
     let filter = {};
 
     if (q) {
@@ -457,7 +457,21 @@ export const getProducts = async (req, res, next) => {
 
       filter.$or = orConditions;
     }
-    if (categoryId) filter.category = categoryId;
+
+    const catParam = categoryId || category;
+    if (catParam && catParam !== 'All' && catParam !== 'null' && catParam !== 'undefined') {
+      if (mongoose.Types.ObjectId.isValid(catParam)) {
+        filter.category = catParam;
+      } else {
+        const catDoc = await Category.findOne({ name: { $regex: new RegExp(`^${String(catParam).trim()}$`, 'i') } });
+        if (catDoc) {
+          filter.category = catDoc._id;
+        } else {
+          filter.category = catParam;
+        }
+      }
+    }
+
     if (isFeatured) filter.isFeatured = isFeatured === 'true';
 
     if (gender && gender !== 'All' && gender !== 'null' && gender !== 'undefined') {
