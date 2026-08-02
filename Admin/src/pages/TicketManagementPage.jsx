@@ -27,11 +27,32 @@ export const TicketManagementPage = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const { data, isLoading, refetch } = useGetTicketsQuery({
+  const { data: rtkData, isLoading: isRtkLoading, refetch } = useGetTicketsQuery({
     status: statusFilter || undefined,
     priority: priorityFilter || undefined,
     search: search || undefined,
   });
+
+  const [fallbackTickets, setFallbackTickets] = useState([]);
+
+  useEffect(() => {
+    fetch('https://fashion-order-service-a4xr.onrender.com/admin/tickets', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('admin_token') || ''}`,
+        'x-user-role': 'admin'
+      }
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d?.success && Array.isArray(d?.tickets)) {
+          setFallbackTickets(d.tickets);
+        }
+      })
+      .catch(err => console.warn('[TICKET PAGE FALLBACK WARN]', err));
+  }, [statusFilter, priorityFilter, search]);
+
+  const ticketsList = (rtkData?.tickets && rtkData.tickets.length > 0) ? rtkData.tickets : fallbackTickets;
+  const isLoading = isRtkLoading && fallbackTickets.length === 0;
 
   const { data: usersData } = useGetAdminUsersQuery({ limit: 100 });
   const registeredUsers = usersData?.users || [];
@@ -139,10 +160,10 @@ export const TicketManagementPage = () => {
             <tbody className="divide-y divide-[#EDEDED] dark:divide-[#262838]">
               {isLoading ? (
                 <tr><td colSpan="7"><Loader message="Loading Support Tickets..." /></td></tr>
-              ) : data?.tickets?.length === 0 ? (
+              ) : ticketsList?.length === 0 ? (
                 <tr><td colSpan="7" className="p-8 text-center text-[#797979] dark:text-[#A0AEC0] font-bold">No support tickets found.</td></tr>
               ) : (
-                data?.tickets?.map((ticket) => {
+                ticketsList?.map((ticket) => {
                   const custEmail = (ticket.userEmail || '').toLowerCase();
                   const custName = ticket.userName || 'Customer';
                   const custFirstChar = custName.charAt(0).toUpperCase();

@@ -1,10 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGetTicketsQuery } from '../../services/adminOrderApi';
 import { MessageSquare, ArrowRight, AlertCircle, Clock, CheckCircle2, User } from 'lucide-react';
 
 export const SupportTicketsWidget = ({ onNavigateToTickets }) => {
-  const { data, isLoading } = useGetTicketsQuery({ limit: 5 });
-  const tickets = data?.tickets || [];
+  const { data: rtkData, isLoading: isRtkLoading } = useGetTicketsQuery({ limit: 5 });
+  const [fallbackTickets, setFallbackTickets] = useState([]);
+
+  useEffect(() => {
+    fetch('https://fashion-order-service-a4xr.onrender.com/admin/tickets', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('admin_token') || ''}`,
+        'x-user-role': 'admin'
+      }
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d?.success && Array.isArray(d?.tickets)) {
+          setFallbackTickets(d.tickets.slice(0, 5));
+        }
+      })
+      .catch(err => console.warn('[TICKETS FALLBACK FETCH WARN]', err));
+  }, []);
+
+  const tickets = (rtkData?.tickets && rtkData.tickets.length > 0) ? rtkData.tickets : fallbackTickets;
+  const isLoading = isRtkLoading && fallbackTickets.length === 0;
   const openCount = tickets.filter(t => t.status === 'open' || t.status === 'in_progress' || t.status === 'escalated').length;
 
   const getStatusBadge = (status) => {

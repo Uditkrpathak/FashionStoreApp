@@ -175,7 +175,8 @@ const ChatSupportScreen = () => {
   };
 
   const handleCreateTicketSubmit = async () => {
-    if (!ticketSubject.trim() || !ticketDescription.trim()) return;
+    const finalSubject = ticketSubject.trim() || 'General Customer Support Issue';
+    const finalMessage = ticketDescription.trim() || 'Customer submitted a support request via Chat Support screen.';
     setIsSubmittingTicket(true);
 
     try {
@@ -183,10 +184,10 @@ const ChatSupportScreen = () => {
         userId: currentUser?._id || `user_${Date.now()}`,
         userName: userDisplayName,
         userEmail: currentUser?.email || 'customer@fashionstore.com',
-        subject: ticketSubject.trim(),
+        subject: finalSubject,
         category: ticketCategory.toLowerCase(),
         priority: ticketPriority,
-        message: ticketDescription.trim(),
+        message: finalMessage,
       });
 
       const userMessage = {
@@ -195,7 +196,7 @@ const ChatSupportScreen = () => {
         senderName: userDisplayName,
         senderAvatar: userAvatarUrl,
         type: 'text',
-        text: `🎫 [SUPPORT TICKET CREATED]\nSubject: ${ticketSubject.trim()}\nCategory: ${ticketCategory}\nDetails: ${ticketDescription.trim()}`,
+        text: `🎫 [SUPPORT TICKET CREATED]\nSubject: ${finalSubject}\nCategory: ${ticketCategory}\nDetails: ${finalMessage}`,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase(),
       };
 
@@ -483,11 +484,8 @@ const ChatSupportScreen = () => {
               />
 
               <TouchableOpacity
-                style={[
-                  styles.submitTicketBtn,
-                  (!ticketSubject.trim() || !ticketDescription.trim()) && styles.btnDisabled,
-                ]}
-                disabled={!ticketSubject.trim() || !ticketDescription.trim() || isSubmittingTicket}
+                style={styles.submitTicketBtn}
+                disabled={isSubmittingTicket}
                 onPress={handleCreateTicketSubmit}
               >
                 {isSubmittingTicket ? (
