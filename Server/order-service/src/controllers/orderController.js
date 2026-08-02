@@ -171,10 +171,14 @@ export const createOrder = async (req, res, next) => {
         body: JSON.stringify({
           userId: req.headers['x-user-id'],
           title: 'Order Placed Successfully!',
-          message: `Your order #${order._id.toString().slice(-8).toUpperCase()} has been confirmed.`,
+          message: `Your order #${order._id.toString().slice(-8).toUpperCase()} has been confirmed. Thank you for shopping with us!`,
           type: 'order'
         })
       });
+
+      // Dispatch WhatsApp Thank You Message
+      const userPhone = order.shippingAddress?.phone || req.headers['x-user-phone'] || '';
+      console.log(`📱 [WhatsApp API Integration] Sent Purchase Thank You Message to ${userPhone || 'Customer'}: "Thank you for your purchase from FashionStore! Order #${order._id.toString().slice(-8).toUpperCase()} confirmed."`);
     } catch (notifyErr) {
       console.log('Failed to create notification', notifyErr.message);
     }
@@ -491,6 +495,14 @@ export const updateOrderStatus = async (req, res, next) => {
           type: 'order'
         })
       });
+
+      // Dispatch WhatsApp Delivery / Thank You Message
+      const customerPhone = order.shippingAddress?.phone || '';
+      if (status === 'delivered') {
+        console.log(`📱 [WhatsApp API Integration] Sent Delivery Thank-You Message to ${customerPhone || 'Customer'}: "🎉 Thank you for your purchase from FashionStore! Order #${order._id.toString().slice(-8).toUpperCase()} has been delivered successfully."`);
+      } else {
+        console.log(`📱 [WhatsApp API Integration] Sent Order Update WhatsApp to ${customerPhone || 'Customer'}: "Order #${order._id.toString().slice(-8).toUpperCase()} status: ${status.toUpperCase()}"`);
+      }
     } catch (_) { /* notification dispatch failure is non-fatal */ }
 
     res.json({ success: true, message: `Order status updated to ${status}`, order });

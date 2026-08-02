@@ -101,12 +101,14 @@ const OrderDetailScreen = () => {
           {canCancel && (
             <Button title="Cancel" variant="outline" onPress={() => navigation.navigate('CancelReturn', { orderId, type: 'cancel' })} style={{ flex: 1 }} />
           )}
+          {order.orderStatus === 'delivered' && (
+            <Button title="Return Item" variant="outline" onPress={() => navigation.navigate('CancelReturn', { orderId, type: 'return' })} style={{ flex: 1 }} />
+          )}
           {order.orderStatus === 'delivered' && order.items?.[0]?.productId && (
             <Button 
               title="Leave Review" 
               onPress={() => navigation.navigate('WriteReview', { 
                 productId: order.items[0].productId,
-                // Pass snapshot data so it works even if product was reseeded
                 productSnapshot: {
                   title: order.items[0].title,
                   image: order.items[0].image,
