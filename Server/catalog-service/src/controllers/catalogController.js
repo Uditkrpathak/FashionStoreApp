@@ -703,6 +703,20 @@ export const createProduct = async (req, res, next) => {
     }
     delete productData.initialRating;
 
+    // Handle category resolution (ObjectId vs string category name)
+    if (category) {
+      if (mongoose.Types.ObjectId.isValid(category)) {
+        productData.category = category;
+      } else {
+        const categoryName = String(category).trim();
+        let catDoc = await Category.findOne({ name: { $regex: new RegExp(`^${categoryName}$`, 'i') } });
+        if (!catDoc) {
+          catDoc = await Category.create({ name: categoryName });
+        }
+        productData.category = catDoc._id;
+      }
+    }
+
     const product = new Product(productData);
     await product.save();
 
@@ -714,18 +728,39 @@ export const createProduct = async (req, res, next) => {
 
     res.status(201).json({ success: true, product });
   } catch (err) {
-    next(err);
+    if (typeof next === 'function') {
+      next(err);
+    } else {
+      res.status(500).json({ success: false, message: err.message });
+    }
   }
 };
 
 export const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const product = await Product.findByIdAndUpdate(id, req.body, { new: true });
+    const updateData = { ...req.body };
+
+    if (updateData.category) {
+      if (!mongoose.Types.ObjectId.isValid(updateData.category)) {
+        const categoryName = String(updateData.category).trim();
+        let catDoc = await Category.findOne({ name: { $regex: new RegExp(`^${categoryName}$`, 'i') } });
+        if (!catDoc) {
+          catDoc = await Category.create({ name: categoryName });
+        }
+        updateData.category = catDoc._id;
+      }
+    }
+
+    const product = await Product.findByIdAndUpdate(id, updateData, { new: true });
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
     res.json({ success: true, product });
   } catch (err) {
-    next(err);
+    if (typeof next === 'function') {
+      next(err);
+    } else {
+      res.status(500).json({ success: false, message: err.message });
+    }
   }
 };
 

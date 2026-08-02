@@ -47,6 +47,11 @@ export const orderApi = baseApi.injectEndpoints({
       query: ({ id, ...body }) => ({ url: `/orders/${id}/return`, method: 'POST', data: body }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Order', id }],
     }),
+
+    createTicket: builder.mutation({
+      query: (body) => ({ url: '/orders/tickets', method: 'POST', data: body }),
+      invalidatesTags: [{ type: 'Order', id: 'LIST' }],
+    }),
   }),
 });
 
@@ -58,4 +63,5 @@ export const {
   useTrackOrderQuery,
   useCancelOrderMutation,
   useReturnOrderMutation,
+  useCreateTicketMutation,
 } = orderApi;
