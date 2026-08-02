@@ -537,7 +537,20 @@ export const getDashboardStats = async (req, res, next) => {
     });
     const totalRevenue = completedOrders.reduce((sum, o) => sum + (o.totals?.grandTotal || 0), 0);
 
-    // Calculate monthly sales trend from DB
+    // Calculate real 6-month monthly sales & order telemetry from DB
+    const now = new Date();
+    const last6Months = [];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      last6Months.push({
+        year: d.getFullYear(),
+        monthNum: d.getMonth() + 1,
+        label: monthNames[d.getMonth()]
+      });
+    }
+
     const monthlyStatsRaw = await Order.aggregate([
       {
         $group: {
@@ -545,19 +558,30 @@ export const getDashboardStats = async (req, res, next) => {
             year: { $year: '$createdAt' },
             month: { $month: '$createdAt' }
           },
-          revenue: { $sum: '$totals.grandTotal' },
+          revenue: {
+            $sum: {
+              $cond: [
+                { $or: [{ $eq: ['$paymentStatus', 'completed'] }, { $eq: ['$paymentStatus', 'paid'] }] },
+                { $ifNull: ['$totals.grandTotal', 0] },
+                0
+              ]
+            }
+          },
           count: { $sum: 1 }
         }
-      },
-      { $sort: { '_id.year': 1, '_id.month': 1 } }
+      }
     ]);
 
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const monthlyStats = monthlyStatsRaw.map(m => ({
-      month: `${monthNames[(m._id.month || 1) - 1]} ${m._id.year}`,
-      revenue: m.revenue || 0,
-      orders: m.count || 0
-    }));
+    const monthlyStats = last6Months.map(m => {
+      const found = monthlyStatsRaw.find(r => r._id.year === m.year && r._id.month === m.monthNum);
+      return {
+        month: m.label,
+        monthNum: m.monthNum,
+        year: m.year,
+        revenue: found ? (found.revenue || 0) : 0,
+        orders: found ? (found.count || 0) : 0
+      };
+    });
 
     res.json({
       success: true,

@@ -47,7 +47,7 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
   const { data: productsData, isLoading, refetch } = useGetAdminProductsQuery({
     q: search || undefined,
     categoryId: selectedCategory || undefined,
-    limit: 50,
+    limit: 1000,
   });
 
   const { data: categoriesData } = useGetAdminCategoriesQuery();
@@ -58,7 +58,7 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
   const reviews = reviewsData?.reviews || [];
 
   // Catalog Analytics Calculations
-  const totalProductsCount = products.length;
+  const totalProductsCount = productsData?.total !== undefined ? productsData.total : products.length;
   const lowStockCount = products.filter(p => (p.stock !== undefined ? p.stock : 50) <= (p.lowStockThreshold !== undefined ? p.lowStockThreshold : 5)).length;
   const totalCatalogValue = products.reduce((acc, p) => acc + ((p.price || 0) * (p.stock !== undefined ? p.stock : 50)), 0);
 

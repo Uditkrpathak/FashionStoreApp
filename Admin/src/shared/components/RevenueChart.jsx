@@ -5,15 +5,11 @@ export const RevenueChart = ({ monthlyStats = [], totalRevenue = 0, totalOrders 
   const [metric, setMetric] = useState('revenue'); // 'revenue' | 'orders'
   const [hoveredIdx, setHoveredIdx] = useState(null);
 
-  // If real monthlyStats exists from backend, use it; otherwise build from baseline real metrics
-  const dataPoints = monthlyStats.length >= 2 ? monthlyStats : [
-    { month: 'Jan', revenue: Math.round(totalRevenue * 0.1), orders: Math.round(totalOrders * 0.1) },
-    { month: 'Feb', revenue: Math.round(totalRevenue * 0.15), orders: Math.round(totalOrders * 0.15) },
-    { month: 'Mar', revenue: Math.round(totalRevenue * 0.12), orders: Math.round(totalOrders * 0.12) },
-    { month: 'Apr', revenue: Math.round(totalRevenue * 0.18), orders: Math.round(totalOrders * 0.18) },
-    { month: 'May', revenue: Math.round(totalRevenue * 0.22), orders: Math.round(totalOrders * 0.22) },
-    { month: 'Jun', revenue: Math.round(totalRevenue * 0.23), orders: Math.round(totalOrders * 0.23) },
-  ];
+  // Use 100% real database telemetry from monthlyStats; fallback to zeroed 6-month timeline if no orders exist yet
+  const defaultMonths = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
+  const dataPoints = (monthlyStats && monthlyStats.length > 0)
+    ? monthlyStats
+    : defaultMonths.map(m => ({ month: m, revenue: 0, orders: 0 }));
 
   const values = dataPoints.map(d => metric === 'revenue' ? d.revenue : d.orders);
   const maxVal = Math.max(...values, metric === 'revenue' ? 1000 : 10);

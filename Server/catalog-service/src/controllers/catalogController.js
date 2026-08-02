@@ -510,11 +510,17 @@ export const getProducts = async (req, res, next) => {
     if (sort === 'price_desc') query = query.sort({ price: -1 });
     if (sort === 'newest') query = query.sort({ createdAt: -1 });
 
-    const rawProducts = await query.limit(parseInt(limit));
+    const total = await Product.countDocuments(filter);
+    const parsedLimit = parseInt(limit) || 500;
+    const rawProducts = await query.limit(parsedLimit);
     const products = rawProducts.filter(p => p.category && p.category.name);
-    res.json({ success: true, products });
+    res.json({ success: true, products, total });
   } catch (err) {
-    next(err);
+    if (typeof next === 'function') {
+      next(err);
+    } else {
+      res.status(500).json({ success: false, message: err.message });
+    }
   }
 };
 
