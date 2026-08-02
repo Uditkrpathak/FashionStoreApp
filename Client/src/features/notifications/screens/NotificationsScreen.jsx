@@ -68,7 +68,7 @@ const NotificationsScreen = () => {
             <Bell size={32} color="#704F38" />
           </View>
           <Text style={styles.emptyTitle}>No Notifications Yet</Text>
-          <Text style={styles.emptySub}>We'll notify you about your order updates & exclusive promo offers here.</Text>
+          <Text style={styles.emptySub}>We&apos;ll notify you about your order updates &amp; exclusive promo offers here.</Text>
         </View>
       ) : (
         <FlatList
