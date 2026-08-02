@@ -382,6 +382,14 @@ export const OrderFulfillmentPage = ({ initialStatusFilter = '' }) => {
                               <RotateCcw className="w-3.5 h-3.5" /> Initiate Return
                             </button>
                           )}
+                          {currentStatus === 'returned' && (
+                            <button
+                              onClick={() => handleOpenReturnModal(order)}
+                              className="inline-flex items-center gap-1.5 bg-[#704F38] hover:bg-[#8C6244] text-white px-3 py-1.5 rounded-xl text-xs font-black shadow-md transition-all"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" /> Process Refund
+                            </button>
+                          )}
                           <button
                             onClick={() => handleOpenDrawer(order)}
                             className="bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] hover:border-[#704F38] dark:hover:border-[#E8B84E] px-3 py-1.5 rounded-xl text-xs font-extrabold text-[#1F2029] dark:text-white transition-all shadow-sm"

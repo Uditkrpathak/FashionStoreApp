@@ -59,8 +59,57 @@ const OrderDetailScreen = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Order #{order._id?.slice(-8).toUpperCase()}</Text>
           <Text style={styles.date}>Placed on {formatDate(order.createdAt)}</Text>
-          <Text style={[styles.status, { color: colors.success }]}>{formatOrderStatus(order.orderStatus)}</Text>
+          <Text style={[styles.status, { color: order.orderStatus === 'cancelled' || order.returnRequest?.status === 'rejected' ? '#DC2626' : order.orderStatus === 'return_requested' ? '#D97706' : colors.success }]}>
+            {formatOrderStatus(order.orderStatus)}
+          </Text>
         </View>
+
+        {/* Return & Refund Decision Card */}
+        {(order.returnRequest?.status === 'pending' || order.orderStatus === 'return_requested') && (
+          <View style={[styles.returnCard, { backgroundColor: '#FFF7ED', borderColor: '#FFEDD5' }]}>
+            <View style={styles.returnCardHeader}>
+              <Text style={[styles.returnCardTitle, { color: '#C2410C' }]}>📦 Return Request Pending Review</Text>
+            </View>
+            <Text style={styles.returnCardReason}>Reason: "{order.returnRequest?.reason || 'Return requested'}"</Text>
+            <Text style={styles.returnCardNote}>
+              Your return request has been received and is under review by store management.
+            </Text>
+          </View>
+        )}
+
+        {order.returnRequest?.status === 'rejected' && (
+          <View style={[styles.returnCard, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}>
+            <View style={styles.returnCardHeader}>
+              <Text style={[styles.returnCardTitle, { color: '#B91C1C' }]}>❌ Return Request Declined</Text>
+            </View>
+            {order.returnRequest?.reason ? (
+              <Text style={styles.returnCardReason}>Your Request Reason: "{order.returnRequest.reason}"</Text>
+            ) : null}
+            <Text style={[styles.returnCardNote, { color: '#7F1D1D', fontWeight: '700', marginTop: 4 }]}>
+              Admin Message: {order.returnRequest.adminNotes || 'Your return request was reviewed and declined by store administration.'}
+            </Text>
+          </View>
+        )}
+
+        {(order.returnRequest?.status === 'approved' || order.orderStatus === 'returned') && (
+          <View style={[styles.returnCard, { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }]}>
+            <View style={styles.returnCardHeader}>
+              <Text style={[styles.returnCardTitle, { color: '#047857' }]}>✅ Return Approved</Text>
+            </View>
+            {order.returnRequest?.reason ? (
+              <Text style={styles.returnCardReason}>Reason: "{order.returnRequest.reason}"</Text>
+            ) : null}
+            <Text style={[styles.returnCardNote, { color: '#065F46', fontWeight: '600' }]}>
+              Resolution: {order.returnRequest?.returnType === 'replacement' ? 'Replacement Order Created' : 'Refund Issued'}
+              {order.creditNoteId ? ` (Credit Note: ${order.creditNoteId})` : ''}
+            </Text>
+            {order.returnRequest?.adminNotes ? (
+              <Text style={[styles.returnCardNote, { color: '#065F46', marginTop: 4 }]}>
+                Admin Note: {order.returnRequest.adminNotes}
+              </Text>
+            ) : null}
+          </View>
+        )}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Items</Text>
           {order.items?.map((item, i) => (
@@ -150,6 +199,11 @@ const styles = StyleSheet.create({
   totalRow:  { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing[3], marginBottom: 0 },
   totalLabel:{ ...textStyles.body1, fontWeight: '700', color: colors.text },
   totalValue:{ ...textStyles.price, color: colors.primary },
+  returnCard: { borderRadius: 16, borderPadding: spacing[4], padding: spacing[4], marginBottom: spacing[3], borderWidth: 1 },
+  returnCardHeader: { marginBottom: spacing[1] },
+  returnCardTitle: { fontSize: 13, fontWeight: '800' },
+  returnCardReason: { fontSize: 12, fontWeight: '600', color: colors.text, marginTop: spacing[1] },
+  returnCardNote: { fontSize: 12, color: colors.textMuted, marginTop: spacing[1] },
   footer: { padding: spacing[4], backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.border },
   actionRow: { flexDirection: 'row', gap: spacing[3] }
 });

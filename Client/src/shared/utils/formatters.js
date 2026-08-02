@@ -79,12 +79,13 @@ export const capitalize = (str) =>
  */
 export const formatOrderStatus = (status) => {
   const map = {
-    placed:    'Order Placed',
-    confirmed: 'Confirmed',
-    shipped:   'Shipped',
-    delivered: 'Delivered',
-    cancelled: 'Cancelled',
-    returned:  'Return Requested',
+    placed:           'Order Placed',
+    confirmed:        'Confirmed',
+    shipped:          'Shipped',
+    delivered:        'Delivered',
+    cancelled:        'Cancelled',
+    return_requested: 'Return Pending Approval',
+    returned:         'Returned',
   };
   return map[status] ?? capitalize(status);
 };
