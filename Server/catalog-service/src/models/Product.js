@@ -21,11 +21,10 @@ const ProductSchema = new mongoose.Schema({
   version: { type: Number, default: 1 }
 }, { timestamps: true });
 
-ProductSchema.pre('save', function(next) {
+ProductSchema.pre('save', function() {
   if (!this.sku) {
     this.sku = 'PRD-' + Math.floor(100000 + Math.random() * 900000);
   }
-  next();
 });
 
 export default mongoose.model('Product', ProductSchema);
