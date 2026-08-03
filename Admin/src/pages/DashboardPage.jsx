@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGetDashboardStatsQuery, useGetAdminOrdersQuery } from '../services/adminOrderApi';
-import { IndianRupee, ShoppingBag, Clock, CheckCircle, AlertTriangle, ArrowRight, ShieldCheck } from 'lucide-react';
+import { IndianRupee, ShoppingBag, Clock, CheckCircle, ArrowRight, BarChart2, ShieldCheck, Server } from 'lucide-react';
 import { Loader } from '../shared/components/Loader';
 import { RevenueChart } from '../shared/components/RevenueChart';
 import { MonthlyBarChart } from '../shared/components/MonthlyBarChart';
 import { RoleDonutChart } from '../shared/components/RoleDonutChart';
+import { CategoryDistributionChart } from '../shared/components/CategoryDistributionChart';
+import { OrderStatusFunnelChart } from '../shared/components/OrderStatusFunnelChart';
+import { FulfillmentVelocityChart } from '../shared/components/FulfillmentVelocityChart';
+import { ServerStatusWidget } from '../shared/components/ServerStatusWidget';
 import { CustomerReviewsWidget } from '../shared/components/CustomerReviewsWidget';
 import { SupportTicketsWidget } from '../shared/components/SupportTicketsWidget';
 import { FigmaContactsWidget } from '../shared/components/FigmaContactsWidget';
@@ -13,6 +17,7 @@ import { RecentActivityWidget } from '../shared/components/RecentActivityWidget'
 export const DashboardPage = ({ onNavigateToTab }) => {
   const { data: statsData, isLoading: isStatsLoading } = useGetDashboardStatsQuery();
   const { data: pendingOrdersData, isLoading: isPendingLoading } = useGetAdminOrdersQuery({ status: 'placed', limit: 5 });
+  const [activeTelemetryTab, setActiveTelemetryTab] = useState('revenue'); // 'revenue' | 'velocity' | 'servers'
 
   const stats = statsData?.stats || {
     totalRevenue: 0,
@@ -38,64 +43,122 @@ export const DashboardPage = ({ onNavigateToTab }) => {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Figma 3-Column Master Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+    <div className="space-y-6 md:space-y-8 min-w-0">
+      {/* Top Section: Responsive 4 KPI Cards Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {miniKpiCards.map((card, idx) => {
+          const Icon = card.icon;
+          return (
+            <div
+              key={idx}
+              className="bg-white dark:bg-[#181926] p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-[#EDEDED] dark:border-[#262838] shadow-sm hover:shadow-md transition-all flex items-center gap-3 min-w-0"
+            >
+              <div
+                className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: card.bg }}
+              >
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: card.color }} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="text-[9px] sm:text-[10px] font-extrabold text-[#797979] dark:text-[#A0AEC0] uppercase tracking-wider block truncate">
+                  {card.title}
+                </span>
+                <span className="text-sm sm:text-xl font-black text-[#1F2029] dark:text-white mt-0.5 block truncate">
+                  {card.value}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Order Lifecycle Funnel Stage Overview */}
+      <OrderStatusFunnelChart stats={stats} />
+
+      {/* Main 3-Column Master Responsive Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-start min-w-0">
         
-        {/* LEFT AREA: 2 COLUMNS (MAIN DASHBOARD ANALYTICS & CHARTS) */}
-        <div className="lg:col-span-2 space-y-8">
-          
-          {/* Top Section: Compact 4 KPI Cards Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {miniKpiCards.map((card, idx) => {
-              const Icon = card.icon;
-              return (
-                <div
-                  key={idx}
-                  className="bg-white dark:bg-[#181926] p-4 rounded-2xl border border-[#EDEDED] dark:border-[#262838] shadow-sm hover:shadow-md transition-all flex items-center gap-3.5"
-                >
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: card.bg }}
-                  >
-                    <Icon className="w-5 h-5" style={{ color: card.color }} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <span className="text-[10px] font-extrabold text-[#797979] dark:text-[#A0AEC0] uppercase tracking-wider block truncate">
-                      {card.title}
-                    </span>
-                    <span className="text-base sm:text-lg font-black text-[#1F2029] dark:text-white mt-0.5 block truncate">
-                      {card.value}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+        {/* LEFT AREA: 2 COLUMNS (ANALYTICS, CHARTS & TABLES) */}
+        <div className="lg:col-span-2 space-y-6 md:space-y-8 min-w-0">
+
+          {/* Interactive Graph Selector Tabs */}
+          <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 no-scrollbar border-b border-[#EDEDED] dark:border-[#262838]">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActiveTelemetryTab('revenue')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                  activeTelemetryTab === 'revenue'
+                    ? 'bg-[#704F38] text-white shadow-md'
+                    : 'bg-white dark:bg-[#181926] text-[#797979] dark:text-[#A0AEC0] border border-[#EDEDED] dark:border-[#262838] hover:text-[#1F2029] dark:hover:text-white'
+                }`}
+              >
+                <BarChart2 className="w-3.5 h-3.5" /> Revenue Analytics
+              </button>
+
+              <button
+                onClick={() => setActiveTelemetryTab('velocity')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                  activeTelemetryTab === 'velocity'
+                    ? 'bg-[#704F38] text-white shadow-md'
+                    : 'bg-white dark:bg-[#181926] text-[#797979] dark:text-[#A0AEC0] border border-[#EDEDED] dark:border-[#262838] hover:text-[#1F2029] dark:hover:text-white'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" /> SLA Velocity Curve
+              </button>
+
+              <button
+                onClick={() => setActiveTelemetryTab('servers')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                  activeTelemetryTab === 'servers'
+                    ? 'bg-[#704F38] text-white shadow-md'
+                    : 'bg-white dark:bg-[#181926] text-[#797979] dark:text-[#A0AEC0] border border-[#EDEDED] dark:border-[#262838] hover:text-[#1F2029] dark:hover:text-white'
+                }`}
+              >
+                <Server className="w-3.5 h-3.5" /> Microservice Latency
+              </button>
+            </div>
+            
+            <span className="text-[10px] font-black text-[#704F38] dark:text-[#E8B84E] uppercase hidden sm:block whitespace-nowrap">
+              Interactive Telemetry
+            </span>
           </div>
 
-          {/* Large Hero Revenue Analytics Sparkline Chart */}
-          <div>
-            <RevenueChart
-              monthlyStats={stats.monthlyStats}
-              totalRevenue={stats.totalRevenue}
-              totalOrders={stats.totalOrders}
-            />
+          {/* Active Primary Graph Rendering */}
+          <div className="min-w-0">
+            {activeTelemetryTab === 'revenue' && (
+              <RevenueChart
+                monthlyStats={stats.monthlyStats}
+                totalRevenue={stats.totalRevenue}
+                totalOrders={stats.totalOrders}
+              />
+            )}
+            {activeTelemetryTab === 'velocity' && (
+              <FulfillmentVelocityChart orders={pendingOrdersData?.orders || []} />
+            )}
+            {activeTelemetryTab === 'servers' && (
+              <ServerStatusWidget />
+            )}
           </div>
 
           {/* Large 12-Month Sales & Fulfillment Bar Chart */}
-          <div>
+          <div className="min-w-0">
             <MonthlyBarChart monthlyStats={stats.monthlyStats} />
           </div>
 
-          {/* Mid Row: User Role Donut Chart & Customer Reviews Widget */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Mid Row: Category Sales & User Role Donut Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-w-0">
+            <CategoryDistributionChart />
             <RoleDonutChart />
+          </div>
+
+          {/* Customer Reviews Widget */}
+          <div className="min-w-0">
             <CustomerReviewsWidget onNavigateToCatalog={onNavigateToTab} />
           </div>
 
           {/* Urgent Action Queue (Pending Fulfillment Table) */}
-          <div className="bg-white dark:bg-[#181926] p-6 rounded-3xl border border-[#EDEDED] dark:border-[#262838] shadow-sm transition-colors">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white dark:bg-[#181926] p-4 sm:p-6 rounded-3xl border border-[#EDEDED] dark:border-[#262838] shadow-sm transition-colors min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
               <div>
                 <h3 className="text-sm font-black text-[#1F2029] dark:text-white uppercase tracking-wider">
                   Urgent Fulfillment Queue
@@ -107,7 +170,7 @@ export const DashboardPage = ({ onNavigateToTab }) => {
               {onNavigateToTab && (
                 <button
                   onClick={() => onNavigateToTab('orders')}
-                  className="text-xs font-black text-[#704F38] dark:text-[#E8B84E] hover:underline flex items-center gap-1"
+                  className="text-xs font-black text-[#704F38] dark:text-[#E8B84E] hover:underline flex items-center gap-1 self-start sm:self-auto"
                 >
                   Manage All Orders <ArrowRight className="w-3.5 h-3.5" />
                 </button>
@@ -121,7 +184,7 @@ export const DashboardPage = ({ onNavigateToTab }) => {
                 No pending orders. Platform fulfillment up to date!
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto -mx-2 sm:mx-0">
                 <table className="w-full text-left text-xs min-w-[500px]">
                   <thead>
                     <tr className="bg-[#FDFBF9] dark:bg-[#11121E] border-b border-[#EDEDED] dark:border-[#262838] text-[#797979] dark:text-[#A0AEC0] text-[10px] font-extrabold uppercase tracking-wider">
@@ -152,7 +215,7 @@ export const DashboardPage = ({ onNavigateToTab }) => {
                         <td className="px-4 py-3 text-right">
                           <button
                             onClick={() => onNavigateToTab && onNavigateToTab('orders')}
-                            className="px-3 py-1 bg-[#704F38] hover:bg-[#8C6244] text-white text-[10px] font-bold rounded-lg shadow-sm"
+                            className="px-3 py-1 bg-[#704F38] hover:bg-[#8C6244] text-white text-[10px] font-bold rounded-lg shadow-sm transition-all"
                           >
                             Process
                           </button>
@@ -168,7 +231,7 @@ export const DashboardPage = ({ onNavigateToTab }) => {
         </div>
 
         {/* RIGHT SIDEBAR: 1 COLUMN (LIVE WIDGETS & AUDIT TIMELINE) */}
-        <div className="lg:col-span-1 space-y-8">
+        <div className="lg:col-span-1 space-y-6 md:space-y-8 min-w-0">
           {/* Widget 1: Customer Support Queue */}
           <SupportTicketsWidget onNavigateToTickets={onNavigateToTab} />
 
