@@ -163,6 +163,47 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
     }
   };
 
+  const getCategoryName = (item) => {
+    if (item.category && typeof item.category === 'object' && item.category.name) {
+      return item.category.name;
+    }
+    const catId = typeof item.category === 'string' ? item.category : item.category?._id;
+    if (catId) {
+      const found = categories.find((c) => c._id === catId || String(c._id) === String(catId));
+      if (found) return found.name;
+    }
+    const title = (item.title || '').toLowerCase();
+    if (title.includes('jacket') || title.includes('hoodie') || title.includes('cardigan') || title.includes('suit') || title.includes('blazer') || title.includes('parka')) return 'Jacket';
+    if (title.includes('shirt') || title.includes('polo')) return 'Shirt';
+    if (title.includes('tee') || title.includes('t-shirt')) return 'T-Shirt';
+    if (title.includes('pant') || title.includes('chino') || title.includes('cargo') || title.includes('trouser')) return 'Trousers';
+    if (title.includes('shoe') || title.includes('sneaker') || title.includes('boot')) return 'Shoes';
+    return 'General';
+  };
+
+  const getCategoryBadgeStyle = (catName) => {
+    const name = (catName || '').toLowerCase();
+    if (name.includes('jacket') || name.includes('hoodie') || name.includes('coat') || name.includes('parka')) {
+      return 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800';
+    }
+    if (name.includes('shirt') || name.includes('polo')) {
+      return 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
+    }
+    if (name.includes('tee') || name.includes('t-shirt')) {
+      return 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800';
+    }
+    if (name.includes('blazer') || name.includes('suit')) {
+      return 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800';
+    }
+    if (name.includes('trouser') || name.includes('pant') || name.includes('chino') || name.includes('jeans')) {
+      return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
+    }
+    if (name.includes('shoe') || name.includes('sneaker') || name.includes('boot')) {
+      return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
+    }
+    return 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800';
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Metric Insights Bar */}
@@ -295,7 +336,7 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
         </div>
       )}
 
-      {/* Product Inventory Table */}
+      {/* Product Inventory Table Card */}
       <div className="bg-white dark:bg-[#181926] rounded-3xl border border-[#EDEDED] dark:border-[#262838] shadow-sm overflow-hidden transition-colors">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm min-w-[850px]">
@@ -331,9 +372,11 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
                   const stock = item.stock !== undefined ? item.stock : 50;
                   const lowThreshold = item.lowStockThreshold !== undefined ? item.lowStockThreshold : 5;
                   const isLowStock = stock <= lowThreshold;
+                  const catName = getCategoryName(item);
+                  const catBadgeStyle = getCategoryBadgeStyle(catName);
 
                   return (
-                    <tr key={item._id} className={`hover:bg-[#FDFBF9]/50 dark:hover:bg-[#1C1D2C] transition-colors ${item.isHidden ? 'opacity-60 bg-gray-50 dark:bg-[#11121E]/50' : ''}`}>
+                    <tr key={item._id} className={`hover:bg-[#FDFBF9]/60 dark:hover:bg-[#1C1D2C] transition-colors ${item.isHidden ? 'opacity-60 bg-gray-50 dark:bg-[#11121E]/50' : ''}`}>
                       <td className="px-5 py-4">
                         <input
                           type="checkbox"
@@ -343,26 +386,31 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
                         />
                       </td>
                       <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3.5">
                           <img
                             src={item.images?.[0] || 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea'}
                             alt={item.title}
-                            className="w-12 h-12 rounded-2xl object-cover border border-[#EDEDED] dark:border-[#2A2C3F] shadow-sm flex-shrink-0"
+                            className="w-12 h-12 rounded-2xl object-cover border border-[#EDEDED] dark:border-[#2A2C3F] shadow-sm flex-shrink-0 transition-transform hover:scale-105"
                           />
                           <div>
-                            <div className="font-extrabold text-[#1F2029] dark:text-white text-sm">{item.title}</div>
-                            <div className="text-[11px] text-[#797979] dark:text-[#A0AEC0] font-medium flex items-center gap-1.5 mt-0.5">
+                            <div 
+                              className="font-extrabold text-[#1F2029] dark:text-white text-sm hover:text-[#704F38] dark:hover:text-[#E8B84E] transition-colors cursor-pointer"
+                              onClick={() => onNavigateToEditProduct && onNavigateToEditProduct(item)}
+                            >
+                              {item.title}
+                            </div>
+                            <div className="text-[11px] text-[#797979] dark:text-[#A0AEC0] font-medium flex items-center gap-1.5 mt-0.5 flex-wrap">
                               <span className="font-mono font-bold text-[#704F38] dark:text-[#E8B84E] bg-[#FDFBF9] dark:bg-[#11121E] px-1.5 py-0.5 rounded-md border border-[#EDEDED] dark:border-[#2A2C3F] select-all">
                                 #{item.sku || ('PRD-' + item._id.slice(-6).toUpperCase())}
                               </span>
-                              <span>• {item.brand} ({item.gender || 'Unisex'})</span>
+                              <span>• {item.brand || 'Store'} ({item.gender || 'Unisex'})</span>
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-5 py-4">
-                        <span className="px-3 py-1 rounded-xl text-xs font-bold bg-[#EEF2FF] dark:bg-[#312E81]/30 text-[#4338CA] dark:text-[#818CF8] border border-[#C7D2FE] dark:border-[#312E81]/50">
-                          {item.category?.name || 'General'}
+                        <span className={`px-3 py-1 rounded-xl text-xs font-black border ${catBadgeStyle}`}>
+                          {catName}
                         </span>
                       </td>
                       <td className="px-5 py-4">
@@ -370,11 +418,11 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
                           onClick={() => handleOpenInventoryModal(item)}
                           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black border transition-all ${
                             isLowStock 
-                              ? 'bg-[#FEF2F2] dark:bg-[#7F1D1D]/30 text-[#B91C1C] dark:text-[#F87171] border-[#FECACA] dark:border-[#7F1D1D]/50 animate-pulse' 
-                              : 'bg-[#FDFBF9] dark:bg-[#11121E] text-[#1F2029] dark:text-white border-[#EDEDED] dark:border-[#2A2C3F] hover:border-[#704F38] dark:hover:border-[#E8B84E]'
+                              ? 'bg-[#FEF2F2] dark:bg-[#7F1D1D]/30 text-[#B91C1C] dark:text-[#F87171] border-[#FECACA] dark:border-[#7F1D1D]/50 animate-pulse shadow-sm' 
+                              : 'bg-[#FDFBF9] dark:bg-[#11121E] text-[#1F2029] dark:text-white border-[#EDEDED] dark:border-[#2A2C3F] hover:border-[#704F38] dark:hover:border-[#E8B84E] shadow-2xs'
                           }`}
                         >
-                          {isLowStock && <AlertTriangle className="w-3.5 h-3.5" />}
+                          {isLowStock && <AlertTriangle className="w-3.5 h-3.5 text-[#B91C1C]" />}
                           Stock: {stock} (Min: {lowThreshold})
                         </button>
                       </td>
@@ -395,7 +443,7 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
                           <button
                             onClick={() => handleToggleProductVisibility(item)}
                             title={item.isHidden ? "Make Visible" : "Soft Hide Product"}
-                            className="p-2 bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] hover:border-[#704F38] dark:hover:border-[#E8B84E] rounded-xl transition-all shadow-sm"
+                            className="p-2 bg-[#FDFBF9] dark:bg-[#11121E] border border-[#EDEDED] dark:border-[#2A2C3F] hover:border-[#704F38] dark:hover:border-[#E8B84E] rounded-xl transition-all shadow-2xs"
                           >
                             {item.isHidden ? <Eye className="w-4 h-4 text-[#047857] dark:text-[#34D399]" /> : <EyeOff className="w-4 h-4 text-[#E57373]" />}
                           </button>
@@ -421,6 +469,18 @@ export const CatalogManagementPage = ({ onNavigateToCreateProduct, onNavigateToE
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Table Footer / Pagination */}
+        <div className="px-6 py-4 bg-[#FDFBF9] dark:bg-[#11121E] border-t border-[#EDEDED] dark:border-[#262838] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#797979] dark:text-[#A0AEC0] font-bold">
+          <div>
+            Showing <span className="text-[#1F2029] dark:text-white font-black">{products.length}</span> of <span className="text-[#1F2029] dark:text-white font-black">{totalProductsCount}</span> catalog products
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-xl bg-white dark:bg-[#181926] border border-[#EDEDED] dark:border-[#262838] font-black text-[#704F38] dark:text-[#E8B84E] shadow-2xs">
+              Page 1 of 1
+            </span>
+          </div>
         </div>
       </div>
 
