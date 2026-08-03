@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { 
-  useAdminLoginMutation, 
-  useGetCaptchaQuery, 
-  useForgotPasswordMutation, 
-  useVerifyOtpMutation, 
-  useResetPasswordMutation 
+import {
+  useAdminLoginMutation,
+  useGetCaptchaQuery,
+  useForgotPasswordMutation,
+  useVerifyOtpMutation,
+  useResetPasswordMutation
 } from '../services/adminAuthApi';
 import { setCredentials } from '../app/authSlice';
+import heroImage from '../assets/admin_login_hero.png';
 import { ShieldCheck, Lock, Mail, Eye, EyeOff, RefreshCw, KeyRound, X, CheckCircle2, Sparkles } from 'lucide-react';
 
 const generateLocalCaptcha = () => {
@@ -101,8 +102,8 @@ export const LoginPage = () => {
         dispatch(setCredentials({ user: res.user, token: res.token }));
       }
     } catch (err) {
-      const serverErrMsg = typeof err.data === 'string' 
-        ? err.data 
+      const serverErrMsg = typeof err.data === 'string'
+        ? err.data
         : (err.data?.message || err.message || 'Invalid admin credentials or CAPTCHA');
       setError(serverErrMsg);
       setCaptchaAnswer('');
@@ -165,70 +166,16 @@ export const LoginPage = () => {
     <div className="min-h-screen bg-[#191A24] flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans selection:bg-[#704F38] selection:text-white">
       {/* Container Box */}
       <div className="w-full max-w-5xl bg-[#191A24] rounded-3xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0 shadow-2xl border border-white/10">
-        
-        {/* Left Side: Mobile App Hero Showcase */}
-        <div className="hidden lg:flex lg:col-span-6 bg-gradient-to-br from-[#FAF8F5] via-[#F4EFEA] to-[#EAE0D5] p-10 flex-col justify-between relative overflow-hidden">
-          {/* Subtle Graphic Ornaments */}
-          <div className="absolute -top-20 -left-20 w-80 h-80 bg-[#704F38]/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-[#704F38]/15 rounded-full blur-3xl" />
 
-          {/* Brand Header */}
-          <div className="relative z-10">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#3D2619] text-[#E8B84E] flex items-center justify-center font-serif font-black text-xl shadow-md">
-                f
-              </div>
-              <span className="text-xl font-black text-[#1F2029] tracking-tight">fashion.</span>
-            </div>
-            <div className="mt-8">
-              <h1 className="text-3xl font-black text-[#1F2029] tracking-tight leading-tight">
-                Clothes Store <br />
-                <span className="text-[#704F38]">Mobile App & Enterprise</span> Portal
-              </h1>
-              <p className="text-xs text-[#6B7280] font-bold mt-2 max-w-sm">
-                Manage products, inventory, orders, customer feedback, and live analytics seamlessly across your e-commerce ecosystem.
-              </p>
-            </div>
-          </div>
+        {/* Left Side: Mobile App Hero Showcase Image */}
+        <div className="hidden lg:block lg:col-span-6 relative overflow-hidden bg-[#FAF8F5]">
+          <img
+            src={heroImage}
+            alt="Fashion Store Mobile App Showcase"
+            className="w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
 
-          {/* Floating Mobile Screens Graphic */}
-          <div className="relative z-10 my-6 py-6 flex items-center justify-center">
-            <div className="relative w-full max-w-sm aspect-[4/3] flex items-center justify-center">
-              {/* Card 1 Back */}
-              <div className="absolute top-0 left-2 w-48 p-3 rounded-2xl bg-white/80 backdrop-blur-md shadow-xl border border-white/60 transform -rotate-12 hover:rotate-0 transition-all duration-300">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-[#704F38] text-white flex items-center justify-center text-[10px] font-bold">f</div>
-                  <span className="text-[10px] font-black text-[#1F2029]">New Collection</span>
-                </div>
-                <div className="h-16 bg-[#F5F2EF] rounded-xl flex items-center justify-center text-[10px] font-bold text-[#704F38]">
-                  🧥 50% Off Flash Sale
-                </div>
-              </div>
-
-              {/* Card 2 Main Front */}
-              <div className="absolute top-6 right-2 w-56 p-4 rounded-3xl bg-[#704F38] text-white shadow-2xl transform rotate-6 hover:rotate-0 transition-all duration-300">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-black tracking-wider uppercase opacity-80">FashionStore App</span>
-                  <Sparkles className="w-4 h-4 text-[#E8B84E]" />
-                </div>
-                <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-sm space-y-2">
-                  <div className="flex justify-between items-center text-xs font-extrabold">
-                    <span>Earthy Slim Fit Blazer</span>
-                    <span className="text-[#E8B84E]">₹83.97</span>
-                  </div>
-                  <div className="text-[10px] text-white/70">⭐ 4.8 (124 reviews)</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom Footer Info */}
-          <div className="relative z-10 flex items-center justify-between text-[11px] font-bold text-[#6B7280] border-t border-[#704F38]/15 pt-4">
-            <span className="flex items-center gap-1">
-              <ShieldCheck className="w-4 h-4 text-[#059669]" /> Enterprise SSL 256-bit Secured
-            </span>
-            <span>v2.5.0</span>
-          </div>
         </div>
 
         {/* Right Side: Exact Admin Login Card */}
