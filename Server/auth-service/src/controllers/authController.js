@@ -348,7 +348,11 @@ export const forgotPassword = async (req, res) => {
       return res.status(500).json({ success: false, message: 'Failed to send OTP email. Please try again.' });
     }
     
-    res.json({ success: true, message: 'Password reset OTP sent' });
+    res.json({ 
+      success: true, 
+      message: `Password reset OTP sent. ${otp ? `(Dev OTP: ${otp})` : ''}`, 
+      devOtp: otp 
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
