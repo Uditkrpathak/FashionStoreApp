@@ -71,8 +71,8 @@ const MyOrdersScreen = () => {
                     
                     <View style={styles.statusRow}>
                       <Text style={styles.price}>₹{item.totals?.grandTotal}</Text>
-                      <View style={styles.statusBadge}>
-                        <Text style={styles.statusText}>{formatOrderStatus(item.orderStatus)}</Text>
+                      <View style={[styles.statusBadge, item.returnRequest?.status === 'rejected' && { backgroundColor: '#FEF2F2' }, (item.returnRequest?.status === 'approved' || item.orderStatus === 'returned') && { backgroundColor: '#ECFDF5' }]}>
+                        <Text style={[styles.statusText, item.returnRequest?.status === 'rejected' && { color: '#B91C1C' }, (item.returnRequest?.status === 'approved' || item.orderStatus === 'returned') && { color: '#047857' }]}>{formatOrderStatus(item.orderStatus, item.returnRequest)}</Text>
                       </View>
                     </View>
                   </View>

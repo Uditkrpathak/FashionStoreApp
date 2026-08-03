@@ -730,10 +730,10 @@ export const processReturnAction = async (req, res, next) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: order.userId,
-          title: isApprove ? 'Return Approved! ✅' : 'Return Request Update ℹ️',
+          title: isApprove ? 'Return Completed ✅' : 'Return Rejected ❌',
           message: isApprove 
-            ? `Your return request for order #${order._id.toString().slice(-8).toUpperCase()} was approved. Resolution: ${order.returnRequest.returnType}.`
-            : `Your return request for order #${order._id.toString().slice(-8).toUpperCase()} was declined by admin.`,
+            ? `Your return request for order #${order._id.toString().slice(-8).toUpperCase()} is completed. Amount will credit in your bank in 3-4 working days.`
+            : `Your return request for order #${order._id.toString().slice(-8).toUpperCase()} was rejected.`,
           type: 'order'
         })
       });

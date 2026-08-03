@@ -73,11 +73,17 @@ export const timeAgo = (date) => {
 export const capitalize = (str) =>
   str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 
-/**
- * Format order status label.
- * @param {'placed'|'confirmed'|'shipped'|'delivered'|'cancelled'} status
- */
-export const formatOrderStatus = (status) => {
+export const formatOrderStatus = (status, returnRequest) => {
+  const reqStatus = typeof returnRequest === 'string' ? returnRequest : returnRequest?.status;
+  if (reqStatus === 'rejected') {
+    return 'Return Rejected';
+  }
+  if (reqStatus === 'approved' || status === 'returned') {
+    return 'Return Completed';
+  }
+  if (reqStatus === 'pending' || status === 'return_requested') {
+    return 'Return Pending Approval';
+  }
   const map = {
     placed:           'Order Placed',
     confirmed:        'Confirmed',
@@ -85,7 +91,7 @@ export const formatOrderStatus = (status) => {
     delivered:        'Delivered',
     cancelled:        'Cancelled',
     return_requested: 'Return Pending Approval',
-    returned:         'Returned',
+    returned:         'Return Completed',
   };
   return map[status] ?? capitalize(status);
 };

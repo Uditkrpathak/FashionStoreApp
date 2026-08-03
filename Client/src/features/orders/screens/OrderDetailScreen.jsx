@@ -60,7 +60,7 @@ const OrderDetailScreen = () => {
           <Text style={styles.sectionTitle}>Order #{order._id?.slice(-8).toUpperCase()}</Text>
           <Text style={styles.date}>Placed on {formatDate(order.createdAt)}</Text>
           <Text style={[styles.status, { color: order.orderStatus === 'cancelled' || order.returnRequest?.status === 'rejected' ? '#DC2626' : order.orderStatus === 'return_requested' ? '#D97706' : colors.success }]}>
-            {formatOrderStatus(order.orderStatus)}
+            {formatOrderStatus(order.orderStatus, order.returnRequest)}
           </Text>
         </View>
 
@@ -80,26 +80,34 @@ const OrderDetailScreen = () => {
         {order.returnRequest?.status === 'rejected' && (
           <View style={[styles.returnCard, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}>
             <View style={styles.returnCardHeader}>
-              <Text style={[styles.returnCardTitle, { color: '#B91C1C' }]}>❌ Return Request Declined</Text>
+              <Text style={[styles.returnCardTitle, { color: '#B91C1C' }]}>❌ Return Rejected</Text>
             </View>
+            <Text style={[styles.returnCardNote, { color: '#7F1D1D', fontWeight: '700', fontSize: 13, marginTop: 2 }]}>
+              Return Rejected
+            </Text>
             {order.returnRequest?.reason ? (
               <Text style={styles.returnCardReason}>Your Request Reason: "{order.returnRequest.reason}"</Text>
             ) : null}
-            <Text style={[styles.returnCardNote, { color: '#7F1D1D', fontWeight: '700', marginTop: 4 }]}>
-              Admin Message: {order.returnRequest.adminNotes || 'Your return request was reviewed and declined by store administration.'}
-            </Text>
+            {order.returnRequest?.adminNotes ? (
+              <Text style={[styles.returnCardNote, { color: '#7F1D1D', marginTop: 4 }]}>
+                Admin Note: {order.returnRequest.adminNotes}
+              </Text>
+            ) : null}
           </View>
         )}
 
         {(order.returnRequest?.status === 'approved' || order.orderStatus === 'returned') && (
           <View style={[styles.returnCard, { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }]}>
             <View style={styles.returnCardHeader}>
-              <Text style={[styles.returnCardTitle, { color: '#047857' }]}>✅ Return Approved</Text>
+              <Text style={[styles.returnCardTitle, { color: '#047857' }]}>✅ Return Completed</Text>
             </View>
+            <Text style={[styles.returnCardNote, { color: '#065F46', fontWeight: '700', fontSize: 13, marginTop: 2 }]}>
+              Amount will credit in your bank in 3-4 working days
+            </Text>
             {order.returnRequest?.reason ? (
               <Text style={styles.returnCardReason}>Reason: "{order.returnRequest.reason}"</Text>
             ) : null}
-            <Text style={[styles.returnCardNote, { color: '#065F46', fontWeight: '600' }]}>
+            <Text style={[styles.returnCardNote, { color: '#065F46', fontWeight: '600', marginTop: 4 }]}>
               Resolution: {order.returnRequest?.returnType === 'replacement' ? 'Replacement Order Created' : 'Refund Issued'}
               {order.creditNoteId ? ` (Credit Note: ${order.creditNoteId})` : ''}
             </Text>
