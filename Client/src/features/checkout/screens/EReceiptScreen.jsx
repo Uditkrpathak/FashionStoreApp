@@ -6,7 +6,7 @@ import { Share as ShareIcon, Download } from 'lucide-react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useGetOrderByIdQuery } from '../../orders/api/orderApi';
-import { formatPrice } from '../../../shared/utils/formatters';
+import { formatPrice, formatOrderStatus } from '../../../shared/utils/formatters';
 import { colors } from '../../../theme/colors';
 import { spacing, shadows } from '../../../theme/spacing';
 import { textStyles } from '../../../theme/typography';
@@ -18,6 +18,9 @@ const EReceiptScreen = () => {
   const { data, isLoading } = useGetOrderByIdQuery(orderId, { skip: !orderId });
   const order = data?.order;
 
+  const isReturnApproved = order?.returnRequest?.status === 'approved' || order?.orderStatus === 'returned';
+  const isReturnRejected = order?.returnRequest?.status === 'rejected';
+
   const generatePDF = async () => {
     if (!order) return;
     
@@ -27,27 +30,42 @@ const EReceiptScreen = () => {
         <head>
           <style>
             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; color: #333; }
-            .header { text-align: center; margin-bottom: 40px; }
+            .header { text-align: center; margin-bottom: 30px; }
             .title { font-size: 28px; font-weight: bold; margin-bottom: 5px; }
             .subtitle { font-size: 14px; color: #777; }
             .divider { border-bottom: 1px solid #EEE; margin: 20px 0; }
             .row { display: flex; justify-content: space-between; margin-bottom: 15px; }
             .label { color: #777; font-size: 14px; }
             .value { font-weight: bold; font-size: 14px; }
-            .total-row { margin-top: 30px; padding-top: 20px; border-top: 2px solid #333; }
+            .total-row { margin-top: 20px; padding-top: 15px; border-top: 2px solid #333; }
             .total-label { font-size: 18px; font-weight: bold; }
             .total-value { font-size: 24px; font-weight: bold; color: #333; }
-            .item-row { display: flex; align-items: center; margin-bottom: 20px; }
-            .item-details { margin-left: 20px; }
-            .item-title { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+            .item-row { display: flex; align-items: center; margin-bottom: 15px; }
+            .item-details { margin-left: 10px; }
+            .item-title { font-weight: bold; font-size: 16px; margin-bottom: 3px; }
             .item-meta { font-size: 12px; color: #777; }
+            .return-banner-success { background-color: #ECFDF5; border: 1px solid #A7F3D0; padding: 12px; border-radius: 8px; margin: 15px 0; color: #065F46; font-size: 13px; }
+            .return-banner-error { background-color: #FEF2F2; border: 1px solid #FECACA; padding: 12px; border-radius: 8px; margin: 15px 0; color: #991B1B; font-size: 13px; }
           </style>
         </head>
         <body>
           <div class="header">
             <div class="title">Fashion Store</div>
-            <div class="subtitle">E-Receipt</div>
+            <div class="subtitle">Official E-Receipt</div>
           </div>
+
+          ${isReturnApproved ? `
+            <div class="return-banner-success">
+              <strong>✅ Return Completed</strong><br/>
+              Amount will credit in your bank in 3-4 working days
+            </div>
+          ` : ''}
+
+          ${isReturnRejected ? `
+            <div class="return-banner-error">
+              <strong>❌ Return Rejected</strong>
+            </div>
+          ` : ''}
           
           <div class="divider"></div>
           
@@ -85,6 +103,10 @@ const EReceiptScreen = () => {
           <div class="row">
             <div class="label">Date</div>
             <div class="value">${new Date(order.createdAt).toLocaleDateString()}</div>
+          </div>
+          <div class="row">
+            <div class="label">Order Status</div>
+            <div class="value">${formatOrderStatus(order.orderStatus, order.returnRequest)}</div>
           </div>
           <div class="row">
             <div class="label">Payment Status</div>
@@ -138,13 +160,30 @@ const EReceiptScreen = () => {
               ))}
             </View>
           </View>
+
+          {isReturnApproved && (
+            <View style={styles.returnBannerSuccess}>
+              <Text style={styles.returnBannerSuccessTitle}>✅ Return Completed</Text>
+              <Text style={styles.returnBannerSuccessText}>Amount will credit in your bank in 3-4 working days</Text>
+            </View>
+          )}
+
+          {isReturnRejected && (
+            <View style={styles.returnBannerError}>
+              <Text style={styles.returnBannerErrorTitle}>❌ Return Rejected</Text>
+            </View>
+          )}
           
           <View style={styles.separator} />
 
           {/* Product Info */}
           {order.items?.map((item, index) => (
             <View key={index} style={styles.productRow}>
-              <View style={styles.productImage} />
+              {item.image ? (
+                <Image source={{ uri: item.image }} style={styles.productImage} />
+              ) : (
+                <View style={styles.productImage} />
+              )}
               <View style={styles.productDetails}>
                 <Text style={styles.productTitle}>{item.title || 'Product Item'}</Text>
                 <Text style={styles.productMeta}>Qty: {item.qty}</Text>
@@ -190,7 +229,13 @@ const EReceiptScreen = () => {
             <Text style={styles.value}>#{order._id.slice(-8).toUpperCase()}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Status</Text>
+            <Text style={styles.label}>Order Status</Text>
+            <View style={[styles.statusBadge, isReturnApproved && { backgroundColor: '#047857' }, isReturnRejected && { backgroundColor: '#B91C1C' }]}>
+              <Text style={styles.statusText}>{formatOrderStatus(order.orderStatus, order.returnRequest)}</Text>
+            </View>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Payment Status</Text>
             <View style={styles.statusBadge}>
               <Text style={styles.statusText}>{order.paymentStatus}</Text>
             </View>
@@ -230,6 +275,13 @@ const styles = StyleSheet.create({
   barcodeContainer: { alignItems: 'center', marginBottom: spacing[2] },
   barcodeMock: { flexDirection: 'row', height: 60, width: '100%', justifyContent: 'space-between', alignItems: 'center', opacity: 0.7 },
   bar: { backgroundColor: '#000', height: 60 },
+
+  returnBannerSuccess: { backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#A7F3D0', borderRadius: 16, padding: spacing[3], marginTop: spacing[3] },
+  returnBannerSuccessTitle: { color: '#047857', fontWeight: '800', fontSize: 13, marginBottom: 2 },
+  returnBannerSuccessText: { color: '#065F46', fontWeight: '600', fontSize: 12 },
+
+  returnBannerError: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 16, padding: spacing[3], marginTop: spacing[3] },
+  returnBannerErrorTitle: { color: '#B91C1C', fontWeight: '800', fontSize: 13 },
   
   separator: { height: 1, backgroundColor: '#F0F0F0', marginVertical: spacing[4] },
   

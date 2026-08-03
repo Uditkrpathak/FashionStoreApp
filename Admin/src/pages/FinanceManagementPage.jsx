@@ -196,9 +196,15 @@ export const FinanceManagementPage = () => {
         const isCOD = rawMethod.includes('cod');
         const isPaid = selectedInvoiceOrder.paymentStatus === 'completed' || selectedInvoiceOrder.paymentStatus === 'paid';
         const isCancelledOrder = selectedInvoiceOrder.orderStatus === 'cancelled';
+        const isReturnApproved = selectedInvoiceOrder.returnRequest?.status === 'approved' || selectedInvoiceOrder.orderStatus === 'returned';
+        const isReturnRejected = selectedInvoiceOrder.returnRequest?.status === 'rejected';
 
         const invoiceHeading = isCancelledOrder
           ? 'Cancelled Order Invoice'
+          : isReturnApproved
+          ? 'Return Completed Invoice'
+          : isReturnRejected
+          ? 'Tax Invoice (Return Rejected)'
           : (isCOD ? 'Delivery Invoice & Cash Receipt' : (isPaid ? 'Official GST Tax Invoice' : 'Pro-Forma Invoice'));
 
         const grandTotal = selectedInvoiceOrder.totals?.grandTotal || 0;
@@ -235,6 +241,22 @@ export const FinanceManagementPage = () => {
                   </div>
                 )}
 
+                {isReturnApproved && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <div className="text-[55px] font-black text-emerald-500/10 uppercase tracking-widest rotate-[-30deg] select-none text-center leading-none">
+                      RETURN<br/>COMPLETED
+                    </div>
+                  </div>
+                )}
+
+                {isReturnRejected && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <div className="text-[55px] font-black text-red-500/10 uppercase tracking-widest rotate-[-30deg] select-none text-center leading-none">
+                      RETURN<br/>REJECTED
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex justify-between items-start border-b border-[#EDEDED] dark:border-[#262838] pb-4">
                   <div>
                     <h2 className="text-xl font-black text-[#704F38] dark:text-[#E8B84E]">FashionStore India Pvt Ltd</h2>
@@ -250,6 +272,22 @@ export const FinanceManagementPage = () => {
                     </div>
                   </div>
                 </div>
+
+                {isReturnApproved && (
+                  <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-3 rounded-2xl text-emerald-800 dark:text-emerald-200 text-xs space-y-0.5">
+                    <span className="font-extrabold block text-sm">✅ Return Completed</span>
+                    <p className="font-medium">Amount will credit in your bank in 3-4 working days.</p>
+                  </div>
+                )}
+
+                {isReturnRejected && (
+                  <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 p-3 rounded-2xl text-red-800 dark:text-red-200 text-xs space-y-0.5">
+                    <span className="font-extrabold block text-sm">❌ Return Rejected</span>
+                    {selectedInvoiceOrder.returnRequest?.adminNotes && (
+                      <p className="font-medium">Admin Note: {selectedInvoiceOrder.returnRequest.adminNotes}</p>
+                    )}
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4 text-xs bg-white dark:bg-[#181926] p-4 rounded-2xl border border-[#EDEDED] dark:border-[#262838]">
                   <div>
